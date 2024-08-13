@@ -1,20 +1,21 @@
-package org.murraybridgebunyips.virtual_robot.samples;
+package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.digitalchickenlabs.OctoQuad;
+import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorSensor;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
-import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.*;
 import org.firstinspires.ftc.robotcore.external.navigation.*;
 
 /**
  * Example OpMode. Demonstrates use of gyro, color sensor, encoders, and telemetry.
+ *
  */
-@TeleOp(name = "mecanum bot demo", group = "z")
+@TeleOp(name = "mecanum bot demo", group = "MecanumBot")
 public class MecanumDemo extends LinearOpMode {
 
-    public void runOpMode() {
+    public void runOpMode(){
         DcMotor m1 = hardwareMap.dcMotor.get("back_left_motor");
         DcMotor m2 = hardwareMap.dcMotor.get("front_left_motor");
         DcMotor m3 = hardwareMap.dcMotor.get("front_right_motor");
@@ -38,11 +39,16 @@ public class MecanumDemo extends LinearOpMode {
         IMU imu = hardwareMap.get(IMU.class, "imu");
 
         ColorSensor colorSensor = hardwareMap.colorSensor.get("color_sensor");
-        telemetry.addData("Press Start When Ready", "");
+
+        SparkFunOTOS myOTOS = hardwareMap.get(SparkFunOTOS.class, "sensor_otos");
+
+        OctoQuad octoQuad = hardwareMap.get(OctoQuad.class, "octoquad");
+
+        telemetry.addData("Press Start When Ready","");
         telemetry.update();
 
         waitForStart();
-        while (opModeIsActive()) {
+        while (opModeIsActive()){
             double px = gamepad1.left_stick_x;
             double py = -gamepad1.left_stick_y;
             double pa = gamepad1.left_trigger - gamepad1.right_trigger;
@@ -64,7 +70,7 @@ public class MecanumDemo extends LinearOpMode {
             m2.setPower(p2);
             m3.setPower(p3);
             m4.setPower(p4);
-            telemetry.addData("Color", "R %d  G %d  B %d", colorSensor.red(), colorSensor.green(), colorSensor.blue());
+            telemetry.addData("Color","R %d  G %d  B %d", colorSensor.red(), colorSensor.green(), colorSensor.blue());
 //            Orientation orientation = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
             Orientation orientation = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
             telemetry.addData("Heading", " %.1f", orientation.firstAngle * 180.0 / Math.PI);
@@ -73,8 +79,13 @@ public class MecanumDemo extends LinearOpMode {
             telemetry.addData("Left Distance", " %.1f", leftDistance.getDistance(DistanceUnit.CM));
             telemetry.addData("Right Distance", " %.1f", rightDistance.getDistance(DistanceUnit.CM));
             telemetry.addData("Back Distance", " %.1f", backDistance.getDistance(DistanceUnit.CM));
-            telemetry.addData("Encoders", " %d %d %d %d", m1.getCurrentPosition(), m2.getCurrentPosition(),
+            telemetry.addData("Encoders"," %d %d %d %d", m1.getCurrentPosition(), m2.getCurrentPosition(),
                     m3.getCurrentPosition(), m4.getCurrentPosition());
+            telemetry.addData("Octoquad", "%d %d %d %d", octoQuad.readSinglePosition(0),
+                    octoQuad.readSinglePosition(1), octoQuad.readSinglePosition(2),
+                    octoQuad.readSinglePosition(3));
+            SparkFunOTOS.Pose2D pose2D = myOTOS.getPosition();
+            telemetry.addData("Pose", "x=%.1f  y=%.1f  h=%.1f", pose2D.x, pose2D.y, pose2D.h);
             telemetry.update();
         }
         m1.setPower(0);
