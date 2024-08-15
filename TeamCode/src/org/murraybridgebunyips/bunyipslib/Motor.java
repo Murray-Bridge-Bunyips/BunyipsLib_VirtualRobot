@@ -350,6 +350,12 @@ public class Motor /*extends DcMotorImplEx */ implements DcMotorEx {
         return __.getDirection();
     }
 
+    private double getClampedInterpolatedGain(InterpolatedLookupTable lut) {
+        int curr = getCurrentPosition();
+        int res = lut.testOutOfRange(curr);
+        if (res == 0) return lut.get(curr);
+        return res == -1 ? lut.getMin() : lut.getMax();
+    }
     /**
      * Update system controllers and propagate new power levels to the motor. Should be called frequently.
      *
@@ -366,7 +372,7 @@ public class Motor /*extends DcMotorImplEx */ implements DcMotorEx {
                     ((PIDFController) rtpController).setTolerance(__.getTargetPositionTolerance());
                 }
                 if (!rtpGains.isEmpty())
-                    rtpController.setCoefficients(rtpGains.stream().mapToDouble((g) -> g.get(getCurrentPosition())).toArray());
+                    rtpController.setCoefficients(rtpGains.stream().mapToDouble(this::getClampedInterpolatedGain).toArray());
 //                Dbg.log("% -> %", getCurrentPosition(), getTargetPosition());
                 // In a RUN_TO_POSITION context, the controller is used for error correction, which will multiply the
                 // allowed power by the user against the encoder error by your (usually PID) controller.
@@ -380,7 +386,7 @@ public class Motor /*extends DcMotorImplEx */ implements DcMotorEx {
                     rueController = new VelocityFFController(pid, new SimpleMotorFeedforward(coeffs.f, 0, 0), encoder::getAcceleration, 1.0, __.getMotorType().getAchieveableMaxTicksPerSecond());
                 }
                 if (!rueGains.isEmpty())
-                    rueController.setCoefficients(rueGains.stream().mapToDouble((g) -> g.get(getCurrentPosition())).toArray());
+                    rueController.setCoefficients(rueGains.stream().mapToDouble(this::getClampedInterpolatedGain).toArray());
                 // In RUN_USING_ENCODER, the controller is expected to take in the encoder velocity and target power,
                 // which usually consists internally of a PID and feedforward controller.
                 if (power == 0) {
