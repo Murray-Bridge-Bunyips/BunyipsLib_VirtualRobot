@@ -2,10 +2,17 @@ package org.murraybridgebunyips.imposter.components;
 
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
+import org.murraybridgebunyips.bunyipslib.DcMotorRamping;
+import org.murraybridgebunyips.bunyipslib.Motor;
 import org.murraybridgebunyips.bunyipslib.RobotConfig;
+import org.murraybridgebunyips.bunyipslib.external.SystemController;
+import org.murraybridgebunyips.bunyipslib.external.VelocityFFController;
+import org.murraybridgebunyips.bunyipslib.external.ff.SimpleMotorFeedforward;
+import org.murraybridgebunyips.bunyipslib.external.pid.PIDController;
 import org.murraybridgebunyips.bunyipslib.roadrunner.drive.DriveConstants;
 import org.murraybridgebunyips.bunyipslib.roadrunner.drive.MecanumCoefficients;
 import org.murraybridgebunyips.bunyipslib.roadrunner.drive.localizers.ThreeWheelLocalizer;
@@ -18,10 +25,10 @@ import static org.murraybridgebunyips.bunyipslib.external.units.Units.*;
  * Running under "Mecanum Bot" config
  */
 public class ImposterConfig extends RobotConfig {
-    public DcMotorEx back_right_motor;
-    public DcMotorEx back_left_motor;
-    public DcMotorEx front_right_motor;
-    public DcMotorEx front_left_motor;
+    public Motor back_right_motor;
+    public Motor back_left_motor;
+    public Motor front_right_motor;
+    public Motor front_left_motor;
     public IMU imu;
 
     public Servo back_servo;
@@ -34,12 +41,32 @@ public class ImposterConfig extends RobotConfig {
     public MecanumCoefficients mecanumCoefficients;
     public ThreeWheelLocalizer.Coefficients localizerCoefficients;
 
+    private SystemController getController(Motor motor) {
+        return new VelocityFFController(
+            new PIDController(1, 0, 0),
+            new SimpleMotorFeedforward(0, 0, 0),
+            motor.getEncoder()::getAcceleration,
+            1.0,
+            motor.getMotorType().getAchieveableMaxTicksPerSecond()
+        );
+    }
+
     @Override
     protected void onRuntime() {
-        back_right_motor = getHardware("back_right_motor", DcMotorEx.class);
-        back_left_motor = getHardware("back_left_motor", DcMotorEx.class);
-        front_right_motor = getHardware("front_right_motor", DcMotorEx.class);
-        front_left_motor = getHardware("front_left_motor", DcMotorEx.class);
+        back_right_motor = getHardware("back_right_motor", Motor.class);
+        back_left_motor = getHardware("back_left_motor", Motor.class);
+        front_right_motor = getHardware("front_right_motor", Motor.class);
+        front_left_motor = getHardware("front_left_motor", Motor.class);
+
+        back_right_motor.setRunToPositionController(new PIDController(0.01, 0, 0));
+        back_left_motor.setRunToPositionController(new PIDController(0.01, 0, 0));
+        front_left_motor.setRunToPositionController(new PIDController(0.01, 0, 0));
+        front_right_motor.setRunToPositionController(new PIDController(0.01, 0, 0));
+
+        back_right_motor.setRunUsingEncoderController(getController(back_right_motor));
+        back_left_motor.setRunUsingEncoderController(getController(back_left_motor));
+        front_right_motor.setRunUsingEncoderController(getController(front_right_motor));
+        front_left_motor.setRunUsingEncoderController(getController(front_left_motor));
 
         back_servo = getHardware("back_servo", Servo.class);
 

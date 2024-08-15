@@ -91,6 +91,10 @@ public class ImposterRoadRunnerTest extends AutonomousBunyipsOpMode implements R
 
     @Override
     protected void periodic() {
+//        telemetry.add(config.back_left_motor.getPower());
+//        telemetry.add(config.back_right_motor.getPower());
+//        telemetry.add(config.front_left_motor.getPower());
+//        telemetry.add(config.front_right_motor.getPower());
     }
 
     @NonNull

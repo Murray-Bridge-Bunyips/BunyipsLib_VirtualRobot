@@ -1,11 +1,10 @@
 package org.murraybridgebunyips.bunyipslib;
 
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorImplEx;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.*;
 
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.murraybridgebunyips.bunyipslib.external.SystemController;
 import org.murraybridgebunyips.bunyipslib.external.VelocityFFController;
 import org.murraybridgebunyips.bunyipslib.external.ff.SimpleMotorFeedforward;
@@ -13,6 +12,7 @@ import org.murraybridgebunyips.bunyipslib.external.pid.PIDController;
 import org.murraybridgebunyips.bunyipslib.external.pid.PIDFController;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 /**
  * Wrapper class for a {@link DcMotor} that uses custom control algorithms to operate {@link RunMode#RUN_USING_ENCODER}
@@ -24,7 +24,9 @@ import java.util.ArrayList;
  *
  * @author Lucas Bubner, 2024
  */
-public class Motor extends DcMotorImplEx {
+public class Motor /*extends DcMotorImplEx */ implements DcMotorEx {
+    private final DcMotorEx __;
+
     private final ArrayList<InterpolatedLookupTable> rtpGains = new ArrayList<>();
     private final ArrayList<InterpolatedLookupTable> rueGains = new ArrayList<>();
     private final Encoder encoder;
@@ -32,18 +34,17 @@ public class Motor extends DcMotorImplEx {
     private SystemController rueController;
     private RunMode mode = RunMode.RUN_WITHOUT_ENCODER;
 
-    // TODO: virtual robot will not work with this class, will need to work out motor controllers to also fix DcMotorRamping
-
     /**
      * Wrap a DcMotor to use in the Motor class.
      *
      * @param motor the DcMotor from hardwareMap to use.
      */
     public Motor(DcMotorEx motor) {
-        super(motor.getController(), motor.getPortNumber(), motor.getDirection(), motor.getMotorType());
+//        super(motor.getController(), motor.getPortNumber(), motor.getDirection(), motor.getMotorType());
+        __ = motor;
         // The actual motor should *always* be running in RUN_WITHOUT_ENCODER
-        super.setMode(RunMode.RUN_WITHOUT_ENCODER);
-        encoder = new Encoder(super::getCurrentPosition, super::getVelocity);
+        __.setMode(RunMode.RUN_WITHOUT_ENCODER);
+        encoder = new Encoder(__::getCurrentPosition, __::getVelocity);
         setTargetPosition(getCurrentPosition());
     }
 
@@ -63,6 +64,8 @@ public class Motor extends DcMotorImplEx {
      */
     public void setRunToPositionController(SystemController controller) {
         rtpController = controller;
+        if (rtpController instanceof PIDFController)
+            ((PIDFController) rtpController).setTolerance(__.getTargetPositionTolerance());
     }
 
     /**
@@ -136,12 +139,72 @@ public class Motor extends DcMotorImplEx {
         return encoder.getPosition();
     }
 
+    @Override
+    public void setTargetPosition(int pos) {
+        __.setTargetPosition(pos);
+    }
+
+    @Override
+    public int getTargetPosition() {
+        return __.getTargetPosition();
+    }
+
     /**
      * @return the current velocity of this motor as specified by your settings. Ticks per second.
      */
     @Override
     public double getVelocity() {
         return encoder.getVelocity();
+    }
+
+    @Override
+    public double getVelocity(AngleUnit unit) {
+        return __.getVelocity(unit);
+    }
+
+    @Override
+    public void setPIDCoefficients(RunMode mode, PIDCoefficients pidCoefficients) {
+        __.setPIDCoefficients(mode, pidCoefficients);
+    }
+
+    @Override
+    public void setPIDFCoefficients(RunMode mode, PIDFCoefficients pidfCoefficients) throws UnsupportedOperationException {
+        __.setPIDFCoefficients(mode, pidfCoefficients);
+    }
+
+    @Override
+    public void setVelocityPIDFCoefficients(double p, double i, double d, double f) {
+        __.setVelocityPIDFCoefficients(p, i, d, f);
+    }
+
+    @Override
+    public void setPositionPIDFCoefficients(double p) {
+        __.setPositionPIDFCoefficients(p);
+    }
+
+    @Override
+    public PIDCoefficients getPIDCoefficients(RunMode mode) {
+        return __.getPIDCoefficients(mode);
+    }
+
+    @Override
+    public PIDFCoefficients getPIDFCoefficients(RunMode mode) {
+        return __.getPIDFCoefficients(mode);
+    }
+
+    @Override
+    public void setMotorEnable() {
+        __.setMotorEnable();
+    }
+
+    @Override
+    public void setMotorDisable() {
+        __.setMotorDisable();
+    }
+
+    @Override
+    public boolean isMotorEnabled() {
+        return __.isMotorEnabled();
     }
 
     /**
@@ -172,6 +235,16 @@ public class Motor extends DcMotorImplEx {
         this.mode = mode;
     }
 
+    @Override
+    public RunMode getMode() {
+        return __.getMode();
+    }
+
+    @Override
+    public DcMotorController getController() {
+        return __.getController();
+    }
+
     /**
      * Note that this method will try to access the {@link RunMode#RUN_TO_POSITION} controller to access information there. This
      * is otherwise unsupported and you should try to access the actual controller to see this information, unless
@@ -187,6 +260,26 @@ public class Motor extends DcMotorImplEx {
             return (int) Math.ceil(((PIDFController) rtpController).getTolerance()[0]);
         }
         throw new UnsupportedOperationException("Can't access target position information on the currently used RTP controller. It may be the case that this controller is open-loop, or not a PID controller, as any tolerance configuration should be modified by your controller, not by this method.");
+    }
+
+    @Override
+    public double getCurrent(CurrentUnit unit) {
+        return __.getCurrent(unit);
+    }
+
+    @Override
+    public double getCurrentAlert(CurrentUnit unit) {
+        return __.getCurrentAlert(unit);
+    }
+
+    @Override
+    public void setCurrentAlert(double current, CurrentUnit unit) {
+        __.setCurrentAlert(current, unit);
+    }
+
+    @Override
+    public boolean isOverCurrent() {
+        return __.isOverCurrent();
     }
 
     /**
@@ -221,6 +314,21 @@ public class Motor extends DcMotorImplEx {
         throw new UnsupportedOperationException("Can't access target position information on the currently used RTP controller. It may be the case that this controller is open-loop, or not a PID controller, as any tolerance configuration should be modified by your controller, not by this method.");
     }
 
+    @Override
+    public void setZeroPowerBehavior(ZeroPowerBehavior zeroPowerBehavior) {
+        __.setZeroPowerBehavior(zeroPowerBehavior);
+    }
+
+    @Override
+    public ZeroPowerBehavior getZeroPowerBehavior() {
+        return __.getZeroPowerBehavior();
+    }
+
+    @Override
+    public MotorConfigurationType getMotorType() {
+        return __.getMotorType();
+    }
+
     /**
      * This method is not supported.
      *
@@ -230,6 +338,16 @@ public class Motor extends DcMotorImplEx {
     @Override
     public void setVelocity(double vel, AngleUnit unit) {
         throw new UnsupportedOperationException("Unsupported on a BunyipsLib motor object. Use RUN_USING_ENCODER and setPower().");
+    }
+
+    @Override
+    public void setDirection(Direction direction) {
+        __.setDirection(direction);
+    }
+
+    @Override
+    public Direction getDirection() {
+        return __.getDirection();
     }
 
     /**
@@ -245,30 +363,50 @@ public class Motor extends DcMotorImplEx {
                     PIDFCoefficients coeffs = getPIDFCoefficients(RunMode.RUN_TO_POSITION);
                     Dbg.warn("[%] No RUN_TO_POSITION controller was specified. This motor will be using the default PIDF coefficients to create a fallback PIDF controller with values from %. Please set your own controller.", getDeviceName(), coeffs);
                     rtpController = new PIDFController(coeffs.p, coeffs.i, coeffs.d, coeffs.f);
+                    ((PIDFController) rtpController).setTolerance(__.getTargetPositionTolerance());
                 }
                 if (!rtpGains.isEmpty())
                     rtpController.setCoefficients(rtpGains.stream().mapToDouble((g) -> g.get(getCurrentPosition())).toArray());
+//                Dbg.log("% -> %", getCurrentPosition(), getTargetPosition());
                 // In a RUN_TO_POSITION context, the controller is used for error correction, which will multiply the
                 // allowed power by the user against the encoder error by your (usually PID) controller.
-                super.setPower(Math.abs(power) * rtpController.calculate(getCurrentPosition(), getTargetPosition()));
+                __.setPower(Math.abs(power) * rtpController.calculate(getCurrentPosition(), getTargetPosition()));
                 break;
             case RUN_USING_ENCODER:
                 if (rueController == null) {
                     PIDFCoefficients coeffs = getPIDFCoefficients(RunMode.RUN_USING_ENCODER);
                     Dbg.warn("[%] No RUN_USING_ENCODER controller was specified. This motor will be using the default PIDF coefficients to create a fallback PID and static FF controller with values from %. Please set your own controller.", getDeviceName(), coeffs);
                     PIDController pid = new PIDController(coeffs.p, coeffs.i, coeffs.d);
-                    rueController = new VelocityFFController(pid, new SimpleMotorFeedforward(coeffs.f, 0, 0), encoder::getAcceleration, 1.0, motorType.getAchieveableMaxTicksPerSecond());
+                    rueController = new VelocityFFController(pid, new SimpleMotorFeedforward(coeffs.f, 0, 0), encoder::getAcceleration, 1.0, __.getMotorType().getAchieveableMaxTicksPerSecond());
                 }
                 if (!rueGains.isEmpty())
                     rueController.setCoefficients(rueGains.stream().mapToDouble((g) -> g.get(getCurrentPosition())).toArray());
                 // In RUN_USING_ENCODER, the controller is expected to take in the encoder velocity and target power,
                 // which usually consists internally of a PID and feedforward controller.
-                super.setPower(rueController.calculate(getVelocity(), power));
+                if (power == 0) {
+                    __.setPower(0);
+                    return;
+                }
+                __.setPower(rueController.calculate(getVelocity(), power));
                 break;
             case RUN_WITHOUT_ENCODER:
-                super.setPower(power);
+                __.setPower(power);
                 break;
         }
+    }
+
+
+    public Optional<SystemController> getRunToPositionController() {
+        return Optional.ofNullable(rtpController);
+    }
+
+    public Optional<SystemController> getRunUsingEncoderController() {
+        return Optional.ofNullable(rueController);
+    }
+
+    @Override
+    public double getPower() {
+        return __.getPower();
     }
 
     /**
