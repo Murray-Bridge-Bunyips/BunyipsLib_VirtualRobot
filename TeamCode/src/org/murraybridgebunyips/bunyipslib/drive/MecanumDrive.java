@@ -16,30 +16,37 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
+import org.firstinspires.ftc.robotcore.internal.system.Watchdog;
 import org.murraybridgebunyips.bunyipslib.BunyipsSubsystem;
 import org.murraybridgebunyips.bunyipslib.Controls;
+import org.murraybridgebunyips.bunyipslib.Dbg;
 import org.murraybridgebunyips.bunyipslib.Storage;
 import org.murraybridgebunyips.bunyipslib.roadrunner.drive.DriveConstants;
 import org.murraybridgebunyips.bunyipslib.roadrunner.drive.MecanumCoefficients;
 import org.murraybridgebunyips.bunyipslib.roadrunner.drive.MecanumRoadRunnerDrive;
 import org.murraybridgebunyips.bunyipslib.roadrunner.drive.RoadRunnerDrive;
+import org.murraybridgebunyips.bunyipslib.roadrunner.drive.localizers.SwitchableLocalizer;
 import org.murraybridgebunyips.bunyipslib.roadrunner.trajectorysequence.TrajectorySequence;
 import org.murraybridgebunyips.bunyipslib.roadrunner.trajectorysequence.TrajectorySequenceBuilder;
 import org.murraybridgebunyips.bunyipslib.roadrunner.trajectorysequence.TrajectorySequenceRunner;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This is the standard MecanumDrive class for modern BunyipsLib robots.
  * This is a component for the RoadRunner Mecanum Drive, integrating RoadRunner and BunyipsLib to be used
- * as a BunyipsSubsystem. As such, this allows for integrated trajectory and pose management,
- * as well as the ability to use Field Centric Drive as a native method.
+ * as a BunyipsSubsystem. As such, this allows for integrated trajectory and pose management, while using
+ * features from BunyipsLib including Task and subsystem-based allocations.
  *
  * @author Lucas Bubner, 2023
  */
 public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
     private final MecanumRoadRunnerDrive drive;
     private final IMU imu;
+
+    private final Watchdog benji;
+    private boolean updates;
 
     /**
      * Constructor for the MecanumDrive class.
@@ -56,8 +63,45 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
     public MecanumDrive(DriveConstants constants, MecanumCoefficients mecanumCoefficients, HardwareMap.DeviceMapping<VoltageSensor> voltageSensor, IMU imu, DcMotorEx fl, DcMotorEx fr, DcMotorEx bl, DcMotorEx br) {
         assertParamsNotNull(constants, mecanumCoefficients, voltageSensor, imu, fl, fr, bl, br);
         drive = new MecanumRoadRunnerDrive(opMode.telemetry, constants, mecanumCoefficients, voltageSensor, imu, fl, fr, bl, br);
+        benji = new Watchdog(() -> {
+            Dbg.log(getClass(), "Direct drive updates have been disabled as it has been longer than 200ms since the last call to update().");
+            updates = false;
+            drive.stop();
+        }, 100, 200, TimeUnit.MILLISECONDS);
         this.imu = imu;
         updatePoseFromMemory();
+    }
+
+    /**
+     * Call to use the MecanumLocalizer as a backup localizer alongside the current localizer. Note if you are already
+     * using a MecanumLocalizer (default), this will duplicate your localizers and there isn't a point of calling this method.
+     * This localizer can be switched/tested as part of the SwitchableLocalizer.
+     *
+     * @return the SwitchableLocalizer
+     */
+    public SwitchableLocalizer useFallbackLocalizer() {
+        Pose2d curr = drive.getPoseEstimate();
+        SwitchableLocalizer localizer = new SwitchableLocalizer(
+                drive.getLocalizer(),
+                new com.acmerobotics.roadrunner.drive.MecanumDrive.MecanumLocalizer(drive, true)
+        );
+        setLocalizer(localizer);
+        drive.setPoseEstimate(curr);
+        return localizer;
+    }
+
+    /**
+     * Call to set a fallback localizer that can be switched/tested to as part of the SwitchableLocalizer.
+     *
+     * @param fallback the backup localizer
+     * @return the SwitchableLocalizer
+     */
+    public SwitchableLocalizer useFallbackLocalizer(Localizer fallback) {
+        Pose2d curr = drive.getPoseEstimate();
+        SwitchableLocalizer localizer = new SwitchableLocalizer(drive.getLocalizer(), fallback);
+        setLocalizer(localizer);
+        drive.setPoseEstimate(curr);
+        return localizer;
     }
 
     /**
@@ -83,6 +127,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
     }
 
     public void waitForIdle() {
+        if (isDisabled() || !updates) return;
         drive.waitForIdle();
     }
 
@@ -105,7 +150,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
      * @return this
      */
     public MecanumDrive setSpeedUsingController(double x, double y, double r) {
-        drive.setWeightedDrivePower(Controls.makeRobotPose(x, y, r));
+        setWeightedDrivePower(Controls.makeRobotPose(x, y, r));
         return this;
     }
 
@@ -115,6 +160,15 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
                 round(Centimeters.convertFrom(drive.getPoseEstimate().getX(), Inches), 1),
                 round(Centimeters.convertFrom(drive.getPoseEstimate().getY(), Inches), 1),
                 round(Math.toDegrees(drive.getPoseEstimate().getHeading()), 1)).color("gray");
+
+        // Required to ensure that update() is being called before scheduling any motor updates,
+        // using a watchdog to ensure that an update is occurring at least every 500ms.
+        // Named after goober Benji, or if you don't like that name then you can call
+        // it the "Brakes Engagement Necessity Justification Initiative".
+        updates = true;
+        if (!benji.isRunning())
+            benji.start();
+        benji.stroke();
 
         drive.update();
         Storage.memory().lastKnownPosition = drive.getPoseEstimate();
@@ -143,6 +197,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
      * @param v3 The power for the back right motor.
      */
     public void setPowers(double v, double v1, double v2, double v3) {
+        if (isDisabled() || !updates) return;
         drive.setMotorPowers(v, v1, v2, v3);
     }
 
@@ -169,31 +224,37 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 
     @Override
     public void turnAsync(double angle) {
+        if (isDisabled() || !updates) return;
         drive.turnAsync(angle);
     }
 
     @Override
     public void turn(double angle) {
+        if (isDisabled() || !updates) return;
         drive.turn(angle);
     }
 
     @Override
     public void followTrajectoryAsync(Trajectory trajectory) {
+        if (isDisabled() || !updates) return;
         drive.followTrajectoryAsync(trajectory);
     }
 
     @Override
     public void followTrajectory(Trajectory trajectory) {
+        if (isDisabled() || !updates) return;
         drive.followTrajectory(trajectory);
     }
 
     @Override
     public void followTrajectorySequenceAsync(TrajectorySequence trajectorySequence) {
+        if (isDisabled() || !updates) return;
         drive.followTrajectorySequenceAsync(trajectorySequence);
     }
 
     @Override
     public void followTrajectorySequence(TrajectorySequence trajectorySequence) {
+        if (isDisabled() || !updates) return;
         drive.followTrajectorySequence(trajectorySequence);
     }
 
@@ -229,11 +290,13 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 
     @Override
     public void setDriveSignal(DriveSignal driveSignal) {
+        if (isDisabled() || !updates) return;
         drive.setDriveSignal(driveSignal);
     }
 
     @Override
     public void setDrivePower(Pose2d drivePower) {
+        if (isDisabled() || !updates) return;
         drive.setDrivePower(drivePower);
     }
 
@@ -254,6 +317,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 
     @Override
     public void setWeightedDrivePower(Pose2d drivePower) {
+        if (isDisabled() || !updates) return;
         drive.setWeightedDrivePower(drivePower);
     }
 

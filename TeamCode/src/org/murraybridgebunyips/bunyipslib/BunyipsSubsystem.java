@@ -65,6 +65,10 @@ public abstract class BunyipsSubsystem extends BunyipsComponent {
         }
     }
 
+    public final boolean isDisabled() {
+        return !shouldRun;
+    }
+
     /**
      * @return a status string of this subsystem
      */
