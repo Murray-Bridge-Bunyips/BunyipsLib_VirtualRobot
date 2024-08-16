@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import org.murraybridgebunyips.bunyipslib.*;
 import org.murraybridgebunyips.bunyipslib.drive.MecanumDrive;
 import org.murraybridgebunyips.bunyipslib.drive.TriDeadwheelMecanumDrive;
+import org.murraybridgebunyips.bunyipslib.roadrunner.drive.localizers.IntrinsicMecanumLocalizer;
 import org.murraybridgebunyips.bunyipslib.roadrunner.trajectorysequence.TrajectorySequence;
 import org.murraybridgebunyips.bunyipslib.tasks.RunTask;
 import org.murraybridgebunyips.bunyipslib.tasks.WaitTask;
@@ -24,6 +25,7 @@ public class ImposterRoadRunnerTest extends AutonomousBunyipsOpMode implements R
     protected void onInitialise() {
         config.init();
         drive = new MecanumDrive(config.driveConstants, config.mecanumCoefficients, hardwareMap.voltageSensor, config.imu, config.front_left_motor, config.front_right_motor, config.back_left_motor, config.back_right_motor);
+        drive.setLocalizer(new IntrinsicMecanumLocalizer(new IntrinsicMecanumLocalizer.Coefficients.Builder().setMultiplier(365.76 / 11.0).build(), drive));
 //        drive = new TriDeadwheelMecanumDrive(config.driveConstants, config.mecanumCoefficients, hardwareMap.voltageSensor, config.imu, config.front_left_motor, config.front_right_motor, config.back_left_motor, config.back_right_motor, config.localizerCoefficients, config.enc_left, config.enc_right, config.enc_x);
         setOpModes(StartingPositions.use());
         setInitTask(new WaitTask(Seconds.of(1), false));
@@ -31,7 +33,10 @@ public class ImposterRoadRunnerTest extends AutonomousBunyipsOpMode implements R
 
     @Override
     protected void onReady(@Nullable Reference<?> selectedOpMode, Controls selectedButton) {
-        if (selectedOpMode == null) return;
+        if (selectedOpMode == null) {
+//            makeTrajectory().forward(23.6*2).turn(-Math.PI / 2.0).forward(23.6*1.5).addTask();
+            return;
+        }
         Dbg.log(selectedButton);
         StartingPositions startingPosition = (StartingPositions) selectedOpMode.require();
         setPose(startingPosition.getPose());
@@ -48,7 +53,7 @@ public class ImposterRoadRunnerTest extends AutonomousBunyipsOpMode implements R
                 .build();
 
         TrajectorySequence redRight = makeTrajectory()
-                .lineToLinearHeading(startingPosition.getPose().plus(RoadRunner.unitPose(new Pose2d(FIELD_TILE_SCALE, FIELD_TILE_SCALE, -90), FieldTiles, Degrees)))
+                .lineToLinearHeading(new Pose2d(36, -36))
                 .mirrorToRef(blueLeft)
                 .build();
 

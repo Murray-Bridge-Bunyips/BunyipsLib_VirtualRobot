@@ -292,6 +292,10 @@ public class MecanumRoadRunnerDrive extends com.acmerobotics.roadrunner.drive.Me
         return wheelVelocities;
     }
 
+    public double[] getMotorPowers() {
+        return new double[]{leftFront.getPower(), leftRear.getPower(), rightRear.getPower(), rightFront.getPower()};
+    }
+
     @Override
     public void setMotorPowers(double v, double v1, double v2, double v3) {
         leftFront.setPower(v);

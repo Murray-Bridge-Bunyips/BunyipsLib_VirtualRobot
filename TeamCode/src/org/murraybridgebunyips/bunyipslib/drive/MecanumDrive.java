@@ -346,11 +346,17 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
         return drive.getLocalizer();
     }
 
+    @Override
     public void setLocalizer(Localizer localizer) {
         drive.setLocalizer(localizer);
     }
 
+    @Override
     public void cancelTrajectory() {
         drive.cancelTrajectory();
+    }
+
+    public double[] getPowers() {
+        return drive.getMotorPowers();
     }
 }
