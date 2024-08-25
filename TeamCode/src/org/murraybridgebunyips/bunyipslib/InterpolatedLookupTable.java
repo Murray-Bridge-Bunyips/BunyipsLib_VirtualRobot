@@ -123,7 +123,7 @@ public class InterpolatedLookupTable {
     public double getMin() {
         if (!built)
             throw new IllegalStateException("This InterpolatedLookupTable has not been built yet.");
-        return get(mX.get(0) + 1e-6);
+        return get(mX.get(0) + 1.0e-6);
     }
 
     /**
@@ -132,7 +132,7 @@ public class InterpolatedLookupTable {
     public double getMax() {
         if (!built)
             throw new IllegalStateException("This InterpolatedLookupTable has not been built yet.");
-        return get(mX.get(mX.size() - 1) - 1e-6);
+        return get(mX.get(mX.size() - 1) - 1.0e-6);
     }
 
     /**

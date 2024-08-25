@@ -367,6 +367,11 @@ public class HoldableActuator extends BunyipsSubsystem {
         motor.setPower(Mathf.clamp(motorPower, LOWER_POWER, UPPER_POWER));
     }
 
+    @Override
+    protected void onDisable() {
+        motor.setPower(0);
+    }
+
     private enum Mode {
         AUTO,
         HOMING,
@@ -384,7 +389,7 @@ public class HoldableActuator extends BunyipsSubsystem {
          * @return a task to move the actuator
          */
         public Task control(DoubleSupplier powerSupplier) {
-            return new ContinuousTask(() -> setPower(powerSupplier.getAsDouble()))
+            return new ContinuousTask(() -> HoldableActuator.this.setPower(powerSupplier.getAsDouble()))
                     .onSubsystem(HoldableActuator.this, false)
                     .withName("Supplier Control");
         }
@@ -396,7 +401,7 @@ public class HoldableActuator extends BunyipsSubsystem {
          * @return a task to set the power
          */
         public Task setPower(double p) {
-            return new RunTask(() -> setPower(p))
+            return new RunTask(() -> HoldableActuator.this.setPower(p))
                     .onSubsystem(HoldableActuator.this, false)
                     .withName("Set Power");
         }

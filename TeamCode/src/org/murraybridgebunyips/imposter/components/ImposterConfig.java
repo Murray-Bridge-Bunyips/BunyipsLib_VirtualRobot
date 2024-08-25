@@ -2,21 +2,18 @@ package org.murraybridgebunyips.imposter.components;
 
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
-import org.murraybridgebunyips.bunyipslib.DcMotorRamping;
 import org.murraybridgebunyips.bunyipslib.Motor;
 import org.murraybridgebunyips.bunyipslib.RobotConfig;
+import org.murraybridgebunyips.bunyipslib.external.PIDFFController;
 import org.murraybridgebunyips.bunyipslib.external.SystemController;
-import org.murraybridgebunyips.bunyipslib.external.VelocityFFController;
 import org.murraybridgebunyips.bunyipslib.external.ff.SimpleMotorFeedforward;
 import org.murraybridgebunyips.bunyipslib.external.pid.PIDController;
 import org.murraybridgebunyips.bunyipslib.roadrunner.drive.DriveConstants;
 import org.murraybridgebunyips.bunyipslib.roadrunner.drive.MecanumCoefficients;
 import org.murraybridgebunyips.bunyipslib.roadrunner.drive.localizers.ThreeWheelLocalizer;
-import org.murraybridgebunyips.bunyipslib.roadrunner.drive.localizers.ThreeWheelLocalizer.Coefficients;
 import org.murraybridgebunyips.bunyipslib.roadrunner.util.Deadwheel;
 
 import static org.murraybridgebunyips.bunyipslib.external.units.Units.*;
@@ -42,12 +39,10 @@ public class ImposterConfig extends RobotConfig {
     public ThreeWheelLocalizer.Coefficients localizerCoefficients;
 
     private SystemController getController(Motor motor) {
-        return new VelocityFFController(
+        return new PIDFFController(
             new PIDController(1, 0, 0),
             new SimpleMotorFeedforward(0, 0, 0),
-            motor.getEncoder()::getAcceleration,
-            1.0,
-            motor.getMotorType().getAchieveableMaxTicksPerSecond()
+            motor.getEncoder()
         );
     }
 
@@ -63,10 +58,10 @@ public class ImposterConfig extends RobotConfig {
         front_left_motor.setRunToPositionController(new PIDController(0.01, 0, 0));
         front_right_motor.setRunToPositionController(new PIDController(0.01, 0, 0));
 
-        back_right_motor.setRunUsingEncoderController(getController(back_right_motor));
-        back_left_motor.setRunUsingEncoderController(getController(back_left_motor));
-        front_right_motor.setRunUsingEncoderController(getController(front_right_motor));
-        front_left_motor.setRunUsingEncoderController(getController(front_left_motor));
+        back_right_motor.setRunUsingEncoderController(getController(back_right_motor), 1, back_right_motor.getMotorType().getAchieveableMaxTicksPerSecond());
+        back_left_motor.setRunUsingEncoderController(getController(back_left_motor), 1, back_left_motor.getMotorType().getAchieveableMaxTicksPerSecond());
+        front_right_motor.setRunUsingEncoderController(getController(front_right_motor), 1, front_right_motor.getMotorType().getAchieveableMaxTicksPerSecond());
+        front_left_motor.setRunUsingEncoderController(getController(front_left_motor), 1, front_left_motor.getMotorType().getAchieveableMaxTicksPerSecond());
 
         back_servo = getHardware("back_servo", Servo.class);
 

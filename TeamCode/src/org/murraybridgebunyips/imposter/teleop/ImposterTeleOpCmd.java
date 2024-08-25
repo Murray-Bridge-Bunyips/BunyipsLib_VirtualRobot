@@ -28,7 +28,7 @@ public class ImposterTeleOpCmd extends CommandBasedBunyipsOpMode {
     protected void onInitialise() {
         config.init();
 //        setLoopSpeed(Seconds.of(0.199));
-        drive = new TriDeadwheelMecanumDrive(config.driveConstants, config.mecanumCoefficients, hardwareMap.voltageSensor, config.imu, config.front_left_motor, config.front_right_motor, config.back_left_motor, config.back_right_motor, config.localizerCoefficients, config.enc_left, config.enc_right, config.enc_x);
+        drive = new TriDeadwheelMecanumDrive(config.driveConstants, config.mecanumCoefficients, config.imu, config.front_left_motor, config.front_right_motor, config.back_left_motor, config.back_right_motor, config.localizerCoefficients, config.enc_left, config.enc_right, config.enc_x);
         drive.setLocalizer(new IntrinsicMecanumLocalizer(new IntrinsicMecanumLocalizer.Coefficients.Builder().setMultiplier(365.76 / 11.0).build(), drive));
 //        setInitTask(drive.useFallbackLocalizer().tasks.manualTestMainLocalizer());
 //        drive.update();

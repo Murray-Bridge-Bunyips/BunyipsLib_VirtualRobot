@@ -9,7 +9,6 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.kinematics.Kinematics;
 import com.acmerobotics.roadrunner.kinematics.MecanumKinematics;
 import com.acmerobotics.roadrunner.localization.Localizer;
-
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.murraybridgebunyips.bunyipslib.Cartesian;
@@ -47,13 +46,13 @@ public class IntrinsicMecanumLocalizer implements Localizer {
      * Create a new IntrinsicMecanumLocalizer.
      *
      * @param coefficients the coefficients used in calculating the intrinsic Mecanum pose
-     * @param drive the drive instance (assumed to be Mecanum/conforms to Mecanum equations). Power info will be
-     *              extracted from the drive.
+     * @param drive        the drive instance (assumed to be Mecanum/conforms to Mecanum equations). Power info will be
+     *                     extracted from the drive.
      */
     public IntrinsicMecanumLocalizer(Coefficients coefficients, MecanumDrive drive) {
         this.coefficients = coefficients;
         this.drive = drive;
-        powers = drive::getPowers;
+        powers = drive::getMotorPowers;
         if (Storage.memory().lastKnownPosition != null)
             poseEstimate = Storage.memory().lastKnownPosition;
         imuOffset = drive.getExternalHeading();
@@ -63,8 +62,8 @@ public class IntrinsicMecanumLocalizer implements Localizer {
      * Create a new IntrinsicMecanumLocalizer.
      *
      * @param coefficients the coefficients used in calculating the intrinsic Mecanum pose
-     * @param drive      the drive instance (assumed to be Mecanum/conforms to Mecanum equations)
-     * @param driveInput the robot pose input (x forward, y left, heading anticlockwise) of the drive
+     * @param drive        the drive instance (assumed to be Mecanum/conforms to Mecanum equations)
+     * @param driveInput   the robot pose input (x forward, y left, heading anticlockwise) of the drive
      */
     public IntrinsicMecanumLocalizer(Coefficients coefficients, MecanumDrive drive, Supplier<Pose2d> driveInput) {
         this.coefficients = coefficients;
@@ -191,7 +190,7 @@ public class IntrinsicMecanumLocalizer implements Localizer {
              * The breakaway powers are the minimum power required to move the robot in a given direction.
              *
              * @param forward the minimum vector power required to move the robot forward
-             * @param strafe the minimum vector power required to move the robot left/right
+             * @param strafe  the minimum vector power required to move the robot left/right
              * @return this builder
              */
             public Builder setBreakawaySpeeds(double forward, double strafe) {
@@ -201,6 +200,7 @@ public class IntrinsicMecanumLocalizer implements Localizer {
 
             /**
              * Build the coefficients.
+             *
              * @return the coefficients
              */
             public Coefficients build() {

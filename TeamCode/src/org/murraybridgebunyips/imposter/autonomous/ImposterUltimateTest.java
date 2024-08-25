@@ -98,7 +98,7 @@ public class ImposterUltimateTest extends AutonomousBunyipsOpMode implements Roa
 //                config.frontLeft, config.frontRight, config.backLeft, config.backRight, config.localizerCoefficients,
 //                config.parallelDeadwheel, config.perpendicularDeadwheel
 //        );
-        drive = new MecanumDrive(config.driveConstants, config.mecanumCoefficients, hardwareMap.voltageSensor, config.imu, config.front_left_motor, config.front_right_motor, config.back_left_motor, config.back_right_motor);
+        drive = new MecanumDrive(config.driveConstants, config.mecanumCoefficients, config.imu, config.front_left_motor, config.front_right_motor, config.back_left_motor, config.back_right_motor);
 //        arm = new HoldableActuator(config.arm).withMovingPower(0.5);
 //        claws = new DualServos(config.leftPixel, config.rightPixel, 1.0, 0.0, 0.0, 1.0);
 //        vision = new Vision(config.webcam);

@@ -8,7 +8,6 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.jetbrains.annotations.NotNull;
-import org.murraybridgebunyips.bunyipslib.Dbg;
 import org.murraybridgebunyips.bunyipslib.drive.MecanumDrive;
 import org.murraybridgebunyips.bunyipslib.external.Mathf;
 import org.murraybridgebunyips.bunyipslib.external.pid.PIDController;
@@ -92,6 +91,33 @@ public class HolonomicVectorDriveTask extends ForeverTask {
      */
     public HolonomicVectorDriveTask(Gamepad driver, @NotNull MecanumDrive mecanumDrive, BooleanSupplier fieldCentricEnabled) {
         this(() -> driver.left_stick_x, () -> driver.left_stick_y, () -> driver.right_stick_x, mecanumDrive, fieldCentricEnabled);
+    }
+
+    /**
+     * Set the translational PID coefficients. By default it is set to your drive coefficients PID.
+     *
+     * @param kp proportional
+     * @param ki integral
+     * @param kd derivative
+     * @return this
+     */
+    public HolonomicVectorDriveTask withTranslationalPID(double kp, double ki, double kd) {
+        xController.setPID(kp, ki, kd);
+        yController.setPID(kp, ki, kd);
+        return this;
+    }
+
+    /**
+     * Set the rotational PID coefficients. By default it is set to your drive coefficients PID.
+     *
+     * @param kp proportional
+     * @param ki integral
+     * @param kd derivative
+     * @return this
+     */
+    public HolonomicVectorDriveTask withRotationalPID(double kp, double ki, double kd) {
+        rController.setPID(kp, ki, kd);
+        return this;
     }
 
     /**

@@ -113,9 +113,9 @@ public class SwitchableLocalizer implements Localizer {
                 private boolean strafeCheck;
 
                 private void update(String text) {
-                    telemetry.setValue("Localizer Auto Test in progress.\n" +
+                    telemetry.setValue("\nLocalizer Auto Test in progress.\n" +
                             "<font color='gray'>gamepad1.left_bumper to early abort and fail the test.\n" +
-                            "gamepad1.right_bumper to force pass the test.</font>\n" + text);
+                            "gamepad1.right_bumper to force pass the test.</font>\n" + text + "\n" + main.getPoseEstimate() + "\n");
                 }
 
                 @Override
@@ -215,11 +215,11 @@ public class SwitchableLocalizer implements Localizer {
                         return;
                     }
                     Pose2d curr = main.getPoseEstimate();
-                    telemetry.setValue("Localizer Test in progress.\n" +
+                    telemetry.setValue("\nLocalizer Test in progress.\n" +
                             "<font color='gray'>gamepad1.left_bumper to fail the test.\n" +
                             "gamepad1.right_bumper to pass the test. Pass the test if the below values are increasing properly.</font>\n" +
                             "Raw: " + curr + "\n" +
-                            "Error (rotated): " + capture.minus(Cartesian.rotate(Cartesian.fromPose(curr).vec(), Radians.of(curr.getHeading()).negate())));
+                            "Error (rotated): " + capture.minus(Cartesian.rotate(Cartesian.fromPose(curr).vec(), Radians.of(curr.getHeading()).negate())) + "\n");
                 }
 
                 @Override

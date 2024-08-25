@@ -3,6 +3,9 @@ package org.murraybridgebunyips.bunyipslib.drive;
 import static org.murraybridgebunyips.bunyipslib.Text.round;
 import static org.murraybridgebunyips.bunyipslib.external.units.Units.Centimeters;
 import static org.murraybridgebunyips.bunyipslib.external.units.Units.Inches;
+import static org.murraybridgebunyips.bunyipslib.external.units.Units.Milliseconds;
+
+import androidx.annotation.Nullable;
 
 import com.acmerobotics.roadrunner.drive.DriveSignal;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
@@ -14,8 +17,11 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import org.firstinspires.ftc.robotcore.internal.system.Watchdog;
 import org.murraybridgebunyips.bunyipslib.BunyipsSubsystem;
 import org.murraybridgebunyips.bunyipslib.Controls;
+import org.murraybridgebunyips.bunyipslib.Dbg;
+import org.murraybridgebunyips.bunyipslib.RoadRunner;
 import org.murraybridgebunyips.bunyipslib.Storage;
 import org.murraybridgebunyips.bunyipslib.roadrunner.drive.DriveConstants;
 import org.murraybridgebunyips.bunyipslib.roadrunner.drive.RoadRunnerDrive;
@@ -26,31 +32,51 @@ import org.murraybridgebunyips.bunyipslib.roadrunner.trajectorysequence.Trajecto
 import org.murraybridgebunyips.bunyipslib.roadrunner.trajectorysequence.TrajectorySequenceRunner;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This is the standard TankDrive class for modern BunyipsLib robots.
  * This is a component for the RoadRunner Tank Drive, integrating RoadRunner and BunyipsLib to be used
- * as a BunyipsSubsystem. As such, this allows for integrated trajectory and pose management.
+ * as a BunyipsSubsystem. As such, this allows for integrated trajectory and pose management, while using
+ * features from BunyipsLib including Task and subsystem-based allocations.
+ * <p>
+ * Note: If you'd like to use deadwheel configurations, you can set them yourself by instantiating your own localizer
+ * and setting it via {@link #setLocalizer(Localizer)}. Note pose estimate data is discarded when switching a localizer
+ * (see the {@link #updatePoseFromMemory()} method).
+ * <p>
+ * This class has an integrated safety watchdog to ensure that the drive stops and locks if no updates are being
+ * supplied. This is to prevent a runaway robot in case of a software bug or other issues, as
+ * the methods attached to this class, such as {@code setSpeedUsingController()} and {@code setWeightedDrivePower()} will
+ * propagate instantly on the drive motors. This is the only type of subsystem that has this feature as it wraps
+ * around a RoadRunner drive. Other subsystems follow this safety by default as their methods only propagate hardware
+ * when the subsystem is updated. This timeout can be changed as it is a constant in {@link RoadRunner}.
  *
  * @author Lucas Bubner, 2023
  */
 public class TankDrive extends BunyipsSubsystem implements RoadRunnerDrive {
     private final TankRoadRunnerDrive instance;
 
+    private final Watchdog benji;
+    private volatile boolean updates;
+
     /**
      * Create a new TankDrive instance.
      *
-     * @param constants    The drive constants
-     * @param coefficients The tank coefficients
-     * @param imu          The IMU
-     * @param frontLeft    The front left motor
-     * @param frontRight   The front right motor
-     * @param backLeft     The back left motor
-     * @param backRight    The back right motor
+     * @param constants    The drive constants for the robot
+     * @param coefficients The TankCoefficients for this drive
+     * @param imu          The IMU for the robot. Can be set to null if you are using three-wheel odometry.
+     * @param leftMotors   The motors on the left side of the robot (e.g. {@code Arrays.asList(fl, bl)})
+     * @param rightMotors  The motors on the right side of the robot (e.g. {@code Arrays.asList(fr, br)})
      */
-    public TankDrive(DriveConstants constants, TankCoefficients coefficients, IMU imu, DcMotorEx frontLeft, DcMotorEx frontRight, DcMotorEx backLeft, DcMotorEx backRight) {
-        assertParamsNotNull(constants, coefficients, imu, frontLeft, frontRight, backLeft, backRight);
-        instance = new TankRoadRunnerDrive(opMode.telemetry, constants, coefficients, opMode.hardwareMap.voltageSensor, imu, frontLeft, frontRight, backLeft, backRight);
+    public TankDrive(DriveConstants constants, TankCoefficients coefficients, @Nullable IMU imu, List<DcMotorEx> leftMotors, List<DcMotorEx> rightMotors) {
+        assertParamsNotNull(constants, coefficients, imu, leftMotors, rightMotors);
+        instance = new TankRoadRunnerDrive(opMode.telemetry, constants, coefficients, opMode.hardwareMap.voltageSensor, imu, leftMotors, rightMotors);
+        benji = new Watchdog(() -> {
+            if (opMode.isStopRequested()) return;
+            Dbg.warn(getClass(), "Stateful drive updates have been disabled as it has been longer than %ms since the last call to update().", RoadRunner.DRIVE_UPDATE_SAFETY_TIMEOUT.in(Milliseconds));
+            updates = false;
+            instance.stop();
+        }, 100, (long) RoadRunner.DRIVE_UPDATE_SAFETY_TIMEOUT.in(Milliseconds), TimeUnit.MILLISECONDS);
         updatePoseFromMemory();
     }
 
@@ -66,6 +92,7 @@ public class TankDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 
     @Override
     public void waitForIdle() {
+        if (isDisabled() || !updates) return;
         instance.waitForIdle();
     }
 
@@ -97,31 +124,37 @@ public class TankDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 
     @Override
     public void turnAsync(double angle) {
+        if (isDisabled() || !updates) return;
         instance.turnAsync(angle);
     }
 
     @Override
     public void turn(double angle) {
+        if (isDisabled() || !updates) return;
         instance.turn(angle);
     }
 
     @Override
     public void followTrajectoryAsync(Trajectory trajectory) {
+        if (isDisabled() || !updates) return;
         instance.followTrajectoryAsync(trajectory);
     }
 
     @Override
     public void followTrajectory(Trajectory trajectory) {
+        if (isDisabled() || !updates) return;
         instance.followTrajectory(trajectory);
     }
 
     @Override
     public void followTrajectorySequenceAsync(TrajectorySequence trajectorySequence) {
+        if (isDisabled() || !updates) return;
         instance.followTrajectorySequenceAsync(trajectorySequence);
     }
 
     @Override
     public void followTrajectorySequence(TrajectorySequence trajectorySequence) {
+        if (isDisabled() || !updates) return;
         instance.followTrajectorySequence(trajectorySequence);
     }
 
@@ -136,6 +169,15 @@ public class TankDrive extends BunyipsSubsystem implements RoadRunnerDrive {
                 round(Centimeters.convertFrom(instance.getPoseEstimate().getX(), Inches), 1),
                 round(Centimeters.convertFrom(instance.getPoseEstimate().getY(), Inches), 1),
                 round(Math.toDegrees(instance.getPoseEstimate().getHeading()), 1)).color("gray");
+
+        // Required to ensure that update() is being called before scheduling any motor updates,
+        // using a watchdog to ensure that an update is occurring at least every 200ms.
+        // Named after goober Benji, or if you don't like that name then you can
+        // call it the "Brakes Engagement Necessity Justification Initiative".
+        updates = true;
+        if (!benji.isRunning())
+            benji.start();
+        benji.stroke();
 
         instance.update();
         Storage.memory().lastKnownPosition = instance.getPoseEstimate();
@@ -163,6 +205,7 @@ public class TankDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 
     @Override
     public void setWeightedDrivePower(Pose2d drivePower) {
+        if (isDisabled() || !updates) return;
         instance.setWeightedDrivePower(drivePower);
     }
 
@@ -174,6 +217,17 @@ public class TankDrive extends BunyipsSubsystem implements RoadRunnerDrive {
     @Override
     public List<Double> getWheelVelocities() {
         return instance.getWheelVelocities();
+    }
+
+    @Override
+    public double[] getMotorPowers() {
+        return instance.getMotorPowers();
+    }
+
+    @Override
+    public void setMotorPowers(double... powers) {
+        if (isDisabled() || !updates) return;
+        instance.setMotorPowers(powers);
     }
 
     @Override
@@ -228,11 +282,13 @@ public class TankDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 
     @Override
     public void setDriveSignal(DriveSignal driveSignal) {
+        if (isDisabled() || !updates) return;
         instance.setDriveSignal(driveSignal);
     }
 
     @Override
     public void setDrivePower(Pose2d drivePower) {
+        if (isDisabled() || !updates) return;
         instance.setDrivePower(drivePower);
     }
 

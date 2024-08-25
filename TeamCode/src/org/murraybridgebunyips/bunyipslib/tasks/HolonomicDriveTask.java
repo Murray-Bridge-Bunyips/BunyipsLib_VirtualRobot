@@ -1,20 +1,22 @@
 package org.murraybridgebunyips.bunyipslib.tasks;
 
+import static org.murraybridgebunyips.bunyipslib.external.units.Units.Radians;
+
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.jetbrains.annotations.NotNull;
-import org.murraybridgebunyips.bunyipslib.*;
+import org.murraybridgebunyips.bunyipslib.BunyipsSubsystem;
+import org.murraybridgebunyips.bunyipslib.Cartesian;
+import org.murraybridgebunyips.bunyipslib.Controls;
+import org.murraybridgebunyips.bunyipslib.EmergencyStop;
 import org.murraybridgebunyips.bunyipslib.drive.CartesianMecanumDrive;
 import org.murraybridgebunyips.bunyipslib.drive.MecanumDrive;
 import org.murraybridgebunyips.bunyipslib.tasks.bases.ForeverTask;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
-
-import static org.murraybridgebunyips.bunyipslib.external.units.Units.Radians;
 
 /**
  * Standard gamepad drive for all holonomic drivetrains.
@@ -69,7 +71,6 @@ public class HolonomicDriveTask extends ForeverTask {
     @Override
     protected void periodic() {
         if (drive instanceof MecanumDrive) {
-            ((MecanumDrive) drive).setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             if (fieldCentricEnabled.getAsBoolean()) {
                 Vector2d cVec = Controls.makeCartesianVector(x.get(), y.get());
                 ((MecanumDrive) drive).setWeightedDrivePower(new Pose2d(
@@ -80,7 +81,6 @@ public class HolonomicDriveTask extends ForeverTask {
                 ((MecanumDrive) drive).setSpeedUsingController(x.get(), y.get(), r.get());
             }
         } else if (drive instanceof CartesianMecanumDrive) {
-            ((CartesianMecanumDrive) drive).setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             ((CartesianMecanumDrive) drive).setSpeedUsingController(x.get(), y.get(), r.get());
         }
     }

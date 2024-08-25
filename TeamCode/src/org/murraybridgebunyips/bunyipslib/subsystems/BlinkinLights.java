@@ -60,6 +60,17 @@ public class BlinkinLights extends BunyipsSubsystem {
     }
 
     /**
+     * Set the current pattern. Will internally cancel any running task on this subsystem.
+     *
+     * @param pattern the pattern to update to.
+     */
+    public void forceSetPattern(RevBlinkinLedDriver.BlinkinPattern pattern) {
+        if (!(getCurrentTask() instanceof IdleTask))
+            cancelCurrentTask();
+        currentPattern = pattern;
+    }
+
+    /**
      * Reset the pattern back to the default. Will no-op if a task is running on this subsystem.
      */
     public void resetPattern() {
@@ -103,9 +114,7 @@ public class BlinkinLights extends BunyipsSubsystem {
          * @return a task to set the pattern for a duration
          */
         public Task setPatternFor(Measure<Time> duration, RevBlinkinLedDriver.BlinkinPattern pattern) {
-            return new RunForTask(duration, () -> {
-                if (getCurrentTask() instanceof IdleTask) currentPattern = pattern;
-            }, BlinkinLights.this::resetPattern)
+            return new RunForTask(duration, () -> currentPattern = pattern, () -> currentPattern = defaultPattern)
                     .onSubsystem(BlinkinLights.this, true)
                     .withName("Lights:" + pattern.name());
         }

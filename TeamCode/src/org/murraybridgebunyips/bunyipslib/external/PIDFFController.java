@@ -1,12 +1,15 @@
 package org.murraybridgebunyips.bunyipslib.external;
 
 import org.murraybridgebunyips.bunyipslib.Encoder;
+import org.murraybridgebunyips.bunyipslib.Motor;
 import org.murraybridgebunyips.bunyipslib.external.pid.PIDController;
+import org.murraybridgebunyips.bunyipslib.external.pid.PIDFController;
 
 import java.util.Arrays;
 
 /**
- * A composite controller to use for PID/FF controls (with kV/kA calculated components) for error calculation.
+ * A composite controller to use for PID+FF controls (with kV/kA calculated components). This controller is compatible
+ * with any error-correction need, including RUN_TO_POSIITON and RUN_USING_ENCODER modes in {@link Motor}.
  * <p>
  * To use an ArmFeedforward, consider using the {@link ArmController}, which will properly integrate the cosine of
  * the arm position as part of your feedforward during a RUN_TO_POSITION.
@@ -14,7 +17,7 @@ import java.util.Arrays;
  * @author Lucas Bubner, 2024
  * @see ArmController
  */
-public class PIDFFController implements SystemController {
+public class PIDFFController implements SystemController, PIDF {
     private final PIDController pid;
     private final Encoder encoder;
     private final SystemController ff;
@@ -23,13 +26,25 @@ public class PIDFFController implements SystemController {
      * Construct a new PIDFFController.
      *
      * @param pid     the PID controller to use
-     * @param encoder the encoder to retrieve velocity/acceleration information from
      * @param ff      the kV/kA feedforward to use
+     * @param encoder the encoder to retrieve velocity/acceleration information from
      */
-    public PIDFFController(PIDController pid, Encoder encoder, SystemController ff) {
+    public PIDFFController(PIDController pid, SystemController ff, Encoder encoder) {
         this.pid = pid;
-        this.encoder = encoder;
         this.ff = ff;
+        this.encoder = encoder;
+    }
+
+    @Override
+    public double[] getCoefficients() {
+        double[] ffCoeffs = ff.getCoefficients();
+        double[] pidCoeffs = pid.getCoefficients();
+
+        double[] coeffs = new double[ffCoeffs.length + pidCoeffs.length];
+        System.arraycopy(pidCoeffs, 0, coeffs, 0, pidCoeffs.length);
+        System.arraycopy(ffCoeffs, 0, coeffs, pidCoeffs.length, ffCoeffs.length);
+
+        return coeffs;
     }
 
     @Override
@@ -46,9 +61,26 @@ public class PIDFFController implements SystemController {
         return pid.calculate(current, target) + ff.calculate(encoder.getVelocity(), encoder.getAcceleration());
     }
 
+    /**
+     * Alternative calculate method where the feedforward component will be assumed to be a velocity, allowing
+     * your feedforward to react faster. This is internally called in {@link Motor} via a type check.
+     *
+     * @param currentVelo current velocity
+     * @param targetVelo  target velocity, will be used instead of the encoder velocity for feedforward
+     * @return calculated controller output
+     */
+    public double calculateVelo(double currentVelo, double targetVelo) {
+        return pid.calculate(currentVelo, targetVelo) + ff.calculate(targetVelo, encoder.getAcceleration());
+    }
+
     @Override
     public void reset() {
         pid.reset();
         ff.reset();
+    }
+
+    @Override
+    public PIDFController getPIDFController() {
+        return pid;
     }
 }

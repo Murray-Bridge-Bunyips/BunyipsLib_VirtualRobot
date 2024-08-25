@@ -65,10 +65,6 @@ public abstract class BunyipsSubsystem extends BunyipsComponent {
         }
     }
 
-    public final boolean isDisabled() {
-        return !shouldRun;
-    }
-
     /**
      * @return a status string of this subsystem
      */
@@ -105,6 +101,13 @@ public abstract class BunyipsSubsystem extends BunyipsComponent {
      */
     public final boolean isDefaultName() {
         return name.equals(getClass().getSimpleName());
+    }
+
+    /**
+     * @return whether this subsystem has been commanded to disable and should not execute any stateful updates
+     */
+    public final boolean isDisabled() {
+        return !shouldRun;
     }
 
     /**
