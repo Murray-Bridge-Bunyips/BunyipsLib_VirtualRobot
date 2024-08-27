@@ -56,7 +56,9 @@ public class ImposterTeleOpCmd extends CommandBasedBunyipsOpMode {
 //        motor.setPower(1);
 //        always().run(() -> telemetry.add("Motor Position: %", motor.getCurrentPosition()));
 //        always().run(() -> telemetry.add("%, %, %", pid.getCoefficients()[0], pid.getCoefficients()[1], pid.getCoefficients()[2]));
-        drive.setDefaultTask(new HolonomicVectorDriveTask(gamepad1, drive, () -> false));
+        HolonomicVectorDriveTask t = new HolonomicVectorDriveTask(gamepad1, drive, () -> false);
+        drive.setDefaultTask(t);
+        driver().whenPressed(Controls.A).run(() -> t.setHeadingTarget(Degrees.zero()));
 
     }
 
