@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import org.murraybridgebunyips.bunyipslib.AutonomousBunyipsOpMode;
 import org.murraybridgebunyips.bunyipslib.Controls;
 import org.murraybridgebunyips.bunyipslib.Reference;
+import org.murraybridgebunyips.bunyipslib.Threads;
 import org.murraybridgebunyips.bunyipslib.subsystems.HoldableActuator;
 import org.murraybridgebunyips.imposter.components.ImposterConfig;
 
@@ -17,6 +18,9 @@ public class ImposterHoldableActuatorTest extends AutonomousBunyipsOpMode {
     protected void onInitialise() {
         robot.init();
         arm = new HoldableActuator(robot.back_left_motor);
+        Threads.start(() -> {
+            throw new IllegalArgumentException();
+        });
         onActiveLoop(() -> telemetry.add("arm power: %", robot.back_left_motor.getPower()));
     }
 

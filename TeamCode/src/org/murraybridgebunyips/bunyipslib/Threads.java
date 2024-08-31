@@ -2,6 +2,8 @@ package org.murraybridgebunyips.bunyipslib;
 
 import static org.murraybridgebunyips.bunyipslib.external.units.Units.Milliseconds;
 
+import androidx.annotation.NonNull;
+
 import org.murraybridgebunyips.bunyipslib.external.units.Measure;
 import org.murraybridgebunyips.bunyipslib.external.units.Time;
 
@@ -16,6 +18,8 @@ import java.util.HashMap;
  */
 public final class Threads {
     private static final HashMap<Integer, Thread> threads = new HashMap<>();
+    private static final Thread.UncaughtExceptionHandler exceptionHandler = (t, e) ->
+            Exceptions.handle(e, BunyipsOpMode.isRunning() ? BunyipsOpMode.getInstance().telemetry::log : null);
 
     private Threads() {
     }
@@ -30,6 +34,7 @@ public final class Threads {
         Dbg.logd(Threads.class, "starting new thread: % ...", name);
         Thread thread = new Thread(task);
         thread.setName(name);
+        thread.setUncaughtExceptionHandler(exceptionHandler);
         thread.start();
         threads.put(task.hashCode(), thread);
     }
@@ -56,6 +61,7 @@ public final class Threads {
             }
         });
         thread.setName(name);
+        thread.setUncaughtExceptionHandler(exceptionHandler);
         thread.start();
         threads.put(task.hashCode(), thread);
     }
