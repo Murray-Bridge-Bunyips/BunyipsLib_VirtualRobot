@@ -3,6 +3,7 @@ package org.murraybridgebunyips.imposter.teleop;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.util.Angle;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.murraybridgebunyips.bunyipslib.*;
 import org.murraybridgebunyips.bunyipslib.Scheduler;
 import org.murraybridgebunyips.bunyipslib.BunyipsOpMode;
@@ -12,11 +13,14 @@ import org.murraybridgebunyips.bunyipslib.subsystems.IMUOp;
 import org.murraybridgebunyips.bunyipslib.tasks.HolonomicDriveTask;
 import org.murraybridgebunyips.imposter.components.ImposterConfig;
 
+import static org.murraybridgebunyips.bunyipslib.external.units.Units.Degrees;
+
 @TeleOp
 public class ImposterTeleOpSimple extends BunyipsOpMode {
     private final ImposterConfig config = new ImposterConfig();
     private CartesianMecanumDrive drive;
     private Scheduler scheduler;
+    private IMUOp imu;
 
     @Override
     protected void onInit() {
@@ -26,12 +30,17 @@ public class ImposterTeleOpSimple extends BunyipsOpMode {
         drive = new CartesianFieldCentricMecanumDrive(config.front_left_motor, config.front_right_motor, config.back_left_motor, config.back_right_motor, config.imu, false, Direction.FORWARD);
         scheduler.addSubsystems(drive);
         drive.setDefaultTask(new HolonomicDriveTask(gamepad1, drive, () -> false));
+        imu = new IMUOp(config.imu);
+        imu.setYawOffset(Degrees.of(90));
+        imu.setYawDomain(IMUOp.YawDomain.UNSIGNED);
 //        scheduler.when(() -> drive.speedX != 0.0 || drive.speedY != 0.0 || drive.speedR != 0.0)
 //                .runDebounced(() -> log("Drive has started moving at % seconds.", getRuntime()));
     }
 
     @Override
     protected void activeLoop() {
+        imu.update();
+        telemetry.add(imu.yaw.in(Degrees));
         scheduler.run();
     }
 }
