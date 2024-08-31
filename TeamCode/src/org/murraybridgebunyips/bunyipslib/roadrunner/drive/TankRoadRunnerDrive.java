@@ -48,6 +48,8 @@ import java.util.stream.Stream;
  * and is wrapped to be a {@link BunyipsSubsystem} via {@link TankDrive}. Use the {@link TankDrive} class
  * to use this drive in a {@link BunyipsOpMode}. This class requires you pass in an instance of {@link DriveConstants},
  * which has been adapted to allow multiple configurations for any drive.
+ *
+ * @since 1.0.0-pre
  */
 public class TankRoadRunnerDrive extends com.acmerobotics.roadrunner.drive.TankDrive implements RoadRunnerDrive {
     private final DriveConstants constants;
@@ -77,7 +79,7 @@ public class TankRoadRunnerDrive extends com.acmerobotics.roadrunner.drive.TankD
      * @param leftMotors    The motors on the left side of the robot (e.g. {@code Arrays.asList(fl, bl)})
      * @param rightMotors   The motors on the right side of the robot (e.g. {@code Arrays.asList(fr, br)})
      */
-    public TankRoadRunnerDrive(DriveConstants constants, TankCoefficients coefficients, HardwareMap.DeviceMapping<VoltageSensor> voltageSensor, IMU imu, List<DcMotorEx> leftMotors, List<DcMotorEx> rightMotors) {
+    public TankRoadRunnerDrive(DriveConstants constants, TankCoefficients coefficients, HardwareMap.DeviceMapping<VoltageSensor> voltageSensor, IMU imu, List<DcMotor> leftMotors, List<DcMotor> rightMotors) {
         this(null, constants, coefficients, voltageSensor, imu, leftMotors, rightMotors);
     }
 
@@ -92,7 +94,7 @@ public class TankRoadRunnerDrive extends com.acmerobotics.roadrunner.drive.TankD
      * @param leftMotors    The motors on the left side of the robot (e.g. {@code Arrays.asList(fl, bl)})
      * @param rightMotors   The motors on the right side of the robot (e.g. {@code Arrays.asList(fr, br)})
      */
-    public TankRoadRunnerDrive(@Nullable DualTelemetry telemetry, DriveConstants constants, TankCoefficients coefficients, HardwareMap.DeviceMapping<VoltageSensor> voltageSensor, IMU imu, List<DcMotorEx> leftMotors, List<DcMotorEx> rightMotors) {
+    public TankRoadRunnerDrive(@Nullable DualTelemetry telemetry, DriveConstants constants, TankCoefficients coefficients, HardwareMap.DeviceMapping<VoltageSensor> voltageSensor, IMU imu, List<DcMotor> leftMotors, List<DcMotor> rightMotors) {
         super(constants.kV, constants.kA, constants.kStatic, constants.TRACK_WIDTH);
 
         follower = new TankPIDVAFollower(coefficients.AXIAL_PID, coefficients.CROSS_TRACK_PID,
@@ -109,12 +111,14 @@ public class TankRoadRunnerDrive extends com.acmerobotics.roadrunner.drive.TankD
         // Assumes IMU is initialised from RobotConfig
         this.imu = imu;
 
-        motors = Stream.concat(leftMotors.stream(), rightMotors.stream())
-                .map(Objects::requireNonNull)
+        this.leftMotors = leftMotors.stream()
+                .map((m) -> Objects.requireNonNull((DcMotorEx) m))
                 .collect(Collectors.toList());
-
-        this.leftMotors = leftMotors;
-        this.rightMotors = rightMotors;
+        this.rightMotors = rightMotors.stream()
+                .map((m) -> Objects.requireNonNull((DcMotorEx) m))
+                .collect(Collectors.toList());
+        motors = Stream.concat(this.leftMotors.stream(), this.rightMotors.stream())
+                .collect(Collectors.toList());
 
         for (DcMotorEx motor : motors) {
             MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();

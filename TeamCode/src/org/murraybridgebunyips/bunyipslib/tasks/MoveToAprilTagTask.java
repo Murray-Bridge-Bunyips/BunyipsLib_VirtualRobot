@@ -28,6 +28,7 @@ import java.util.function.DoubleSupplier;
  * Task to move to and align to an AprilTag.
  *
  * @author Lucas Bubner, 2024
+ * @since 1.0.0-pre
  */
 @Config
 public class MoveToAprilTagTask extends Task {
@@ -251,11 +252,6 @@ public class MoveToAprilTagTask extends Task {
                         Range.clip(headingError, -MAX_AUTO_TURN, MAX_AUTO_TURN)
                 )
         );
-    }
-
-    @Override
-    protected void onFinish() {
-//        drive.setSpeedUsingController(0, 0, 0);
     }
 
     @Override

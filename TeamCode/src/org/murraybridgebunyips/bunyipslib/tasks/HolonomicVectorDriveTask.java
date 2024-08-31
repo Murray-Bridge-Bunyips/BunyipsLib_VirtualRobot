@@ -43,6 +43,7 @@ import java.util.function.Supplier;
  * coefficients such as your PID. Therefore, the only supported class this task will work for is {@link MecanumDrive}.
  *
  * @author Lucas Bubner, 2024
+ * @since 4.0.0
  */
 public class HolonomicVectorDriveTask extends ForeverTask {
     private final MecanumDrive drive;
@@ -170,7 +171,7 @@ public class HolonomicVectorDriveTask extends ForeverTask {
      * and is to try and hold rotation. Note that user input will override this lock, this
      * simply tells the task to respect this value as the locking value.
      *
-     * @param heading the angle to rotate to, will be wrapped from [0, 2pi]
+     * @param heading the angle to rotate to, will be wrapped from [0, 2pi] radians
      */
     public void setHeadingTarget(Measure<Angle> heading) {
         headingLock = Mathf.normaliseAngle(heading).in(Radians);
@@ -182,7 +183,7 @@ public class HolonomicVectorDriveTask extends ForeverTask {
      * simply tells the task to respect this value as the locking value.
      *
      * @param forwardX Forward X component of the locking vector
-     * @param strafeY Strafe Y component of the locking vector
+     * @param strafeY  Strafe Y component of the locking vector
      */
     public void setVectorTarget(Measure<Distance> forwardX, Measure<Distance> strafeY) {
         vectorLock = new Vector2d(forwardX.in(Inches), strafeY.in(Inches));
@@ -197,6 +198,7 @@ public class HolonomicVectorDriveTask extends ForeverTask {
     @Override
     protected void periodic() {
         Pose2d current = drive.getPoseEstimate();
+
         // Create a new pose based off the user input, which will be the offset from the current pose.
         // Must rotate by 90 degrees (y, -x), then flip y as it is inverted. Rotation must also be inverted as it
         // must be positive anticlockwise.

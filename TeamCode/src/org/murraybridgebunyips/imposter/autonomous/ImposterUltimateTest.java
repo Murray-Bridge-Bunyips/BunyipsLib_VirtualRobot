@@ -31,7 +31,7 @@ import org.murraybridgebunyips.bunyipslib.subsystems.DualServos;
 import org.murraybridgebunyips.bunyipslib.subsystems.HoldableActuator;
 import org.murraybridgebunyips.bunyipslib.tasks.DriveToPoseTask;
 import org.murraybridgebunyips.bunyipslib.tasks.DynamicTask;
-import org.murraybridgebunyips.bunyipslib.tasks.GetTriPositionContourTask;
+import org.murraybridgebunyips.bunyipslib.tasks.GetDualSplitContourTask;
 import org.murraybridgebunyips.bunyipslib.tasks.WaitTask;
 import org.murraybridgebunyips.bunyipslib.tasks.groups.ParallelTaskGroup;
 import org.murraybridgebunyips.bunyipslib.vision.AprilTagPoseEstimator;

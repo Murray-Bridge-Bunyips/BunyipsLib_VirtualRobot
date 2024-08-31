@@ -5,13 +5,13 @@ import org.jetbrains.annotations.NotNull;
 import org.murraybridgebunyips.bunyipslib.roadrunner.drive.MecanumRoadRunnerDrive;
 import org.murraybridgebunyips.bunyipslib.roadrunner.drive.RoadRunnerDrive;
 import org.murraybridgebunyips.bunyipslib.roadrunner.drive.localizers.ThreeWheelLocalizer;
-import org.murraybridgebunyips.bunyipslib.roadrunner.drive.tuning.RoadRunnerTuning;
+import org.murraybridgebunyips.bunyipslib.roadrunner.drive.tuning.RoadRunnerTuningOpMode;
 import org.murraybridgebunyips.imposter.components.ImposterConfig;
 
 import java.util.ArrayList;
 
 @TeleOp
-public class ImposterRRTuning extends RoadRunnerTuning {
+public class ImposterRRTuning extends RoadRunnerTuningOpMode {
     @NotNull
     @Override
     protected RoadRunnerDrive getBaseRoadRunnerDrive() {

@@ -27,8 +27,9 @@ import java.util.ArrayList;
  * You will need to make a new OpMode that extends this class.
  *
  * @author Lucas Bubner, 2024
+ * @since 1.0.0-pre
  */
-public abstract class PathRecorder extends BunyipsOpMode {
+public abstract class PathRecorderOpMode extends BunyipsOpMode {
     private final ArrayList<Pose2d> path = new ArrayList<>();
     private final ElapsedTime timer = new ElapsedTime();
     private RoadRunnerDrive drive;

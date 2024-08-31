@@ -28,8 +28,10 @@ import java.util.List;
 
 /**
  * Global filesystem and volatile storage utilities for robot operation.
+ * <b>***NOTE: IN THE VIRTUAL ROBOT CONFIGURATION, THE FILESYSTEM IS NOT SUPPORTED.***</b>
  *
  * @author Lucas Bubner, 2024
+ * @since 3.2.0
  */
 public final class Storage {
     private static Memory memory = null;

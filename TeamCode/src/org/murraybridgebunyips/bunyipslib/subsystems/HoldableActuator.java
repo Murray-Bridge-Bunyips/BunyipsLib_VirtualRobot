@@ -30,6 +30,7 @@ import java.util.function.DoubleSupplier;
  * but will hold its position when the input is released.
  *
  * @author Lucas Bubner, 2024
+ * @since 1.0.0-pre
  */
 public class HoldableActuator extends BunyipsSubsystem {
     /**
@@ -73,14 +74,14 @@ public class HoldableActuator extends BunyipsSubsystem {
      *
      * @param motor the motor to control
      */
-    public HoldableActuator(DcMotorEx motor) {
+    public HoldableActuator(DcMotor motor) {
         if (!assertParamsNotNull(motor)) return;
-        this.motor = motor;
+        this.motor = (DcMotorEx) motor;
         // Assumes current arm position is the zero position, the user may home manually if required using setInitTask
-        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor.setTargetPosition(0);
-        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motor.setPower(HOLDING_POWER);
+        this.motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        this.motor.setTargetPosition(0);
+        this.motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        this.motor.setPower(HOLDING_POWER);
     }
 
     /**

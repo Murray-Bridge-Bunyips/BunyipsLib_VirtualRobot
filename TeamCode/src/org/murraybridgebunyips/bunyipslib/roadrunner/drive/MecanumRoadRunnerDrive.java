@@ -41,6 +41,8 @@ import java.util.List;
  * and is wrapped to be a {@link BunyipsSubsystem} via {@link MecanumDrive}. Use the {@link MecanumDrive} class
  * to use this drive in a {@link BunyipsOpMode}. This class requires you pass in an instance of {@link DriveConstants},
  * which has been adapted to allow multiple configurations for any drive.
+ *
+ * @since 1.0.0-pre
  */
 public class MecanumRoadRunnerDrive extends com.acmerobotics.roadrunner.drive.MecanumDrive implements RoadRunnerDrive {
     private final DriveConstants constants;
@@ -71,7 +73,7 @@ public class MecanumRoadRunnerDrive extends com.acmerobotics.roadrunner.drive.Me
      * @param bl            The back left motor.
      * @param br            The back right motor.
      */
-    public MecanumRoadRunnerDrive(DriveConstants constants, MecanumCoefficients coefficients, HardwareMap.DeviceMapping<VoltageSensor> voltageSensor, @Nullable IMU imu, DcMotorEx fl, DcMotorEx fr, DcMotorEx bl, DcMotorEx br) {
+    public MecanumRoadRunnerDrive(DriveConstants constants, MecanumCoefficients coefficients, HardwareMap.DeviceMapping<VoltageSensor> voltageSensor, @Nullable IMU imu, DcMotor fl, DcMotor fr, DcMotor bl, DcMotor br) {
         this(null, constants, coefficients, voltageSensor, imu, fl, fr, bl, br);
     }
 
@@ -88,7 +90,7 @@ public class MecanumRoadRunnerDrive extends com.acmerobotics.roadrunner.drive.Me
      * @param bl            The back left motor.
      * @param br            The back right motor.
      */
-    public MecanumRoadRunnerDrive(@Nullable DualTelemetry telemetry, DriveConstants constants, MecanumCoefficients coefficients, HardwareMap.DeviceMapping<VoltageSensor> voltageSensor, @Nullable IMU imu, DcMotorEx fl, DcMotorEx fr, DcMotorEx bl, DcMotorEx br) {
+    public MecanumRoadRunnerDrive(@Nullable DualTelemetry telemetry, DriveConstants constants, MecanumCoefficients coefficients, HardwareMap.DeviceMapping<VoltageSensor> voltageSensor, @Nullable IMU imu, DcMotor fl, DcMotor fr, DcMotor bl, DcMotor br) {
         super(constants.kV, constants.kA, constants.kStatic, constants.TRACK_WIDTH, constants.TRACK_WIDTH, coefficients.LATERAL_MULTIPLIER);
 
         follower = new HolonomicPIDVAFollower(coefficients.TRANSLATIONAL_PID, coefficients.TRANSLATIONAL_PID, coefficients.HEADING_PID,
@@ -107,10 +109,10 @@ public class MecanumRoadRunnerDrive extends com.acmerobotics.roadrunner.drive.Me
         // Assumes IMU was initialised from RobotConfig
         this.imu = imu;
 
-        leftFront = fl;
-        leftRear = bl;
-        rightRear = br;
-        rightFront = fr;
+        leftFront = (DcMotorEx) fl;
+        leftRear = (DcMotorEx) bl;
+        rightRear = (DcMotorEx) br;
+        rightFront = (DcMotorEx) fr;
 
         motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
 

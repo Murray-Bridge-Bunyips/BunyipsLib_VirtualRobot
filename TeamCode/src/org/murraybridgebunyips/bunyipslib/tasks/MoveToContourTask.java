@@ -24,6 +24,7 @@ import java.util.function.DoubleSupplier;
  * Task to move to and align to a contour using the vision system.
  *
  * @author Lucas Bubner, 2024
+ * @since 1.0.0-pre
  */
 @Config
 public class MoveToContourTask extends Task {
@@ -155,11 +156,6 @@ public class MoveToContourTask extends Task {
         } else {
             drive.setWeightedDrivePower(pose);
         }
-    }
-
-    @Override
-    protected void onFinish() {
-//        drive.setSpeedUsingController(0, 0, 0);
     }
 
     @Override

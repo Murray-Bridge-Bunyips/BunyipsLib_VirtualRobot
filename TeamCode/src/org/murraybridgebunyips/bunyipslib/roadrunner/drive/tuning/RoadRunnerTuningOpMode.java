@@ -51,9 +51,10 @@ import java.util.Objects;
  * and by applying the tuning process for RoadRunner v0.5.
  *
  * @author Lucas Bubner, 2024
+ * @since 4.0.0
  */
 @Config
-public abstract class RoadRunnerTuning extends LinearOpMode {
+public abstract class RoadRunnerTuningOpMode extends LinearOpMode {
     // Tuning procedures are exposed as public static fields so FtcDashboard can change internally public properties,
     // with documentation of their operation being attached to their actual classes, not these instances.
     // These tests are ordered in the general tuning process order, minus LocalizationTest which is usually run whenever.
@@ -182,6 +183,7 @@ public abstract class RoadRunnerTuning extends LinearOpMode {
 
         // Defer the OpMode to the tuning OpMode now, it is confirmed to be safe to cast
         out.setOpModeStatus(html().bold(selection[0].getClass().getSimpleName()).toString());
+        out.update();
         ((TriConsumer<LinearOpMode, DualTelemetry, RoadRunnerDrive>) selection[0])
                 .accept(this, out, drive);
     }

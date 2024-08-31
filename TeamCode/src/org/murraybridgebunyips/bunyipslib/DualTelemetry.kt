@@ -25,6 +25,7 @@ import kotlin.math.roundToInt
  * This is used internally by [BunyipsOpMode] to be accessible by the overridden `telemetry` field.
  *
  * @author Lucas Bubner, 2024
+ * @since 1.0.0-pre
  */
 @Config
 class DualTelemetry @JvmOverloads constructor(
@@ -161,7 +162,7 @@ class DualTelemetry @JvmOverloads constructor(
      * @return The telemetry item added to the Driver Station, null if the send failed from overflow
      */
     override fun addData(caption: String, format: String, vararg args: Any): Item {
-        return add(caption + dashboardCaptionValueAutoSeparator + format, args)
+        return add(caption + dashboardCaptionValueAutoSeparator + format, *args)
     }
 
     /**
@@ -865,7 +866,7 @@ class DualTelemetry @JvmOverloads constructor(
             level = DeprecationLevel.ERROR
         )
         override fun addData(caption: String, format: String, vararg args: Any): Item? {
-            return item?.addData(caption, format, args)
+            return item?.addData(caption, format, *args)
         }
 
         /**

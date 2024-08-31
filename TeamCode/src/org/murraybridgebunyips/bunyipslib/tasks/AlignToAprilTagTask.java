@@ -24,6 +24,7 @@ import java.util.function.DoubleSupplier;
  * Task to align to an AprilTag.
  *
  * @author Lucas Bubner, 2024
+ * @since 1.0.0-pre
  */
 @Config
 public class AlignToAprilTagTask extends Task {
@@ -140,11 +141,6 @@ public class AlignToAprilTagTask extends Task {
                 )
         );
         hasCalculated = true;
-    }
-
-    @Override
-    protected void onFinish() {
-//        drive.setSpeedUsingController(0, 0, 0);
     }
 
     @Override

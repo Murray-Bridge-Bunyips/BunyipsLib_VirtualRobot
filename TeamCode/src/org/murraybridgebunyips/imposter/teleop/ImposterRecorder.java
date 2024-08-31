@@ -4,12 +4,12 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.murraybridgebunyips.bunyipslib.drive.TriDeadwheelMecanumDrive;
-import org.murraybridgebunyips.bunyipslib.roadrunner.PathRecorder;
+import org.murraybridgebunyips.bunyipslib.roadrunner.PathRecorderOpMode;
 import org.murraybridgebunyips.bunyipslib.roadrunner.drive.RoadRunnerDrive;
 import org.murraybridgebunyips.imposter.components.ImposterConfig;
 
 @TeleOp
-public class ImposterRecorder extends PathRecorder {
+public class ImposterRecorder extends PathRecorderOpMode {
     private ImposterConfig config = new ImposterConfig();
 
     @Override
