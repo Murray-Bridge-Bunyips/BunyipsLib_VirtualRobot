@@ -1,8 +1,6 @@
 package com.qualcomm.robotcore.util;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.*;
 
 public class ThreadPool {
     public static ExecutorService newFixedThreadPool(int i, String name) {
@@ -12,4 +10,11 @@ public class ThreadPool {
     {
         return new ScheduledThreadPoolExecutor(maxWorkerThreadCount);
     }
+//    private static ExecutorService defaultExecutor = null;
+//    public static ExecutorService getDefault() {
+//        if (defaultExecutor == null) {
+//            defaultExecutor = new ThreadPoolExecutor(0, 1000, 30L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
+//        }
+//        return defaultExecutor;
+//    }
 }
