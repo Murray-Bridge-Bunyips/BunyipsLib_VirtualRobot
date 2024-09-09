@@ -14,6 +14,8 @@ import org.murraybridgebunyips.bunyipslib.tasks.groups.ParallelTaskGroup;
 import org.murraybridgebunyips.imposter.components.ImposterConfig;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
+
 import static org.murraybridgebunyips.bunyipslib.external.units.Units.*;
 
 @Autonomous
@@ -27,7 +29,8 @@ public class ImposterRoadRunnerTest extends AutonomousBunyipsOpMode implements R
         drive = new MecanumDrive(config.driveConstants, config.mecanumCoefficients, config.imu, config.front_left_motor, config.front_right_motor, config.back_left_motor, config.back_right_motor);
 //        drive.setLocalizer(new IntrinsicMecanumLocalizer(new IntrinsicMecanumLocalizer.Coefficients.Builder().setMultiplier(365.76 / 11.0).build(), drive));
 //        drive = new TriDeadwheelMecanumDrive(config.driveConstants, config.mecanumCoefficients, config.imu, config.front_left_motor, config.front_right_motor, config.back_left_motor, config.back_right_motor, config.localizerCoefficients, config.enc_left, config.enc_right, config.enc_x);
-        setOpModes(StartingPositions.use());
+//        setOpModes(StartingPositions.use());
+        setOpModes(Arrays.stream(StartingPositions.values()).map(StartingPositions::toStartingConfiguration).toArray());
         setInitTask(new WaitTask(Seconds.of(1), false));
     }
 
