@@ -2,6 +2,7 @@ package org.murraybridgebunyips.bunyipslib
 
 import com.acmerobotics.roadrunner.geometry.Pose2d
 import org.apache.commons.math3.exception.OutOfRangeException
+import org.apache.commons.math3.exception.util.LocalizedFormats
 import org.murraybridgebunyips.bunyipslib.StartingConfiguration.Alliance.BLUE
 import org.murraybridgebunyips.bunyipslib.StartingConfiguration.Alliance.RED
 import org.murraybridgebunyips.bunyipslib.StartingConfiguration.Origin.LEFT
@@ -10,9 +11,7 @@ import org.murraybridgebunyips.bunyipslib.Text.formatString
 import org.murraybridgebunyips.bunyipslib.external.units.Angle
 import org.murraybridgebunyips.bunyipslib.external.units.Distance
 import org.murraybridgebunyips.bunyipslib.external.units.Measure
-import org.murraybridgebunyips.bunyipslib.external.units.Units.Degrees
-import org.murraybridgebunyips.bunyipslib.external.units.Units.Feet
-import org.murraybridgebunyips.bunyipslib.external.units.Units.FieldTiles
+import org.murraybridgebunyips.bunyipslib.external.units.Units.*
 import java.util.Locale
 
 /**
@@ -107,6 +106,21 @@ object StartingConfiguration {
          */
         fun invert(): Position {
             return Position(alliance.invert(), origin.invert(), backwardTranslation, horizontalTranslation, ccwRotation)
+        }
+
+        /**
+         * Return an informative string about this starting configuration.
+         */
+        fun toVerboseString(): String {
+            return formatString(
+                "{alliance=%, origin=%, backwardTranslation=%, horizontalTranslation=%, ccwRotation=%, fieldPose=%}",
+                alliance.name,
+                origin.name,
+                backwardTranslation,
+                horizontalTranslation,
+                ccwRotation,
+                toFieldPose()
+            )
         }
 
         /**
@@ -241,7 +255,7 @@ object StartingConfiguration {
          */
         fun tile(tileFromOrigin: Double): PrebuiltPosition {
             if (tileFromOrigin < 0.5 || tileFromOrigin > 6.5)
-                throw OutOfRangeException(tileFromOrigin, 0.5, 6.5)
+                throw OutOfRangeException(LocalizedFormats.OUT_OF_RANGE_SIMPLE, tileFromOrigin, 0.5, 6.5)
             translate(FieldTiles.one().divide(2.0).plus(FieldTiles.one().times(tileFromOrigin - 1)))
             return PrebuiltPosition()
         }
