@@ -41,7 +41,7 @@ public class ImposterRoadRunnerTest extends AutonomousBunyipsOpMode implements R
             return;
         }
         Dbg.log(selectedButton);
-        StartingPositions startingPosition = (StartingPositions) selectedOpMode.require();
+        StartingPositions startingPosition = ((StartingConfiguration.Position) selectedOpMode.require()).toStartingPosition();
         setPose(startingPosition.getPose());
         Reference<TrajectorySequence> blueLeft = Reference.empty();
         Reference<TrajectorySequence> blueRight = Reference.empty();
