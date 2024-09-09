@@ -16,7 +16,6 @@ public class ImposterStartingConfTest extends AutonomousBunyipsOpMode {
     protected void onInitialise() {
         setOpModes(
                 blueLeft().tile(4).rotate(Degrees.of(45)),
-                blueRight().translate(Centimeters.of(15)),
                 blueRight().translate(Centimeters.of(15)).backward(Inches.of(5)),
                 redLeft().tile(5.5).rotate(Degrees.of(90)),
                 redRight().tile(2).rotate(Degrees.of(90)).backward(Centimeters.of(3))
@@ -25,6 +24,6 @@ public class ImposterStartingConfTest extends AutonomousBunyipsOpMode {
 
     @Override
     protected void onReady(@Nullable Reference<?> selectedOpMode, Controls selectedButton) {
-        telemetry.log(((StartingConfiguration.Position)selectedOpMode.require()).toVerboseString());
+        telemetry.log(((StartingConfiguration.Position)selectedOpMode.require()).toFieldPose());
     }
 }
