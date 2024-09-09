@@ -55,9 +55,9 @@ import java.util.concurrent.TimeUnit;
  * @since 1.0.0-pre
  */
 public class TankDrive extends BunyipsSubsystem implements RoadRunnerDrive {
-    private final TankRoadRunnerDrive drive;
+    private TankRoadRunnerDrive drive;
 
-    private final Watchdog benji;
+    private Watchdog benji;
     private volatile boolean updates;
 
     /**
@@ -70,11 +70,11 @@ public class TankDrive extends BunyipsSubsystem implements RoadRunnerDrive {
      * @param rightMotors  The motors on the right side of the robot (e.g. {@code Arrays.asList(fr, br)})
      */
     public TankDrive(DriveConstants constants, TankCoefficients coefficients, @Nullable IMU imu, List<DcMotor> leftMotors, List<DcMotor> rightMotors) {
-        assertParamsNotNull(constants, coefficients, imu, leftMotors, rightMotors);
+        if (!assertParamsNotNull(constants, coefficients, imu, leftMotors, rightMotors)) return;
         drive = new TankRoadRunnerDrive(opMode.telemetry, constants, coefficients, opMode.hardwareMap.voltageSensor, imu, leftMotors, rightMotors);
         benji = new Watchdog(() -> {
             if (opMode.isStopRequested()) return;
-            Dbg.log(getClass(), "Stateful drive updates have been disabled as it has been longer than %ms since the last call to update().", RoadRunner.DRIVE_UPDATE_SAFETY_TIMEOUT.in(Milliseconds));
+            Dbg.warn(getClass(), "Stateful drive updates have been disabled as it has been longer than %ms since the last call to update().", RoadRunner.DRIVE_UPDATE_SAFETY_TIMEOUT.in(Milliseconds));
             updates = false;
             drive.stop();
         }, 100, (long) RoadRunner.DRIVE_UPDATE_SAFETY_TIMEOUT.in(Milliseconds), TimeUnit.MILLISECONDS);

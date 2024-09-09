@@ -2,6 +2,7 @@ package org.murraybridgebunyips.bunyipslib;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import org.murraybridgebunyips.deps.BuildConfig;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -9,6 +10,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Text and string manipulation utilities.
@@ -166,13 +168,49 @@ public final class Text {
             // dalvik.system.VMStack.getThreadStackTrace(Native Method) is not useful, which shows up in the stacktrace
             if (stackTraceElement.toString().toLowerCase().contains("stacktrace")) continue;
             // If porting, ensure the string below is set to the package name of BunyipsLib
-            if (!stackTraceElement.getClassName().startsWith("org.murraybridgebunyips.bunyipslib")) {
+            if (!stackTraceElement.getClassName().startsWith(BuildConfig.LIBRARY_PACKAGE_NAME)) {
                 return stackTraceElement;
             }
         }
         // If we can't find the calling function, then we can't return a stack trace element
         Dbg.warn("Could not find calling function in getCallingUserCodeFunction()!");
         return new StackTraceElement("Unknown", "userMethod", "User Code", -1);
+    }
+
+    /**
+     * Removes HTML from a string.
+     *
+     * @param htmlString the string with HTML
+     * @return string with tags and {@code &nbsp;} removed
+     */
+    public static String removeHtml(String htmlString) {
+        return htmlString
+                .replaceAll("<.*?>", "")
+                .replaceAll("&nbsp;", " ");
+    }
+
+    /**
+     * Lowercase a string.
+     *
+     * @param str the string to lowercase
+     * @return the lowercased string
+     */
+    public static String lower(String str) {
+        // This method is for Kotlin interop as case conversion is different between the versions
+        // we use, and it causes way too many headaches to deal with
+        return str.toLowerCase(Locale.getDefault());
+    }
+
+    /**
+     * Uppercase a string.
+     *
+     * @param str the string to uppercase
+     * @return the uppercased string
+     */
+    public static String upper(String str) {
+        // This method is for Kotlin interop as case conversion is different between the versions
+        // we use, and it causes way too many headaches to deal with
+        return str.toUpperCase(Locale.getDefault());
     }
 
     /**

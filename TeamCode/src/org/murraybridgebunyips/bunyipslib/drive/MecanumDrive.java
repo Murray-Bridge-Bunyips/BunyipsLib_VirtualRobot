@@ -51,10 +51,10 @@ import java.util.concurrent.TimeUnit;
  * @since 1.0.0-pre
  */
 public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
-    private final MecanumRoadRunnerDrive drive;
-    private final IMU imu;
+    private MecanumRoadRunnerDrive drive;
+    private IMU imu;
 
-    private final Watchdog benji;
+    private Watchdog benji;
     private volatile boolean updates;
 
     /**
@@ -69,11 +69,11 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
      * @param br           The back right motor.
      */
     public MecanumDrive(DriveConstants constants, MecanumCoefficients coefficients, @Nullable IMU imu, DcMotor fl, DcMotor fr, DcMotor bl, DcMotor br) {
-        assertParamsNotNull(constants, coefficients, imu, fl, fr, bl, br);
+        if (!assertParamsNotNull(constants, coefficients, imu, fl, fr, bl, br)) return;
         drive = new MecanumRoadRunnerDrive(opMode.telemetry, constants, coefficients, opMode.hardwareMap.voltageSensor, imu, fl, fr, bl, br);
         benji = new Watchdog(() -> {
             if (opMode.isStopRequested()) return;
-            Dbg.log(getClass(), "Stateful drive updates have been disabled as it has been longer than %ms since the last call to update().", RoadRunner.DRIVE_UPDATE_SAFETY_TIMEOUT.in(Milliseconds));
+            Dbg.warn(getClass(), "Stateful drive updates have been disabled as it has been longer than %ms since the last call to update().", RoadRunner.DRIVE_UPDATE_SAFETY_TIMEOUT.in(Milliseconds));
             updates = false;
             drive.stop();
         }, 100, (long) RoadRunner.DRIVE_UPDATE_SAFETY_TIMEOUT.in(Milliseconds), TimeUnit.MILLISECONDS);

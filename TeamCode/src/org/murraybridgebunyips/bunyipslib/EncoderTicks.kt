@@ -5,8 +5,6 @@ import com.qualcomm.robotcore.hardware.DcMotorEx
 import org.murraybridgebunyips.bunyipslib.external.units.Angle
 import org.murraybridgebunyips.bunyipslib.external.units.Distance
 import org.murraybridgebunyips.bunyipslib.external.units.Measure
-import org.murraybridgebunyips.bunyipslib.external.units.Units.Degrees
-import org.murraybridgebunyips.bunyipslib.external.units.Units.Meters
 import org.murraybridgebunyips.bunyipslib.external.units.Units.Revolutions
 import org.murraybridgebunyips.bunyipslib.external.units.Units.Second
 import org.murraybridgebunyips.bunyipslib.external.units.Velocity

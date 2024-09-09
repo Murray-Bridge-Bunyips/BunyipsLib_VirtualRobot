@@ -1,11 +1,13 @@
-package org.murraybridgebunyips.bunyipslib.subsystems;
+package org.murraybridgebunyips.bunyipslib;
 
 import static org.murraybridgebunyips.bunyipslib.external.units.Units.Degrees;
 import static org.murraybridgebunyips.bunyipslib.external.units.Units.DegreesPerSecond;
+import static org.murraybridgebunyips.bunyipslib.external.units.Units.Seconds;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -15,29 +17,32 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Quaternion;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-import org.murraybridgebunyips.bunyipslib.BunyipsSubsystem;
-import org.murraybridgebunyips.bunyipslib.Dbg;
 import org.murraybridgebunyips.bunyipslib.external.Mathf;
 import org.murraybridgebunyips.bunyipslib.external.units.Angle;
 import org.murraybridgebunyips.bunyipslib.external.units.Measure;
+import org.murraybridgebunyips.bunyipslib.external.units.Time;
 import org.murraybridgebunyips.bunyipslib.external.units.Velocity;
-import org.murraybridgebunyips.bunyipslib.tasks.bases.Task;
 
 /**
- * IMU utility class that will wrap an Inertial Measurement Unit to provide data and automatic updates
- * of the IMU angles as part of a subsystem. This subsystem has no meaningful {@link Task} to schedule.
+ * Drop-in replacement for an Inertial Measurement Unit that provides WPIUnit data and the capabilities of automatic updates
+ * similar to (but not implementing) a subsystem multi-thread.
  * <p>
- * This class, alike the old IMUOp also supports different readings of IMU measurement, such as an unrestricted domain
+ * This class supports different readings of IMU measurement, such as an unrestricted domain
  * on heading reads, while also being able to provide IMU units in terms of WPIUnits.
  * <p>
- * This class is also down-castable to the Universal IMU Interface.
+ * This class is also down-castable to the Universal IMU Interface. Note that all data in this class is retrieved
+ * via the {@link #run()} method, which opens the possibility for threading the IMU via {@link #startThread()}, similar
+ * to a {@link BunyipsSubsystem}.
+ * <p>
+ * Since this class is down-castable, it also can be used as a {@link HardwareDevice} and serves
+ * as a drop-in replacement for the {@link IMU} interface.
  * <p>
  * Field-exposed angles from this class are intrinsic. Read more in the {@link YawPitchRollAngles} and {@link Orientation} classes.
  *
  * @author Lucas Bubner, 2024
  * @since 4.0.0
  */
-public class IMUOp extends BunyipsSubsystem implements IMU {
+public class IMUEx implements IMU, Runnable {
     private final IMU imu;
 
     /**
@@ -90,18 +95,19 @@ public class IMUOp extends BunyipsSubsystem implements IMU {
     @Nullable
     public volatile Long lastAcquisitionTimeNanos = null;
 
-    @NonNull
+    private String threadName = null;
     private YawDomain domain = YawDomain.SIGNED;
     private Measure<Angle> yawOffset = Degrees.zero();
+    private double yawDeltaMultiplier = 1;
     private double angleSumDeg;
     private double lastYawDeg;
 
     /**
-     * Wrap an IMU to use in IMUOp.
+     * Wrap an IMU to use in IMUEx.
      *
      * @param imu the imu to wrap
      */
-    public IMUOp(IMU imu) {
+    public IMUEx(IMU imu) {
         this.imu = imu;
     }
 
@@ -121,20 +127,20 @@ public class IMUOp extends BunyipsSubsystem implements IMU {
      * Note: This method will not respect the currently set {@link YawDomain}, as it may not respect the angle requirement
      * as listed by the {@link YawPitchRollAngles} that is provided by this method. This ensures consistent use of
      * the {@link YawPitchRollAngles} class while still delegating the collection of IMU data.
+     * <p>
+     * Data will be automatically updated when this method is called, unless it is being updated asynchronously.
+     *
      * @inheritDoc
      */
     @Override
     @SuppressWarnings("DataFlowIssue")
     public YawPitchRollAngles getRobotYawPitchRollAngles() {
-        if (lastAcquisitionTimeNanos == null) {
-            Dbg.warn("IMUOp subsystem wrapping an IMU is not being updated. An automatic call to update() has been propagated. Further results from this class will be stale if not updated.");
-            update();
-        }
+        run();
         return new YawPitchRollAngles(
                 AngleUnit.DEGREES,
                 // Note: Exposed yaw is controlled by the yaw domain, and may not conform to the requirement as listed by the YawPitchRollAngles class.
                 // Therefore, this is why the yaw property of this specific method will not respect the YawDomain, and instead access
-                // the raw quaternion to generate the instance of YawPitchRollAngles.
+                // the raw quaternion to generate the instance of YawPitchRollAngles. (Yaw offset and multiplier still apply)
                 quaternion.toOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES).thirdAngle,
                 pitch.in(Degrees),
                 roll.in(Degrees),
@@ -145,38 +151,34 @@ public class IMUOp extends BunyipsSubsystem implements IMU {
     /**
      * Note: This Orientation will not respect the currently set {@link YawDomain} to ensure consistency across usages
      * of the Universal IMU Interface.
+     * <p>
+     * Data will be automatically updated when this method is called, unless it is being updated asynchronously.
+     *
      * @inheritDoc
      */
     @Override
     public Orientation getRobotOrientation(AxesReference reference, AxesOrder order, AngleUnit angleUnit) {
-        if (lastAcquisitionTimeNanos == null) {
-            Dbg.warn("IMUOp subsystem wrapping an IMU is not being updated. An automatic call to update() has been propagated. Further results from this class will be stale if not updated.");
-            update();
-        }
-        return quaternion.toOrientation(reference, order, angleUnit);
+        return getRobotOrientationAsQuaternion().toOrientation(reference, order, angleUnit);
     }
 
     /**
      * Note: This Orientation will not respect the currently set {@link YawDomain} to ensure consistency across usages
      * of the Universal IMU Interface.
+     * <p>
+     * Data will be automatically updated when this method is called, unless it is being updated asynchronously.
+     *
      * @inheritDoc
      */
     @Override
     public Quaternion getRobotOrientationAsQuaternion() {
-        if (lastAcquisitionTimeNanos == null) {
-            Dbg.warn("IMUOp subsystem wrapping an IMU is not being updated. An automatic call to update() has been propagated. Further results from this class will be stale if not updated.");
-            update();
-        }
+        run();
         return quaternion;
     }
 
     @Override
     @SuppressWarnings("DataFlowIssue")
     public AngularVelocity getRobotAngularVelocity(AngleUnit angleUnit) {
-        if (lastAcquisitionTimeNanos == null) {
-            Dbg.warn("IMUOp subsystem wrapping an IMU is not being updated. An automatic call to update() has been propagated. Further results from this class will be stale if not updated.");
-            update();
-        }
+        run();
         return new AngularVelocity(AngleUnit.DEGREES, (float) pitchVel.magnitude(), (float) rollVel.magnitude(), (float) yawVel.magnitude(), lastAcquisitionTimeNanos);
     }
 
@@ -211,26 +213,73 @@ public class IMUOp extends BunyipsSubsystem implements IMU {
     /**
      * Set an offset of the yaw value that will apply for <i>all</i> future yaw reads in this class.
      *
-     * @param yawOffset the yaw offset that will be added to the actual yaw
+     * @param yawOffset the yaw offset that will be added, applies to all IMU-related reads
      */
     public void setYawOffset(Measure<Angle> yawOffset) {
         if (yawOffset == null) return;
         this.yawOffset = yawOffset;
     }
 
+    /**
+     * Set a multiplicative scale that will be applied to every delta update of the IMU heading. This is similar
+     * to calibrating a dead wheel, where you will supply a ratio between measured/actual values to improve IMU performance.
+     *
+     * @param mul multiplicative scale for yaw readings, applies to all IMU-related reads (default 1)
+     */
+    public void setYawMultiplier(double mul) {
+        yawDeltaMultiplier = mul;
+    }
+
+    /**
+     * Update the class fields and method return values with newest information from the IMU.
+     * This method will no-op if updates have been delegated via {@link #startThread()}.
+     */
     @Override
-    protected void periodic() {
+    public void run() {
+        if (threadName != null) return;
+        internalUpdate();
+    }
+
+    /**
+     * Call to delegate the manual data updating of the IMU to a thread managed by {@link Threads}.
+     * Manual calls to {@link #run()} will be ignored as they will be dispatched by the thread.
+     * This mirrors behaviour found in a {@link BunyipsSubsystem}.
+     * <p>
+     * The thread will run at full speed as-is.
+     */
+    public void startThread() {
+        startThread(Seconds.zero());
+    }
+
+    /**
+     * Call to delegate the manual data updating of the IMU to a thread managed by {@link Threads}.
+     * Manual calls to {@link #run()} will be ignored as they will be dispatched by the thread.
+     * This mirrors behaviour found in a {@link BunyipsSubsystem}.
+     *
+     * @param loopSleepDuration the duration to sleep this thread after every loop to save resources
+     */
+    public void startThread(Measure<Time> loopSleepDuration) {
+        if (threadName != null) return;
+        // Run at least once to ensure last acquired time is updated
+        internalUpdate();
+        threadName = "IMUEx-Threaded-" + hashCode();
+        Threads.startLoop(this::internalUpdate, threadName, loopSleepDuration);
+    }
+
+    /**
+     * Call to stop the thread started by {@link #startThread()}.
+     */
+    public void stopThread() {
+        if (threadName == null) return;
+        Threads.stop(threadName);
+        threadName = null;
+    }
+
+    private void internalUpdate() {
         // Get raw orientations from the IMU to give us full information
         // This will be where the data is retrieved from the IMU, and will be the blocking part of the loop
         Orientation rawOrientation = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
         AngularVelocity angleVels = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
-
-        // Add the yaw offset to apply to all sources
-        rawOrientation.thirdAngle += (float) yawOffset.in(Degrees);
-        rawOrientation.thirdAngle = AngleUnit.normalizeDegrees(rawOrientation.thirdAngle);
-
-        lastAcquisitionTimeNanos = rawOrientation.acquisitionTime;
-        quaternion = Quaternion.fromMatrix(rawOrientation.getRotationMatrix(), rawOrientation.acquisitionTime);
 
         double yawDeg = rawOrientation.thirdAngle;
         double yawDelta = yawDeg - lastYawDeg;
@@ -240,11 +289,13 @@ public class IMUOp extends BunyipsSubsystem implements IMU {
         }
         lastYawDeg = yawDeg;
 
-        angleSumDeg += yawDelta;
-        Measure<Angle> totalYaw = Degrees.of(angleSumDeg);
+        angleSumDeg += yawDelta * yawDeltaMultiplier;
+        Measure<Angle> totalYaw = Degrees.of(angleSumDeg).plus(yawOffset);
+        Measure<Angle> signedClamp = Mathf.angleModulus(totalYaw);
 
+        // Only apply YawDomain to the yaw field
         if (domain == YawDomain.SIGNED) {
-            yaw = Mathf.angleModulus(totalYaw);
+            yaw = signedClamp;
         } else if (domain == YawDomain.UNSIGNED) {
             yaw = Mathf.normaliseAngle(totalYaw);
         } else {
@@ -252,8 +303,14 @@ public class IMUOp extends BunyipsSubsystem implements IMU {
             yaw = totalYaw;
         }
 
+        // Always apply signed domain to raw orientation (required for yaw multiplier/offset)
+        rawOrientation.thirdAngle = (float) signedClamp.in(Degrees);
+
+        lastAcquisitionTimeNanos = rawOrientation.acquisitionTime;
+        quaternion = Quaternion.fromMatrix(rawOrientation.getRotationMatrix(), rawOrientation.acquisitionTime);
+
         // These fields are also bound by the [-180, 180) degree domain but can be converted with Mathf utilities.
-        // IMUOp provides a built in utility for the yaw, as it is a common use case and usually you wouldn't need
+        // IMUEx provides a built in utility for the yaw, as it is a common use case and usually you wouldn't need
         // to use these fields in a different domain. Note that the yaw field is the only element affected
         // by the yaw domain restriction.
         pitch = Degrees.of(rawOrientation.firstAngle);
@@ -291,13 +348,12 @@ public class IMUOp extends BunyipsSubsystem implements IMU {
 
     @Override
     public void close() {
-        disable();
         imu.close();
     }
 
     /**
      * The various modes that the {@link #yaw} field can represent the current robot yaw as.
-     * Note this domain does not apply to the IMU interface methods.
+     * Note this domain does not apply to the {@link IMU} interface methods.
      * If you wish to convert between these domains, see the utilities available in {@link Mathf}.
      */
     public enum YawDomain {

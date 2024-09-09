@@ -3,13 +3,10 @@ package org.murraybridgebunyips.bunyipslib;
 import static org.murraybridgebunyips.bunyipslib.external.units.Units.Milliseconds;
 import static org.murraybridgebunyips.bunyipslib.external.units.Units.Seconds;
 
-import com.qualcomm.robotcore.util.ThreadPool;
-
 import org.murraybridgebunyips.bunyipslib.external.units.Measure;
 import org.murraybridgebunyips.bunyipslib.external.units.Time;
 
 import java.util.HashMap;
-import java.util.concurrent.Future;
 
 /**
  * Async utilities for running user code on different threads while having control/logging over them.
@@ -128,6 +125,7 @@ public final class Threads {
      */
     public static void stopAll() {
         for (Thread thread : threads.values()) {
+            if (!thread.isAlive()) continue;
             Dbg.logd(Threads.class, "stopping thread: %(%) ...", thread.getName(), thread.hashCode());
             thread.interrupt();
         }

@@ -24,11 +24,10 @@ import org.murraybridgebunyips.bunyipslib.roadrunner.drive.RoadRunnerDrive;
 //import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 
 /**
  * Global filesystem and volatile storage utilities for robot operation.
- * <b>***NOTE: IN THE VIRTUAL ROBOT CONFIGURATION, THE FILESYSTEM IS NOT SUPPORTED.***</b>
  *
  * @author Lucas Bubner, 2024
  * @since 3.2.0
@@ -89,7 +88,7 @@ public final class Storage {
          *
          * @see NullSafety
          */
-        public final List<String> unusableComponents = new ArrayList<>();
+        public final HashSet<String> unusableComponents = new HashSet<>();
         private final HashMap<String, Object> store = new HashMap<>();
         /**
          * The last known player Alliance.
