@@ -247,7 +247,7 @@ abstract class Task(
 
     /**
      * Reset a task to an uninitialised and unfinished state.
-     * Will no-op if the task is already reset.
+     * Will no-op if the task is already fully reset.
      */
     fun reset() {
         if (startTime == 0L && !taskFinished && !finisherFired)

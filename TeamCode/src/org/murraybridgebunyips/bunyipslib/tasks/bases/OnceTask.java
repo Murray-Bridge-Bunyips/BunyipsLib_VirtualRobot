@@ -3,11 +3,14 @@ package org.murraybridgebunyips.bunyipslib.tasks.bases;
 import static org.murraybridgebunyips.bunyipslib.external.units.Units.Milliseconds;
 
 /**
- * A task that runs once and then immediately completes.
+ * A short task that runs once and then immediately completes.
  *
  * @since 1.0.0-pre
  */
 public abstract class OnceTask extends Task {
+    // This value may need adjustment in combination with a SequentialTaskGroup where the timeouts are summed,
+    // however we can't tell how long a single method will execute for so we need to assume OnceTasks will only
+    // do one small task.
     private static final int EPSILON_MS = 10;
 
     protected OnceTask() {
