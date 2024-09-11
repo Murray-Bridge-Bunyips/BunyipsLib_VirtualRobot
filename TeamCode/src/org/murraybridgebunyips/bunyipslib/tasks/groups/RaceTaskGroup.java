@@ -2,6 +2,10 @@ package org.murraybridgebunyips.bunyipslib.tasks.groups;
 
 import org.murraybridgebunyips.bunyipslib.tasks.bases.Task;
 
+import java.util.Arrays;
+
+import static org.murraybridgebunyips.bunyipslib.external.units.Units.Seconds;
+
 /**
  * A group of tasks that runs all at once, until one of them is finished.
  * Once a single task is finished, all other tasks are cancelled.
@@ -16,7 +20,9 @@ public class RaceTaskGroup extends TaskGroup {
      * @param tasks The tasks to run together
      */
     public RaceTaskGroup(Task... tasks) {
-        super(tasks);
+        // Try to extract the lowest timeout to be the timeout of this task group.
+        // This works for a race where the first task to finish will finish the rest.
+        super(Seconds.of(Arrays.stream(tasks).mapToDouble(t -> t.getTimeout().in(Seconds)).min().orElse(0.0)), tasks);
     }
 
     @Override

@@ -196,13 +196,10 @@ public class Scheduler extends BunyipsComponent {
                             // Finish handler will be called below
                             task.taskToRun.finish();
                         }
-                        // Check for a debouncing situation and skip if it is not met
-                        if (task.debouncing && !debouncingCheck(task, condition)) {
-                            continue;
-                        }
                         // This is a non-command task, run it now as it will not be run by any subsystem
                         task.taskToRun.run();
-                        if (task.taskToRun.pollFinished()) {
+                        // Debouncing should not auto-reset the task if it is completed
+                        if (task.taskToRun.pollFinished() && !task.debouncing) {
                             // Reset the task as it is not attached to a subsystem and will not be reintegrated by one
                             task.taskToRun.reset();
                         }
@@ -215,25 +212,18 @@ public class Scheduler extends BunyipsComponent {
                     if (task.stopCondition.getAsBoolean()) {
                         // Finish handler will be called on the subsystem
                         task.taskToRun.finish();
+                        return;
+                    }
+                    if (task.taskToRun.isFinished() && task.debouncing) {
+                        // Don't requeue if debouncing
+                        return;
                     }
                     task.taskToRun.getDependency().get().setCurrentTask(task.taskToRun);
                 }
             } else {
-                task.lastState = false;
                 task.activeSince = -1;
             }
         }
-    }
-
-    private boolean debouncingCheck(ConditionalTask task, boolean condition) {
-        if (condition && !task.lastState) {
-            task.lastState = true;
-            return true;
-        } else if (!condition) {
-            // This reset is also handled if the condition is false by the main loop
-            task.lastState = false;
-        }
-        return false;
     }
 
     /**
@@ -487,7 +477,6 @@ public class Scheduler extends BunyipsComponent {
         protected Task taskToRun;
         protected Measure<Time> time = INFINITE_TIMEOUT;
         protected boolean debouncing;
-        protected boolean lastState;
         protected BooleanSupplier stopCondition = () -> false;
         protected long activeSince = -1;
         private boolean isTaskMuted = false;

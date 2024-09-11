@@ -2,6 +2,10 @@ package org.murraybridgebunyips.bunyipslib.tasks.groups;
 
 import org.murraybridgebunyips.bunyipslib.tasks.bases.Task;
 
+import java.util.Arrays;
+
+import static org.murraybridgebunyips.bunyipslib.external.units.Units.Seconds;
+
 /**
  * A group of tasks that runs one after the other, until they are all finished.
  *
@@ -18,7 +22,10 @@ public class SequentialTaskGroup extends TaskGroup {
      * @param tasks The tasks to run in sequence
      */
     public SequentialTaskGroup(Task... tasks) {
-        super(tasks);
+        // Timeout will be represented by the sum of all tasks, unless one is infinite then the entire group is infinite.
+        // This works for a sequential following where each task gets its own runtime
+        super(Arrays.stream(tasks).anyMatch(t -> t.getTimeout().magnitude() == 0.0) ? INFINITE_TIMEOUT :
+                Seconds.of(Arrays.stream(tasks).mapToDouble(t -> t.getTimeout().in(Seconds)).sum()), tasks);
         currentTask = this.tasks.get(0);
     }
 
