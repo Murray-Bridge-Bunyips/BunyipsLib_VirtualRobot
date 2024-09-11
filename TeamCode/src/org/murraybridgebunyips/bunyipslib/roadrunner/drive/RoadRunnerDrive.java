@@ -1,5 +1,7 @@
 package org.murraybridgebunyips.bunyipslib.roadrunner.drive;
 
+import androidx.annotation.Nullable;
+
 import com.acmerobotics.roadrunner.drive.DriveSignal;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.localization.Localizer;
@@ -221,6 +223,15 @@ public interface RoadRunnerDrive {
     void setWeightedDrivePower(Pose2d drivePower);
 
     /**
+     * Set a drive power with axial weights. Feedforward is not applied.
+     * Rotation component is prioritised in the motor speeds (such that the heading component of this pose will
+     * be applied first, then translation takes the rest of the available motor power).
+     *
+     * @param drivePowerRotationPriority the robot-centric pose to travel in.
+     */
+    void setRotationPriorityWeightedDrivePower(Pose2d drivePowerRotationPriority);
+
+    /**
      * @return the encoder report of wheel positions
      */
     List<Double> getWheelPositions();
@@ -291,8 +302,9 @@ public interface RoadRunnerDrive {
     void setPoseEstimate(Pose2d value);
 
     /**
-     * @return the change of pose (pose delta since last update)
+     * @return the rate of change of pose (pose delta per second, derivative of position with respect to time)
      */
+    @Nullable
     Pose2d getPoseVelocity();
 
     /**

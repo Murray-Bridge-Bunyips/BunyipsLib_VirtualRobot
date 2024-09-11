@@ -7,6 +7,7 @@ import com.acmerobotics.roadrunner.drive.DriveSignal;
 import com.acmerobotics.roadrunner.followers.TankPIDVAFollower;
 import com.acmerobotics.roadrunner.followers.TrajectoryFollower;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.acmerobotics.roadrunner.trajectory.constraints.AngularVelocityConstraint;
@@ -61,6 +62,7 @@ public class TankRoadRunnerDrive extends com.acmerobotics.roadrunner.drive.TankD
     private final TrajectoryAccelerationConstraint accelConstraint;
 
     private final TrajectoryFollower follower;
+    private final DualTelemetry telemetry;
 
     private final List<DcMotorEx> motors;
     private final List<DcMotorEx> leftMotors;
@@ -107,6 +109,7 @@ public class TankRoadRunnerDrive extends com.acmerobotics.roadrunner.drive.TankD
 
         this.constants = constants;
         this.coefficients = coefficients;
+        this.telemetry = telemetry;
 
         // Assumes IMU is initialised from RobotConfig
         this.imu = imu;
@@ -289,24 +292,57 @@ public class TankRoadRunnerDrive extends com.acmerobotics.roadrunner.drive.TankD
     }
 
     public void setWeightedDrivePower(Pose2d drivePower) {
-        Pose2d vel;
+        Pose2d current = getPoseEstimate();
 
         if (Math.abs(drivePower.getX()) + Math.abs(drivePower.getHeading()) > 1) {
             // re-normalize the powers according to the weights
             double denom = coefficients.VX_WEIGHT * Math.abs(drivePower.getX())
                     + coefficients.OMEGA_WEIGHT * Math.abs(drivePower.getHeading());
 
-            vel = new Pose2d(
+            drivePower = new Pose2d(
                     coefficients.VX_WEIGHT * drivePower.getX(),
                     0,
                     coefficients.OMEGA_WEIGHT * drivePower.getHeading()
             ).div(denom);
         } else {
             // Ensure the y axis is zeroed out.
-            vel = new Pose2d(drivePower.getX(), 0, drivePower.getHeading());
+            drivePower = new Pose2d(drivePower.getX(), 0, drivePower.getHeading());
         }
 
-        setDrivePower(vel);
+        if (telemetry != null) {
+            Vector2d directionOfTravel = drivePower.vec()
+                    .rotated(current.getHeading())
+                    // 24 for 1 field tile in inches
+                    .times(24);
+            telemetry.dashboardFieldOverlay()
+                    .setStroke("#751000")
+                    .strokeLine(
+                            current.getX(),
+                            current.getY(),
+                            current.getX() + directionOfTravel.getX(),
+                            current.getY() + directionOfTravel.getY()
+                    );
+        }
+
+        setDrivePower(drivePower);
+    }
+
+    @Override
+    public void setRotationPriorityWeightedDrivePower(Pose2d drivePowerRotationPriority) {
+        drivePowerRotationPriority = new Pose2d(
+                drivePowerRotationPriority.getX() * coefficients.VX_WEIGHT,
+                0,
+                drivePowerRotationPriority.getHeading() * coefficients.OMEGA_WEIGHT
+        );
+
+        double remainder = 1 - Math.min(1, Math.abs(drivePowerRotationPriority.getHeading()));
+        drivePowerRotationPriority = new Pose2d(
+                drivePowerRotationPriority.getX() * remainder,
+                0,
+                drivePowerRotationPriority.getHeading()
+        );
+
+        setWeightedDrivePower(drivePowerRotationPriority);
     }
 
     @NonNull

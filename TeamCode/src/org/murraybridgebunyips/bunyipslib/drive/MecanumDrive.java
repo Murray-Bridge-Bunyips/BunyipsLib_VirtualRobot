@@ -311,6 +311,12 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
     }
 
     @Override
+    public void setRotationPriorityWeightedDrivePower(Pose2d drivePowerRotationPriority) {
+        if (isDisabled() || !updates) return;
+        drive.setRotationPriorityWeightedDrivePower(drivePowerRotationPriority);
+    }
+
+    @Override
     public List<Double> getWheelPositions() {
         return drive.getWheelPositions();
     }

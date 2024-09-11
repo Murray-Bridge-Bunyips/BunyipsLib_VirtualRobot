@@ -7,6 +7,7 @@ import com.acmerobotics.roadrunner.drive.DriveSignal;
 import com.acmerobotics.roadrunner.followers.HolonomicPIDVAFollower;
 import com.acmerobotics.roadrunner.followers.TrajectoryFollower;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryAccelerationConstraint;
@@ -25,6 +26,7 @@ import org.murraybridgebunyips.bunyipslib.BunyipsSubsystem;
 import org.murraybridgebunyips.bunyipslib.DualTelemetry;
 import org.murraybridgebunyips.bunyipslib.EmergencyStop;
 import org.murraybridgebunyips.bunyipslib.Motor;
+import org.murraybridgebunyips.bunyipslib.drive.CartesianMecanumDrive;
 import org.murraybridgebunyips.bunyipslib.drive.MecanumDrive;
 import org.murraybridgebunyips.bunyipslib.roadrunner.trajectorysequence.TrajectorySequence;
 import org.murraybridgebunyips.bunyipslib.roadrunner.trajectorysequence.TrajectorySequenceBuilder;
@@ -59,6 +61,7 @@ public class MecanumRoadRunnerDrive extends com.acmerobotics.roadrunner.drive.Me
     private final VoltageSensor batteryVoltageSensor;
     private final List<Integer> lastEncPositions = new ArrayList<>();
     private final List<Integer> lastEncVels = new ArrayList<>();
+    private final DualTelemetry telemetry;
     private MecanumCoefficients coefficients;
 
     /**
@@ -130,6 +133,7 @@ public class MecanumRoadRunnerDrive extends com.acmerobotics.roadrunner.drive.Me
 
         List<Integer> lastTrackingEncPositions = new ArrayList<>();
         List<Integer> lastTrackingEncVels = new ArrayList<>();
+        this.telemetry = telemetry;
 
         trajectorySequenceRunner = new TrajectorySequenceRunner(
                 telemetry, constants.RUN_USING_ENCODER, follower, coefficients.HEADING_PID, batteryVoltageSensor,
@@ -269,23 +273,56 @@ public class MecanumRoadRunnerDrive extends com.acmerobotics.roadrunner.drive.Me
     }
 
     public void setWeightedDrivePower(Pose2d drivePower) {
-        Pose2d vel = drivePower;
+        Pose2d current = getPoseEstimate();
 
         if (Math.abs(drivePower.getX()) + Math.abs(drivePower.getY())
                 + Math.abs(drivePower.getHeading()) > 1) {
-            // re-normalize the powers according to the weights
+            // Re-normalize the powers according to the weights
             double denom = coefficients.VX_WEIGHT * Math.abs(drivePower.getX())
                     + coefficients.VY_WEIGHT * Math.abs(drivePower.getY())
                     + coefficients.OMEGA_WEIGHT * Math.abs(drivePower.getHeading());
 
-            vel = new Pose2d(
+            drivePower = new Pose2d(
                     coefficients.VX_WEIGHT * drivePower.getX(),
                     coefficients.VY_WEIGHT * drivePower.getY(),
                     coefficients.OMEGA_WEIGHT * drivePower.getHeading()
             ).div(denom);
         }
 
-        setDrivePower(vel);
+        if (telemetry != null) {
+            Vector2d directionOfTravel = drivePower.vec()
+                    .rotated(current.getHeading())
+                    // 24 for 1 field tile in inches
+                    .times(24);
+            telemetry.dashboardFieldOverlay()
+                    .setStroke("#751000")
+                    .strokeLine(
+                            current.getX(),
+                            current.getY(),
+                            current.getX() + directionOfTravel.getX(),
+                            current.getY() + directionOfTravel.getY()
+                    );
+        }
+
+        setDrivePower(drivePower);
+    }
+
+    @Override
+    public void setRotationPriorityWeightedDrivePower(Pose2d drivePowerRotationPriority) {
+        // Will not re-normalise as we want rotation to keep the full ratio while translation fills in
+        drivePowerRotationPriority = new Pose2d(
+                coefficients.VX_WEIGHT * drivePowerRotationPriority.getX(),
+                coefficients.VY_WEIGHT * drivePowerRotationPriority.getY(),
+                coefficients.OMEGA_WEIGHT * drivePowerRotationPriority.getHeading()
+        );
+
+        double[] rotPriorityPowers = CartesianMecanumDrive.calculateRotationPrioritisedPowers(
+                -drivePowerRotationPriority.getY(),
+                drivePowerRotationPriority.getX(),
+                -drivePowerRotationPriority.getHeading()
+        );
+
+        setMotorPowers(rotPriorityPowers[0], rotPriorityPowers[2], rotPriorityPowers[3], rotPriorityPowers[1]);
     }
 
     @NonNull
