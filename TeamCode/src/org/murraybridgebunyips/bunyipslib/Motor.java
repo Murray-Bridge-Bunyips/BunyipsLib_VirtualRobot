@@ -1,6 +1,7 @@
 package org.murraybridgebunyips.bunyipslib;
 
 import static org.murraybridgebunyips.bunyipslib.Text.formatString;
+import static org.murraybridgebunyips.bunyipslib.external.units.Units.Nanoseconds;
 import static org.murraybridgebunyips.bunyipslib.external.units.Units.Radians;
 
 import android.util.Pair;
@@ -20,6 +21,8 @@ import org.murraybridgebunyips.bunyipslib.external.SystemController;
 import org.murraybridgebunyips.bunyipslib.external.ff.SimpleMotorFeedforward;
 import org.murraybridgebunyips.bunyipslib.external.pid.PIDController;
 import org.murraybridgebunyips.bunyipslib.external.pid.PIDFController;
+import org.murraybridgebunyips.bunyipslib.external.units.Measure;
+import org.murraybridgebunyips.bunyipslib.external.units.Time;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -46,6 +49,10 @@ public class Motor /*extends DcMotorImplEx*/ implements DcMotorEx {
     private SystemController rueController;
     private Pair<Double, Double> rueInfo = null;
     private RunMode mode = RunMode.RUN_WITHOUT_ENCODER;
+    private double powerDeltaTolerance = 0;
+    private double lastPower = 0;
+    private long refreshRateNanos = 0;
+    private long lastUpdate = 0;
 
     /**
      * Wrap a DcMotor to use in the Motor class.
@@ -59,6 +66,27 @@ public class Motor /*extends DcMotorImplEx*/ implements DcMotorEx {
         __VIRT_MOTOR.setMode(RunMode.RUN_WITHOUT_ENCODER);
         encoder = new Encoder(__VIRT_MOTOR::getCurrentPosition, __VIRT_MOTOR::getVelocity);
         setTargetPosition(getCurrentPosition());
+    }
+
+    /**
+     * Set the delta in power required to propagate a hardware write.
+     * A commanded power of 0 to the motor will ignore this threshold for safety.
+     *
+     * @param magnitude absolute magnitude of delta in power, 0/default will disable
+     */
+    public void setPowerDeltaThreshold(double magnitude) {
+        powerDeltaTolerance = Math.abs(magnitude);
+    }
+
+    /**
+     * Set the refresh rate of the motor that will be a minimum time between hardware writes.
+     * Consistent calls to {@link #setPower(double)} is required for this refresh rate to be effective.
+     * A commanded power of 0 to the motor will ignore this refresh rate for safety.
+     *
+     * @param refreshRate the refresh rate interval, <=0/default will disable
+     */
+    public void setPowerRefreshRate(Measure<Time> refreshRate) {
+        refreshRateNanos = (long) refreshRate.in(Nanoseconds);
     }
 
     /**
@@ -491,8 +519,22 @@ public class Motor /*extends DcMotorImplEx*/ implements DcMotorEx {
                 break;
         }
         // Clamp and rescale depending on the maximum magnitude
-        magnitude = Mathf.clamp(magnitude, -1, 1);
-        __VIRT_MOTOR.setPower(Mathf.scale(Mathf.clamp(magnitude, -1, 1), -1, 1, -maxMagnitude, maxMagnitude));
+        magnitude = Mathf.scale(Mathf.clamp(magnitude, -1, 1), -1, 1, -maxMagnitude, maxMagnitude);
+        if (magnitude != 0) {
+            // Can check refresh rate and apply cache for a non-zero power.
+            // We early return down here next to the actual hardware write to ensure the PID controllers
+            // still update (PID controllers don't take up the loop times)
+            if (refreshRateNanos > 0 && Math.abs(lastUpdate - System.nanoTime()) < refreshRateNanos) {
+                return;
+            }
+            if (powerDeltaTolerance != 0 && Math.abs(lastPower - power) < powerDeltaTolerance) {
+                return;
+            }
+        }
+        // Always update last powers to keep the system in sync
+        lastUpdate = System.nanoTime();
+        lastPower = power;
+        __VIRT_MOTOR.setPower(magnitude);
     }
 
     @Override

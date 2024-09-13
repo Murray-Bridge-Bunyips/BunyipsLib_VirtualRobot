@@ -18,8 +18,10 @@ import org.murraybridgebunyips.bunyipslib.external.units.Units.*
 import org.murraybridgebunyips.bunyipslib.roadrunner.util.LynxModuleUtil
 import org.murraybridgebunyips.bunyipslib.tasks.bases.Task
 import org.murraybridgebunyips.deps.BuildConfig
+import java.util.Optional
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 import kotlin.math.abs
 
 
@@ -110,12 +112,11 @@ abstract class BunyipsOpMode : BOMInternal() {
          * The instance of the current [BunyipsOpMode]. This is set automatically by the [BunyipsOpMode] lifecycle.
          * This can be used instead of dependency injection to access the current OpMode, as it is a singleton.
          *
-         * `BunyipsComponent` and `Task` internally use this to grant access to the current OpMode through
-         * the `opMode` property. As such, you must ensure all `Task`s and `BunyipsComponent`s are instantiated during runtime,
-         * (such as during [onInit]), otherwise this property will be null.
+         * `BunyipsComponent` (and derivatives `Task`, `BunyipsSubsystem`, etc) internally use this to grant access
+         * to the current BunyipsOpMode through the `opMode` property.
          *
          * If you choose to access the current OpMode through this property, you must ensure that the OpMode
-         * is actively running, otherwise this property will be null and you will raise an exception.
+         * is actively running, otherwise this property will be null and you will raise a full-crashing exception.
          *
          * @throws UninitializedPropertyAccessException If a [BunyipsOpMode] is not running, this exception will be raised.
          * @return The instance of the current [BunyipsOpMode].
@@ -125,7 +126,7 @@ abstract class BunyipsOpMode : BOMInternal() {
             // If Kotlin throws an UninitializedPropertyAccessException, it will crash the DS and require a full
             // restart, so we will handle this exception ourselves and supply a more informative message.
             get() = _instance
-                ?: throw UninitializedPropertyAccessException("Attempted to access a BunyipsOpMode that is not running, this may be due to a task or subsystem being instantiated in the constructor or member fields. All subsystems and tasks must be instantiated during runtime, such as in onInit().")
+                ?: throw UninitializedPropertyAccessException("Attempted to access a BunyipsOpMode that is not running, this may be due to a derived BunyipsComponent class attempting to be instantiated outside the environment of an active BunyipsOpMode.")
 
         /**
          * Whether a [BunyipsOpMode] is currently running. This is useful for checking if the OpMode singleton can be accessed
@@ -136,6 +137,27 @@ abstract class BunyipsOpMode : BOMInternal() {
         @JvmStatic
         val isRunning: Boolean
             get() = _instance != null
+
+        /**
+         * Run the supplied callback if a [BunyipsOpMode] is currently running. This chains an internal call to [BunyipsOpMode]
+         * with a lambda supplied with the non-null instance of [BunyipsOpMode].
+         *
+         * The consumer will no-op if a [BunyipsOpMode] is not running.
+         */
+        @JvmStatic
+        fun ifRunning(opModeConsumer: Consumer<BunyipsOpMode>) {
+            if (isRunning)
+                opModeConsumer.accept(instance)
+        }
+    }
+
+    init {
+        // Early assign an instance of BunyipsOpMode to allow member field access of the derived class
+        // to access references to the OpMode. We re-assign this value in runBunyipsOpMode() for paranoia to ensure
+        // a fully constructed instance is available. Usually, we don't need to get the instance of the derived class,
+        // so leaking the instance here is fine.
+        @Suppress("LeakingThis")
+        _instance = this
     }
 
     /**
@@ -496,6 +518,13 @@ abstract class BunyipsOpMode : BOMInternal() {
     }
 
     /**
+     * Get the currently respected init-task that will run during `dynamic_init`.
+     */
+    fun getInitTask(): Optional<Runnable> {
+        return Optional.ofNullable(initTask)
+    }
+
+    /**
      * Set a task that will run as an init-task. This will run
      * after your [onInit] has completed, allowing you to initialise hardware first.
      * This is an optional method, and runs alongside [onInitLoop].
@@ -506,12 +535,13 @@ abstract class BunyipsOpMode : BOMInternal() {
      * to do anything after the initTask has finished.
      *
      * If you do not define an initTask, then running it during the `dynamic_init` phase will be skipped.
+     * Note that there can only be one init-task set. Consider a task group for multiple operations.
      *
      * @see onInitDone
      */
-    protected fun setInitTask(task: Runnable) {
+    fun setInitTask(task: Runnable) {
         if (initTask != null) {
-            Dbg.warn(javaClass, "Init-task has already been set to %, overriding it with %...", initTask, task)
+            Dbg.warn("BunyipsOpMode: init-task has already been set to %, overriding it with %...", initTask, task)
         }
         initTask = task
     }
@@ -521,10 +551,12 @@ abstract class BunyipsOpMode : BOMInternal() {
      * This is useful for running code that needs to be executed on the main thread, but is not
      * a subsystem or task.
      *
+     * This method is public to allow you to add looping code from [RobotConfig], [Task], and other contexts.
      * This method is called before the [activeLoop] method, and will run the runnables in the order they were added.
      */
-    protected fun onActiveLoop(vararg runnables: Runnable) {
+    fun onActiveLoop(vararg runnables: Runnable) {
         this.runnables.addAll(runnables)
+        Dbg.logv("BunyipsOpMode: added % activeLoop task(s), % task(s) set.", runnables.size, this.runnables.size)
     }
 
     /**
@@ -554,13 +586,13 @@ abstract class BunyipsOpMode : BOMInternal() {
     }
 
     /**
-     * Dangerous method: Call to command all motors and sensors on the robot to shut down. This is a method
+     * Dangerous method: Call to command all motors and servos on the robot to shut down. This is a method
      * called by the SDK continuously when no OpMode is running. It is also automatically called via [finish].
      *
-     * Do note [safeHaltHardware] is a one-way operation for some devices that can only be
-     * restored on an OpMode restart. See [stopMotors] to simply set motor powers to zero.
+     * Do note [safeHaltHardware] may be an operation for some devices that can only be restored on an OpMode
+     * restart or by re-enabling the devices manually. See [stopMotors] to simply set motor powers to zero.
      *
-     * This method will also power down all LynxModules and disable all servos.
+     * This method internally powers down motors, LynxModules, servos, and light sensors.
      */
     fun safeHaltHardware() {
         // Set all motor powers to zero. The implementation here will also stop any CRServos.
@@ -592,9 +624,10 @@ abstract class BunyipsOpMode : BOMInternal() {
     }
 
     /**
-     * Call to command all moving motors to stop by method of setting their powers to zero.
+     * Call to command all moving motors/CRServos to stop by method of setting their powers to zero.
+     * This does not impact normal servos.
      *
-     * A more aggressive/one-way approach to stopping can be done via [safeHaltHardware], which is an
+     * A more aggressive/full-safe approach to stopping can be done via [safeHaltHardware], which is an
      * internal SDK method that runs when no OpMode is running and also shuts down servos.
      */
     fun stopMotors() {
@@ -641,6 +674,11 @@ abstract class BunyipsOpMode : BOMInternal() {
     fun exit() {
         Dbg.logd("BunyipsOpMode: exiting opmode...")
         finish()
+        // This is a rare instance where we know we need to exit the OpMode and we have control over hardware,
+        // so we can try to reset the lights just before we call the stop method.
+        robotControllers.forEach { c ->
+            c.pattern = LynxModule.blinkerPolicy.getIdlePattern(c)
+        }
         requestOpModeStop()
     }
 

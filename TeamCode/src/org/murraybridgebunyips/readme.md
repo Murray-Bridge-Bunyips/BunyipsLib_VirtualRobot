@@ -19,3 +19,4 @@ When copying BunyipsLib to org.murraybridgebunyips, you will need to do the foll
 9. Revert any changes done to `bunyipslib/Storage.java`
 
 BunyipsLib will now compile, although missing some features.
+An alternative & faster method of converting changes can be accomplished via the Patch system via JetBrains IDEs.
