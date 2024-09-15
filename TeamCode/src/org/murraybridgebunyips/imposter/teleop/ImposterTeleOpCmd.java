@@ -1,21 +1,14 @@
 package org.murraybridgebunyips.imposter.teleop;
 
-import com.acmerobotics.roadrunner.geometry.Pose2d;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Arrays;
 import java.util.function.DoubleSupplier;
 
-import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import org.murraybridgebunyips.bunyipslib.*;
 import org.murraybridgebunyips.bunyipslib.drive.MecanumDrive;
 import org.murraybridgebunyips.bunyipslib.drive.TriDeadwheelMecanumDrive;
-import org.murraybridgebunyips.bunyipslib.external.pid.PIDController;
-import org.murraybridgebunyips.bunyipslib.roadrunner.drive.localizers.IntrinsicMecanumLocalizer;
-import org.murraybridgebunyips.bunyipslib.subsystems.Switch;
 import org.murraybridgebunyips.bunyipslib.tasks.*;
 import org.murraybridgebunyips.imposter.components.ImposterConfig;
 
@@ -27,7 +20,9 @@ import static org.murraybridgebunyips.bunyipslib.external.units.Units.*;
 public class ImposterTeleOpCmd extends CommandBasedBunyipsOpMode {
     private final ImposterConfig config = new ImposterConfig();
     private MecanumDrive drive;
-    private final Filter.WeightedFusion lowPass = new Filter.WeightedFusion(new DoubleSupplier[]{() -> config.back_right_motor.getVelocity(), () -> config.back_left_motor.getVelocity() * 0.8}, new double[]{0.9, 0.1});
+    private DoubleSupplier model = () -> config.back_left_motor.getVelocity();
+    private DoubleSupplier sensor = () -> config.back_left_motor.getVelocity() + (Math.random() * 40);
+    private final Filter.Kalman filter = new Filter.Kalman(model, sensor, 8, 0.00001);
     private PrintWriter logWriter;
 
     @Override
@@ -51,9 +46,9 @@ public class ImposterTeleOpCmd extends CommandBasedBunyipsOpMode {
     }
 
     protected void periodic() {
-        double angVelo = config.back_left_motor.getVelocity();
-        double angVelo2 = config.back_left_motor.getVelocity() * 0.8;
-        double lowPassAngVelo = lowPass.getAsDouble();
+        double angVelo = model.getAsDouble();
+        double angVelo2 = sensor.getAsDouble();
+        double lowPassAngVelo = filter.getAsDouble();
         long timestamp = System.currentTimeMillis();
 
         logWriter.printf("%d,%.6f,%.6f,%.6f%n", timestamp, angVelo, lowPassAngVelo, angVelo2);

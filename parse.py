@@ -14,5 +14,5 @@ y3 = [float(row[3]) for row in data]
 plt.plot(x, y1)
 plt.plot(x, y2)
 plt.plot(x, y3)
-plt.legend(["y1 (original)", "y2 (filtered)", "y3 (garbage)"])
+plt.legend(["y1 (model)", "y2 (filtered)", "y3 (garbage sensor)"])
 plt.show()
