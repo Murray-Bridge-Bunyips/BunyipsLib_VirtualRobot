@@ -21,7 +21,7 @@ public class ImposterTeleOpCmd extends CommandBasedBunyipsOpMode {
     private final ImposterConfig config = new ImposterConfig();
     private MecanumDrive drive;
     private DoubleSupplier model = () -> config.back_left_motor.getVelocity();
-    private DoubleSupplier sensor = () -> config.back_left_motor.getVelocity() + (Math.random() * 40);
+    private DoubleSupplier sensor = () -> config.back_left_motor.getVelocity() + ((Math.random() - 0.5) * 40) + 10;
     private final Filter.Kalman filter = new Filter.Kalman(model, sensor, 8, 0.00001);
     private PrintWriter logWriter;
 
