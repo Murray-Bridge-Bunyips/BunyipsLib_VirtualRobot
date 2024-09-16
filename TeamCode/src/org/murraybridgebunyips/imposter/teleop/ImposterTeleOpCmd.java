@@ -22,7 +22,7 @@ public class ImposterTeleOpCmd extends CommandBasedBunyipsOpMode {
     private MecanumDrive drive;
     private DoubleSupplier model = () -> config.back_left_motor.getVelocity();
     private DoubleSupplier sensor = () -> config.back_left_motor.getVelocity() + ((Math.random() - 0.5) * 40) + 10;
-    private final Filter.Kalman filter = new Filter.Kalman(model, sensor, 8, 0.00001);
+    private final Filter.Kalman filter = new Filter.Kalman(8, 0.00001);
     private PrintWriter logWriter;
 
     @Override
@@ -48,7 +48,7 @@ public class ImposterTeleOpCmd extends CommandBasedBunyipsOpMode {
     protected void periodic() {
         double angVelo = model.getAsDouble();
         double angVelo2 = sensor.getAsDouble();
-        double lowPassAngVelo = filter.getAsDouble();
+        double lowPassAngVelo = filter.calculate(angVelo, angVelo2);
         long timestamp = System.currentTimeMillis();
 
         logWriter.printf("%d,%.6f,%.6f,%.6f%n", timestamp, angVelo, lowPassAngVelo, angVelo2);
