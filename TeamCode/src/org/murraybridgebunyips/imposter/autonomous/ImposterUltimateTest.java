@@ -47,7 +47,7 @@ import org.reflections.vfs.Vfs;
 public class ImposterUltimateTest extends AutonomousBunyipsOpMode implements RoadRunner {
     // virtual config, the robot is assumed to be perfect with no scaling required
     public static double FIELD_TILE_SCALE = 1;
-    public static Direction fakeSpikeMark = Direction.FORWARD;
+    public static Direction fakeSpikeMark = Direction.RIGHT;
     public static Direction parkingDirection = Direction.LEFT;
 
 
@@ -172,9 +172,9 @@ public class ImposterUltimateTest extends AutonomousBunyipsOpMode implements Roa
 
             // Recenter to facing forward to restore a known state
             redBuilder
-                    .setRefMirroring(false)
+                    .setRefMirroring(MirrorMap.NONE)
                     .splineTo(drive.getPoseEstimate().vec(), startingPosition.getPose().getHeading())
-                    .setRefMirroring(true);
+                    .setRefMirroring(MirrorMap.ALLIANCE_REFLECTION);
 
             // Far side backdrop navigation
             if (startingPosition == StartingPositions.STARTING_RED_LEFT || startingPosition == StartingPositions.STARTING_BLUE_RIGHT) {
