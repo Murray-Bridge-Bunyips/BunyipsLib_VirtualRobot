@@ -170,7 +170,7 @@ public class Controller extends Gamepad {
      * called in BunyipsOpMode on another thread.
      */
     public void update() {
-//        parseUnmanagedControllerBuffer();
+        parseUnmanagedControllerBuffer();
 
         // Recalculate all custom inputs, these accommodate for the custom functions set by the user
         // and are the same controls that we intentionally didn't update in parseUnmanagedControllerBuffer().

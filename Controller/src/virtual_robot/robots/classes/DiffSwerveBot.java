@@ -25,7 +25,7 @@ import virtual_robot.util.AngleUtils;
 public class DiffSwerveBot extends VirtualBot {
 
     private final MotorType MOTOR_TYPE = MotorType.NeverestOrbital20;
-    private DcMotorImplEx[] motors = null;
+    private DcMotorExImpl[] motors = null;
     private BNO055IMUImpl imu = null;
     private BNO055IMUNew imuNew = null;
     private VirtualRobotController.ColorSensorImpl colorSensor = null;
@@ -60,11 +60,11 @@ public class DiffSwerveBot extends VirtualBot {
     public void initialize() {
         super.initialize();
         hardwareMap.setActive(true);
-        motors = new DcMotorImplEx[]{
-                hardwareMap.get(DcMotorImplEx.class, "bottom_left_motor"),
-                hardwareMap.get(DcMotorImplEx.class, "top_left_motor"),
-                hardwareMap.get(DcMotorImplEx.class, "bottom_right_motor"),
-                hardwareMap.get(DcMotorImplEx.class, "top_right_motor")
+        motors = new DcMotorExImpl[]{
+                hardwareMap.get(DcMotorExImpl.class, "bottom_left_motor"),
+                hardwareMap.get(DcMotorExImpl.class, "top_left_motor"),
+                hardwareMap.get(DcMotorExImpl.class, "bottom_right_motor"),
+                hardwareMap.get(DcMotorExImpl.class, "top_right_motor")
         };
         distanceSensors = new VirtualRobotController.DistanceSensorImpl[]{
                 hardwareMap.get(VirtualRobotController.DistanceSensorImpl.class, "front_distance"),
@@ -91,7 +91,9 @@ public class DiffSwerveBot extends VirtualBot {
     protected void createHardwareMap(){
         hardwareMap = new HardwareMap();
         String[] motorNames = new String[] {"bottom_left_motor", "top_left_motor", "bottom_right_motor", "top_right_motor"};
-        for (String name: motorNames) hardwareMap.put(name, new DcMotorImplEx(MOTOR_TYPE));
+        for (int i=0; i<4; i++){
+            hardwareMap.put(motorNames[i], new DcMotorExImpl(MOTOR_TYPE, motorController0, i));
+        }
         String[] distNames = new String[]{"front_distance", "left_distance", "back_distance", "right_distance"};
         for (String name: distNames) hardwareMap.put(name, controller.new DistanceSensorImpl());
         hardwareMap.put("imu", new BNO055IMUImpl(this, 10));

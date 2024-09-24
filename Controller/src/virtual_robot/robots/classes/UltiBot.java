@@ -1,6 +1,6 @@
 package virtual_robot.robots.classes;
 
-import com.qualcomm.robotcore.hardware.DcMotorImplEx;
+import com.qualcomm.robotcore.hardware.DcMotorExImpl;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.ServoImpl;
 import com.qualcomm.robotcore.hardware.configuration.MotorType;
@@ -56,9 +56,9 @@ public class UltiBot extends MecanumPhysicsBase implements ControlsElements {
     private KickerState kickerState = KickerState.COCKED;
 
     // Motors for intake, shooting, and scoop
-    private DcMotorImplEx intakeMotor;
-    private DcMotorImplEx shooterMotor;
-    private DcMotorImplEx scoopMotor;
+    private DcMotorExImpl intakeMotor;
+    private DcMotorExImpl shooterMotor;
+    private DcMotorExImpl scoopMotor;
 
     //Scoop mechanism
     Body scoopBody;           // Body to represent the scoop in the physics engine
@@ -75,9 +75,9 @@ public class UltiBot extends MecanumPhysicsBase implements ControlsElements {
         super.initialize();
         hardwareMap.setActive(true);
         kickerServo = hardwareMap.get(ServoImpl.class, "kicker_servo");
-        intakeMotor = hardwareMap.get(DcMotorImplEx.class, "intake_motor");
-        shooterMotor = hardwareMap.get(DcMotorImplEx.class, "shooter_motor");
-        scoopMotor = hardwareMap.get(DcMotorImplEx.class, "scoop_motor");
+        intakeMotor = hardwareMap.get(DcMotorExImpl.class, "intake_motor");
+        shooterMotor = hardwareMap.get(DcMotorExImpl.class, "shooter_motor");
+        scoopMotor = hardwareMap.get(DcMotorExImpl.class, "scoop_motor");
         hardwareMap.setActive(false);
 
         /*
@@ -157,9 +157,9 @@ public class UltiBot extends MecanumPhysicsBase implements ControlsElements {
     protected void createHardwareMap(){
         super.createHardwareMap();
         hardwareMap.put("kicker_servo", new ServoImpl());
-        hardwareMap.put("intake_motor", new DcMotorImplEx(MotorType.Neverest40));
-        hardwareMap.put("shooter_motor", new DcMotorImplEx(MotorType.Neverest40));
-        hardwareMap.put("scoop_motor", new DcMotorImplEx(MotorType.Neverest40));
+        hardwareMap.put("intake_motor", new DcMotorExImpl(MotorType.Neverest40, motorController1, 0));
+        hardwareMap.put("shooter_motor", new DcMotorExImpl(MotorType.Neverest40, motorController1, 1));
+        hardwareMap.put("scoop_motor", new DcMotorExImpl(MotorType.Neverest40, motorController1, 2));
     }
 
     public synchronized void updateStateAndSensors(double millis){

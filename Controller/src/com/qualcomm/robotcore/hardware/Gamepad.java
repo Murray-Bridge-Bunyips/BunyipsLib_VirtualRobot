@@ -162,7 +162,7 @@ public class Gamepad {
     }
 
     public byte[] toByteArray() {
-        return new byte[1];
+        return new byte[1000];
     }
 
     public void copy(Gamepad other) {

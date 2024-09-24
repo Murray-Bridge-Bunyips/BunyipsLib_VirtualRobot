@@ -1,130 +1,189 @@
 package com.qualcomm.robotcore.hardware;
 
-import com.qualcomm.robotcore.hardware.configuration.MotorType;
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
-/**
- * A very limited implementation of DcMotorEx.
- *
- * This is included to support existing Team Code that uses Bulk Cache Reads.
- */
+// portination for bunyips library
+public class DcMotorImplEx implements DcMotorEx {
+    public final MotorConfigurationType motorType;
+    private final DcMotorControllerImpl con;
+    private final int port;
 
-public class DcMotorImplEx extends DcMotorImpl implements DcMotorEx{
-
-    /**
-     * For internal use only.
-     * @param motorType
-     */
-    public DcMotorImplEx(MotorType motorType){
-        super(motorType);
+    public DcMotorImplEx(DcMotorController controller, int port, Direction direction, MotorConfigurationType type){
+        this.port = port;
+        con = (DcMotorControllerImpl) controller;
+        motorType = type;
+        setDirection(direction);
     }
 
     @Override
     public void setMotorEnable() {
-        throw new NotImplementedException("setMotorEnable method has not been implemented in DcMotorExImpl.");
+        con.getMotor(port).setMotorEnable();
     }
 
     @Override
     public void setMotorDisable() {
-        throw new NotImplementedException("setMotorDisable method has not been implemented in DcMotorExImpl.");
+        con.getMotor(port).setMotorDisable();
     }
 
     @Override
     public boolean isMotorEnabled() {
-        return true;
-    }
-
-    /**
-     * Set desired velocity (in ticks per second)
-     * @param angularRate  the desired ticks per second
-     */
-    @Override
-    public synchronized void setVelocity(double angularRate) {
-        setPower(angularRate/MOTOR_TYPE.MAX_TICKS_PER_SECOND);
-    }
-
-    /**
-     * Set desired velocity in specified angular units
-     * @param angularRate   the desired angular rate, in units per second
-     * @param unit          the units in which angularRate is expressed
-     *
-     */
-    @Override
-    public synchronized void setVelocity(double angularRate, AngleUnit unit) {
-        double unitsPerRotation = unit == AngleUnit.DEGREES? 360.0 : 2.0 * Math.PI;
-        double ticksPerSecond = angularRate * MOTOR_TYPE.TICKS_PER_ROTATION / unitsPerRotation;
-        setVelocity(ticksPerSecond);
-    }
-
-    /**
-     * Get current velocity of motor in ticks per second
-     * @return velocity in ticks per second
-     */
-    @Override
-    public synchronized double getVelocity() {
-        return getSpeed() * MOTOR_TYPE.MAX_TICKS_PER_SECOND;
+        return con.getMotor(port).isMotorEnabled();
     }
 
     @Override
-    public synchronized double getVelocity(AngleUnit unit) {
-        double unitsPerRotation = unit == AngleUnit.DEGREES? 360.0 : 2.0 * Math.PI;
-        return getVelocity() * unitsPerRotation / MOTOR_TYPE.TICKS_PER_ROTATION;
+    public void setVelocity(double angularRate) {
+        con.getMotor(port).setVelocity(angularRate);
+    }
+
+    @Override
+    public void setVelocity(double angularRate, AngleUnit unit) {
+        con.getMotor(port).setVelocity(angularRate, unit);
+    }
+
+    @Override
+    public double getVelocity() {
+        return con.getMotor(port).getVelocity();
+    }
+
+    @Override
+    public double getVelocity(AngleUnit unit) {
+        return con.getMotor(port).getVelocity(unit);
     }
 
     @Override
     public void setPIDCoefficients(RunMode mode, PIDCoefficients pidCoefficients) {
-        // allows use of code that calls this but doesn't do anything
+        con.getMotor(port).setPIDCoefficients(mode, pidCoefficients);
     }
 
     @Override
-    public void setPIDFCoefficients(RunMode mode, PIDFCoefficients pidfCoefficients)  {
+    public void setPIDFCoefficients(RunMode mode, PIDFCoefficients pidfCoefficients) throws UnsupportedOperationException {
+        con.getMotor(port).setPIDFCoefficients(mode, pidfCoefficients);
     }
 
     @Override
     public void setVelocityPIDFCoefficients(double p, double i, double d, double f) {
+        con.getMotor(port).setVelocityPIDFCoefficients(p, i, d, f);
     }
 
     @Override
     public void setPositionPIDFCoefficients(double p) {
+        con.getMotor(port).setPositionPIDFCoefficients(p);
     }
 
     @Override
     public PIDCoefficients getPIDCoefficients(RunMode mode) {
-        throw new NotImplementedException("getPIDCoefficients method has not been implemented in DcMotorExImpl.");
+        return con.getMotor(port).getPIDCoefficients(mode);
     }
 
     @Override
     public PIDFCoefficients getPIDFCoefficients(RunMode mode) {
-        return new PIDFCoefficients(COEFF_PROPORTIONATE, 0, 0, 0);
+        return con.getMotor(port).getPIDFCoefficients(mode);
     }
 
     @Override
     public void setTargetPositionTolerance(int tolerance) {
+        con.getMotor(port).setTargetPositionTolerance(tolerance);
     }
 
     @Override
     public int getTargetPositionTolerance() {
-        return (int)(MOTOR_TYPE.TICKS_PER_ROTATION * MAX_ROT_OFFSET);
+        return con.getMotor(port).getTargetPositionTolerance();
     }
 
     @Override
     public double getCurrent(CurrentUnit unit) {
-        return 0;
+        return con.getMotor(port).getCurrent(unit);
     }
 
     @Override
     public double getCurrentAlert(CurrentUnit unit) {
-        return 0;
+        return con.getMotor(port).getCurrentAlert(unit);
     }
 
     @Override
     public void setCurrentAlert(double current, CurrentUnit unit) {
-
+        con.getMotor(port).setCurrentAlert(current, unit);
     }
 
     @Override
     public boolean isOverCurrent() {
-        return false;
+        return con.getMotor(port).isOverCurrent();
+    }
+
+    @Override
+    public void setMode(RunMode mode) {
+        con.getMotor(port).setMode(mode);
+    }
+
+    @Override
+    public RunMode getMode() {
+        return con.getMotor(port).getMode();
+    }
+
+    @Override
+    public int getCurrentPosition() {
+        return con.getMotor(port).getCurrentPosition();
+    }
+
+    @Override
+    public void setTargetPosition(int pos) {
+        con.getMotor(port).setTargetPosition(pos);
+    }
+
+    @Override
+    public int getTargetPosition() {
+        return con.getMotor(port).getTargetPosition();
+    }
+
+    @Override
+    public boolean isBusy() {
+        return con.getMotor(port).isBusy();
+    }
+
+    @Override
+    public void setZeroPowerBehavior(ZeroPowerBehavior zeroPowerBehavior) {
+        con.getMotor(port).setZeroPowerBehavior(zeroPowerBehavior);
+    }
+
+    @Override
+    public ZeroPowerBehavior getZeroPowerBehavior() {
+        return con.getMotor(port).getZeroPowerBehavior();
+    }
+
+    @Override
+    public MotorConfigurationType getMotorType() {
+        return motorType;
+    }
+
+    @Override
+    public DcMotorController getController() {
+        return con;
+    }
+
+    @Override
+    public int getPortNumber() {
+        return port;
+    }
+
+    @Override
+    public void setDirection(Direction direction) {
+        con.getMotor(port).setDirection(direction);
+    }
+
+    @Override
+    public Direction getDirection() {
+        return con.getMotor(port).getDirection();
+    }
+
+    @Override
+    public void setPower(double power) {
+        con.getMotor(port).setPower(power);
+    }
+
+    @Override
+    public double getPower() {
+        return con.getMotor(port).getPower();
     }
 }

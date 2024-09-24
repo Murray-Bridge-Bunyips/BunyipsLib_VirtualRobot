@@ -11,6 +11,8 @@ import java.util.Random;
 public class DcMotorImpl implements DcMotor {
     public final MotorType MOTOR_TYPE;
     public final MotorConfigurationType MOTOR_CONFIGURATION_TYPE;
+    public final DcMotorControllerImpl controller;
+    public final int portNumber;
 
     //Proportionate coefficient for RUN_TO_POSITION mode
     protected final double COEFF_PROPORTIONATE = 5.0;
@@ -57,14 +59,19 @@ public class DcMotorImpl implements DcMotor {
     private boolean upperPositionLimitEnabled = false;
     private boolean lowerPositionLimitEnabled = false;
 
+    public final MotorConfigurationType motorType = new MotorConfigurationType(MotorType.Gobilda192);
+
 
     /**
      * For internal use only.
      * @param motorType
      */
-    public DcMotorImpl(MotorType motorType){
+    public DcMotorImpl(MotorType motorType, DcMotorControllerImpl controller, int portNumber){
         MOTOR_TYPE = motorType;
         MOTOR_CONFIGURATION_TYPE = new MotorConfigurationType(motorType);
+        this.controller = controller;
+        this.portNumber = portNumber;
+        controller.setMotor(portNumber, this);
     }
 
     /**
@@ -73,11 +80,14 @@ public class DcMotorImpl implements DcMotor {
      * @param supportsError  True, if motor is to be affected by random and systematic error.
      * @param supportsInertia   True, if motor is to be affected by inertia.
      */
-    public DcMotorImpl(MotorType motorType, boolean supportsError, boolean supportsInertia){
+    public DcMotorImpl(MotorType motorType, DcMotorControllerImpl controller, int portNumber, boolean supportsError, boolean supportsInertia){
         MOTOR_TYPE = motorType;
         MOTOR_CONFIGURATION_TYPE = new MotorConfigurationType(motorType);
+        this.controller = controller;
+        this.portNumber = portNumber;
         this.supportsInertia = supportsInertia;
         this.supportsError = supportsError;
+        controller.setMotor(portNumber, this);
     }
 
     /**
@@ -101,11 +111,6 @@ public class DcMotorImpl implements DcMotor {
      * @return mode
      */
     public synchronized RunMode getMode(){ return mode; }
-
-    @Override
-    public DcMotorController getController() {
-        return null;
-    }
 
     /**
      * Set logical direction
@@ -350,6 +355,14 @@ public class DcMotorImpl implements DcMotor {
     public synchronized void setActualPositionLimits(double lowerPositionLimit, double upperPositionLimit){
         this.upperActualPositionLimit = upperPositionLimit;
         this.lowerActualPositionLimit = lowerPositionLimit;
+    }
+
+    public DcMotorController getController(){
+        return controller;
+    }
+
+    public int getPortNumber(){
+        return portNumber;
     }
 
 }

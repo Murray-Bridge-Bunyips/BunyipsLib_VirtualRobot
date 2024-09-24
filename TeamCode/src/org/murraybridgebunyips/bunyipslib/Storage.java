@@ -15,6 +15,8 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 
 //import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import org.murraybridgebunyips.bunyipslib.roadrunner.drive.RoadRunnerDrive;
+import org.murraybridgebunyips.bunyipslib.vision.processors.ColourLocator;
+import org.murraybridgebunyips.bunyipslib.vision.processors.ColourSensor;
 
 //import java.io.Closeable;
 //import java.io.File;
@@ -49,6 +51,8 @@ public final class Storage {
         RoadRunner.resetForOpMode();
         BunyipsSubsystem.resetForOpMode();
         Tasks.resetForOpMode();
+        ColourLocator.resetForOpMode();
+        ColourSensor.resetForOpMode();
     }
 
     /**

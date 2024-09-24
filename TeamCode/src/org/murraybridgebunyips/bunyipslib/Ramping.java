@@ -4,14 +4,16 @@ import static org.murraybridgebunyips.bunyipslib.external.units.Units.Seconds;
 
 import androidx.annotation.NonNull;
 
-import com.qualcomm.robotcore.hardware.DcMotorController;
+import com.qualcomm.robotcore.hardware.DcMotorControllerImpl;
 import com.qualcomm.robotcore.hardware.DcMotorImpl;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
+import com.qualcomm.robotcore.hardware.DcMotorImplEx;
+import com.qualcomm.robotcore.hardware.configuration.MotorType;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.murraybridgebunyips.bunyipslib.external.Mathf;
 import org.murraybridgebunyips.bunyipslib.external.units.Measure;
 import org.murraybridgebunyips.bunyipslib.external.units.Time;
+import virtual_robot.controller.VirtualBot;
 
 import java.util.function.DoubleSupplier;
 
@@ -263,9 +265,7 @@ public interface Ramping {
      * @author Lucas Bubner, 2024
      * @since 3.0.0
      */
-    class DcMotor /*extends DcMotorImpl*/ implements Ramping, com.qualcomm.robotcore.hardware.DcMotor {
-        private final com.qualcomm.robotcore.hardware.DcMotor __VIRT_MOTOR;
-
+    class DcMotor extends DcMotorImplEx implements Ramping {
         private final Supplier v = new Supplier(this::getPower);
 
         /**
@@ -276,8 +276,7 @@ public interface Ramping {
          * @param motor the DcMotor object to wrap. By default, the ramping function is enabled.
          */
         public DcMotor(com.qualcomm.robotcore.hardware.DcMotor motor) {
-//            super(motor.getController(), motor.getPortNumber(), motor.getDirection(), motor.getMotorType());
-            __VIRT_MOTOR = motor;
+            super(motor.getController(), motor.getPortNumber(), motor.getDirection(), motor.getMotorType());
         }
 
         /**
@@ -289,8 +288,7 @@ public interface Ramping {
          * @param maxDelta   the maximum change in power level per second
          */
         public DcMotor(com.qualcomm.robotcore.hardware.DcMotor motor, Measure<Time> smoothTime, double maxDelta) {
-            __VIRT_MOTOR = motor;
-//            super(motor.getController(), motor.getPortNumber(), motor.getDirection(), motor.getMotorType());
+            super(motor.getController(), motor.getPortNumber(), motor.getDirection(), motor.getMotorType());
             v.setRampingParameters(smoothTime, maxDelta);
         }
 
@@ -340,16 +338,6 @@ public interface Ramping {
             return this;
         }
 
-        @Override
-        public void setDirection(Direction direction) {
-            __VIRT_MOTOR.setDirection(direction);
-        }
-
-        @Override
-        public Direction getDirection() {
-            return __VIRT_MOTOR.getDirection();
-        }
-
         /**
          * Set the power level of the motor, which will be passed through a SmoothDamp function defined by the motor's ramping parameters.
          * <b>This function must be called periodically</b> (e.g. constantly during an activeLoop) to update the motor's power level,
@@ -359,19 +347,14 @@ public interface Ramping {
          */
         @Override
         public void setPower(double power) {
-            __VIRT_MOTOR.setPower(v.get(power));
-        }
-
-        @Override
-        public double getPower() {
-            return __VIRT_MOTOR.getPower();
+            super.setPower(v.get(power));
         }
 
         /**
          * Instantly set the power level of the motor, bypassing the SmoothDamp function.
          */
         public void setPowerInstant(double power) {
-            __VIRT_MOTOR.setPower(power);
+            super.setPower(power);
         }
 
         /**
@@ -379,56 +362,6 @@ public interface Ramping {
          */
         public void stop() {
             setPowerInstant(0);
-        }
-
-        @Override
-        public void setMode(RunMode mode) {
-            __VIRT_MOTOR.setMode(mode);
-        }
-
-        @Override
-        public RunMode getMode() {
-            return __VIRT_MOTOR.getMode();
-        }
-
-        @Override
-        public DcMotorController getController() {
-            return __VIRT_MOTOR.getController();
-        }
-
-        @Override
-        public int getCurrentPosition() {
-            return __VIRT_MOTOR.getCurrentPosition();
-        }
-
-        @Override
-        public void setTargetPosition(int pos) {
-            __VIRT_MOTOR.setTargetPosition(pos);
-        }
-
-        @Override
-        public int getTargetPosition() {
-            return __VIRT_MOTOR.getTargetPosition();
-        }
-
-        @Override
-        public boolean isBusy() {
-            return __VIRT_MOTOR.isBusy();
-        }
-
-        @Override
-        public void setZeroPowerBehavior(ZeroPowerBehavior zeroPowerBehavior) {
-            __VIRT_MOTOR.setZeroPowerBehavior(zeroPowerBehavior);
-        }
-
-        @Override
-        public ZeroPowerBehavior getZeroPowerBehavior() {
-            return __VIRT_MOTOR.getZeroPowerBehavior();
-        }
-
-        @Override
-        public MotorConfigurationType getMotorType() {
-            return __VIRT_MOTOR.getMotorType();
         }
     }
 }

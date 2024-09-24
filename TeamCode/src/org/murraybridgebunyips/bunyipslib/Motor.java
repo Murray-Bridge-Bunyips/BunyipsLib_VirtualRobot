@@ -6,13 +6,15 @@ import static org.murraybridgebunyips.bunyipslib.external.units.Units.Radians;
 
 import android.util.Pair;
 
-import com.qualcomm.robotcore.hardware.*;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorImplEx;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.apache.commons.math3.exception.OutOfRangeException;
+import org.apache.commons.math3.exception.util.LocalizedFormats;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 import org.murraybridgebunyips.bunyipslib.external.Mathf;
 import org.murraybridgebunyips.bunyipslib.external.PIDF;
@@ -28,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 /**
- * Wrapper class for a {@link DcMotor} that uses custom control algorithms to operate {@link RunMode#RUN_USING_ENCODER}
+ * Drop-in replacement for a {@link DcMotor} that uses custom control algorithms to operate {@link RunMode#RUN_USING_ENCODER}
  * and {@link RunMode#RUN_TO_POSITION} modes. Internally integrates a gain scheduler to allow for more precise
  * system coefficients against gravity and other external forces.
  * <p>
@@ -38,9 +40,7 @@ import java.util.Optional;
  * @author Lucas Bubner, 2024
  * @since 4.0.0
  */
-public class Motor /*extends DcMotorImplEx*/ implements DcMotorEx {
-    private final DcMotorEx __VIRT_MOTOR;
-
+public class Motor extends DcMotorImplEx {
     private final ArrayList<InterpolatedLookupTable> rtpGains = new ArrayList<>();
     private final ArrayList<InterpolatedLookupTable> rueGains = new ArrayList<>();
     private final Encoder encoder;
@@ -48,7 +48,7 @@ public class Motor /*extends DcMotorImplEx*/ implements DcMotorEx {
     private SystemController rtpController;
     private SystemController rueController;
     private Pair<Double, Double> rueInfo = null;
-    private RunMode mode = RunMode.RUN_WITHOUT_ENCODER;
+    private DcMotor.RunMode mode = RunMode.RUN_WITHOUT_ENCODER;
     private double powerDeltaTolerance = 0;
     private double lastPower = 0;
     private long refreshRateNanos = 0;
@@ -60,11 +60,10 @@ public class Motor /*extends DcMotorImplEx*/ implements DcMotorEx {
      * @param motor the DcMotor from hardwareMap to use.
      */
     public Motor(DcMotor motor) {
-//        super(motor.getController(), motor.getPortNumber(), motor.getDirection(), motor.getMotorType());
-        __VIRT_MOTOR = (DcMotorEx) motor;
+        super(motor.getController(), motor.getPortNumber(), motor.getDirection(), motor.getMotorType());
         // The actual motor should *always* be running in RUN_WITHOUT_ENCODER
-        __VIRT_MOTOR.setMode(RunMode.RUN_WITHOUT_ENCODER);
-        encoder = new Encoder(__VIRT_MOTOR::getCurrentPosition, __VIRT_MOTOR::getVelocity);
+        super.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        encoder = new Encoder(super::getCurrentPosition, super::getVelocity);
         setTargetPosition(getCurrentPosition());
     }
 
@@ -121,7 +120,7 @@ public class Motor /*extends DcMotorImplEx*/ implements DcMotorEx {
     public void setRunToPositionController(SystemController controller) {
         rtpController = controller;
         if (rtpController instanceof PIDF)
-            ((PIDF) rtpController).getPIDFController().setTolerance(__VIRT_MOTOR.getTargetPositionTolerance());
+            ((PIDF) rtpController).getPIDFController().setTolerance(super.getTargetPositionTolerance());
     }
 
     /**
@@ -150,7 +149,7 @@ public class Motor /*extends DcMotorImplEx*/ implements DcMotorEx {
      */
     public void setRunUsingEncoderController(SystemController controller, double bufferFraction, double maxAchievableTicksPerSecond) {
         if (bufferFraction <= 0 || bufferFraction > 1) {
-            throw new OutOfRangeException(bufferFraction, 0, 1);
+            throw new OutOfRangeException(LocalizedFormats.OUT_OF_RANGE_LEFT, bufferFraction, 0, 1);
         }
         rueController = controller;
         rueInfo = new Pair<>(bufferFraction, maxAchievableTicksPerSecond);
@@ -165,7 +164,7 @@ public class Motor /*extends DcMotorImplEx*/ implements DcMotorEx {
      */
     public GainScheduling scheduleRunToPositionGains() {
         rtpGains.clear();
-        return new GainScheduling(RunMode.RUN_TO_POSITION);
+        return new GainScheduling(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     /**
@@ -212,72 +211,12 @@ public class Motor /*extends DcMotorImplEx*/ implements DcMotorEx {
         return encoder.getPosition();
     }
 
-    @Override
-    public void setTargetPosition(int pos) {
-        __VIRT_MOTOR.setTargetPosition(pos);
-    }
-
-    @Override
-    public int getTargetPosition() {
-        return __VIRT_MOTOR.getTargetPosition();
-    }
-
     /**
      * @return the current velocity of this motor as specified by your settings. Ticks per second.
      */
     @Override
     public double getVelocity() {
         return encoder.getVelocity();
-    }
-
-    @Override
-    public double getVelocity(AngleUnit unit) {
-        return __VIRT_MOTOR.getVelocity(unit);
-    }
-
-    @Override
-    public void setPIDCoefficients(RunMode mode, PIDCoefficients pidCoefficients) {
-        __VIRT_MOTOR.setPIDCoefficients(mode, pidCoefficients);
-    }
-
-    @Override
-    public void setPIDFCoefficients(RunMode mode, PIDFCoefficients pidfCoefficients) throws UnsupportedOperationException {
-        __VIRT_MOTOR.setPIDFCoefficients(mode, pidfCoefficients);
-    }
-
-    @Override
-    public void setVelocityPIDFCoefficients(double p, double i, double d, double f) {
-        __VIRT_MOTOR.setVelocityPIDFCoefficients(p, i, d, f);
-    }
-
-    @Override
-    public void setPositionPIDFCoefficients(double p) {
-        __VIRT_MOTOR.setPositionPIDFCoefficients(p);
-    }
-
-    @Override
-    public PIDCoefficients getPIDCoefficients(RunMode mode) {
-        return __VIRT_MOTOR.getPIDCoefficients(mode);
-    }
-
-    @Override
-    public PIDFCoefficients getPIDFCoefficients(RunMode mode) {
-        return __VIRT_MOTOR.getPIDFCoefficients(mode);
-    }
-
-    @Override
-    public void setMotorEnable() {
-        __VIRT_MOTOR.setMotorEnable();
-    }
-
-    @Override
-    public void setMotorDisable() {
-        __VIRT_MOTOR.setMotorDisable();
-    }
-
-    @Override
-    public boolean isMotorEnabled() {
-        return __VIRT_MOTOR.isMotorEnabled();
     }
 
     /**
@@ -302,7 +241,7 @@ public class Motor /*extends DcMotorImplEx*/ implements DcMotorEx {
      * is currently running in.
      */
     @Override
-    public RunMode getMode() {
+    public DcMotor.RunMode getMode() {
         return mode;
     }
 
@@ -314,18 +253,13 @@ public class Motor /*extends DcMotorImplEx*/ implements DcMotorEx {
      * @param mode the new current run mode for this motor
      */
     @Override
-    public void setMode(RunMode mode) {
-        if (mode == RunMode.STOP_AND_RESET_ENCODER) {
+    public void setMode(DcMotor.RunMode mode) {
+        if (mode == DcMotor.RunMode.STOP_AND_RESET_ENCODER) {
             setPower(0);
             resetEncoder();
             return;
         }
         this.mode = mode;
-    }
-
-    @Override
-    public DcMotorController getController() {
-        return __VIRT_MOTOR.getController();
     }
 
     /**
@@ -345,26 +279,6 @@ public class Motor /*extends DcMotorImplEx*/ implements DcMotorEx {
             return (int) Math.ceil(((PIDF) rtpController).getPIDFController().getTolerance()[0]);
         }
         throw new UnsupportedOperationException("Can't access target position information on the currently used RTP controller. It may be the case that this controller is open-loop, or not a PID controller, as any tolerance configuration should be modified by your controller, not by this method.");
-    }
-
-    @Override
-    public double getCurrent(CurrentUnit unit) {
-        return __VIRT_MOTOR.getCurrent(unit);
-    }
-
-    @Override
-    public double getCurrentAlert(CurrentUnit unit) {
-        return __VIRT_MOTOR.getCurrentAlert(unit);
-    }
-
-    @Override
-    public void setCurrentAlert(double current, CurrentUnit unit) {
-        __VIRT_MOTOR.setCurrentAlert(current, unit);
-    }
-
-    @Override
-    public boolean isOverCurrent() {
-        return __VIRT_MOTOR.isOverCurrent();
     }
 
     /**
@@ -403,35 +317,20 @@ public class Motor /*extends DcMotorImplEx*/ implements DcMotorEx {
         throw new UnsupportedOperationException("Can't access target position information on the currently used RTP controller. It may be the case that this controller is open-loop, or not a PID controller, as any tolerance configuration should be modified by your controller, not by this method.");
     }
 
-    @Override
-    public void setZeroPowerBehavior(ZeroPowerBehavior zeroPowerBehavior) {
-        __VIRT_MOTOR.setZeroPowerBehavior(zeroPowerBehavior);
-    }
-
-    @Override
-    public ZeroPowerBehavior getZeroPowerBehavior() {
-        return __VIRT_MOTOR.getZeroPowerBehavior();
-    }
-
-    @Override
-    public MotorConfigurationType getMotorType() {
-        return __VIRT_MOTOR.getMotorType();
-    }
-
     /**
      * Switches the motor to velocity control and tries to set the angular velocity of the motor based on the intrinsic
      * {@link MotorConfigurationType} configuration.
      *
-     * @param vel  the desired angular rate, in units per second
-     * @param unit the units in which angularRate is expressed
+     * @param angVel the desired angular rate, in units per second
+     * @param unit   the units in which angVel is expressed
      */
     @Override
-    public void setVelocity(double vel, AngleUnit unit) {
-        double tpr = __VIRT_MOTOR.getMotorType().getTicksPerRev();
+    public void setVelocity(double angVel, AngleUnit unit) {
+        double tpr = motorType.getTicksPerRev();
         if (tpr <= 0) {
             throw new IllegalStateException(formatString("The Ticks Per Revolution attribute has not been set for this motor (% on port %). You will have to clone the current motorType, set the ticksPerRev, and set the new motorType to the cloned copy.", getDeviceName(), getPortNumber()));
         }
-        double radsPerSec = UnnormalizedAngleUnit.RADIANS.fromUnit(unit.getUnnormalized(), vel);
+        double radsPerSec = UnnormalizedAngleUnit.RADIANS.fromUnit(unit.getUnnormalized(), angVel);
         // Will assume no reduction, the user can scale the velocity on their own terms
         setVelocity(EncoderTicks.fromAngle(Radians.of(radsPerSec), (int) tpr, 1));
     }
@@ -449,21 +348,11 @@ public class Motor /*extends DcMotorImplEx*/ implements DcMotorEx {
         maxMagnitude = Math.min(1, Math.abs(magnitude));
     }
 
-    @Override
-    public void setDirection(Direction direction) {
-        __VIRT_MOTOR.setDirection(direction);
-    }
-
-    @Override
-    public Direction getDirection() {
-        return __VIRT_MOTOR.getDirection();
-    }
-
     /**
      * Update system controllers and propagate new power levels to the motor.
      * <p>
-     * Note: <b>This method needs to be called periodically (as part of the active loop)
-     * in order to update the system controllers that respond to dynamic conditions.</b>
+     * Note: <b>This method must be called periodically (as part of the active loop)
+     * in order to update the system controllers and timers that respond to dynamic conditions.</b>
      *
      * @param power the new power level of the motor, a value in the interval [-1.0, 1.0];
      *              this value is scaled by {@link #setMaxPower}, if used.
@@ -479,7 +368,7 @@ public class Motor /*extends DcMotorImplEx*/ implements DcMotorEx {
                     Dbg.error(msg);
                     RobotLog.addGlobalWarningMessage(msg);
                     rtpController = new PIDFController(coeffs.p, coeffs.i, coeffs.d, coeffs.f);
-                    ((PIDFController) rtpController).setTolerance(__VIRT_MOTOR.getTargetPositionTolerance());
+                    ((PIDFController) rtpController).setTolerance(super.getTargetPositionTolerance());
                 }
                 if (!rtpGains.isEmpty())
                     rtpController.setCoefficients(rtpGains.stream().mapToDouble(this::getClampedInterpolatedGain).toArray());
@@ -495,7 +384,7 @@ public class Motor /*extends DcMotorImplEx*/ implements DcMotorEx {
                     RobotLog.addGlobalWarningMessage(msg);
                     PIDController pid = new PIDController(coeffs.p, coeffs.i, coeffs.d);
                     rueController = new PIDFFController(pid, new SimpleMotorFeedforward(coeffs.f, 0, 0), encoder);
-                    rueInfo = new Pair<>(1.0, __VIRT_MOTOR.getMotorType().getAchieveableMaxTicksPerSecond());
+                    rueInfo = new Pair<>(1.0, motorType.getAchieveableMaxTicksPerSecond());
                 }
                 if (!rueGains.isEmpty())
                     rueController.setCoefficients(rueGains.stream().mapToDouble(this::getClampedInterpolatedGain).toArray());
@@ -534,12 +423,8 @@ public class Motor /*extends DcMotorImplEx*/ implements DcMotorEx {
         // Always update last powers to keep the system in sync
         lastUpdate = System.nanoTime();
         lastPower = power;
-        __VIRT_MOTOR.setPower(magnitude);
-    }
-
-    @Override
-    public double getPower() {
-        return __VIRT_MOTOR.getPower();
+        // Write to the hardware
+        super.setPower(magnitude);
     }
 
     private double getClampedInterpolatedGain(InterpolatedLookupTable lut) {
@@ -558,8 +443,8 @@ public class Motor /*extends DcMotorImplEx*/ implements DcMotorEx {
     public class GainScheduling {
         private final ArrayList<InterpolatedLookupTable> gains;
 
-        private GainScheduling(RunMode targetMode) {
-            gains = targetMode == RunMode.RUN_TO_POSITION ? rtpGains : rueGains;
+        private GainScheduling(DcMotor.RunMode targetMode) {
+            gains = targetMode == DcMotor.RunMode.RUN_TO_POSITION ? rtpGains : rueGains;
         }
 
         /**

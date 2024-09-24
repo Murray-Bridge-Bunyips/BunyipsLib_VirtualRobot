@@ -1,5 +1,6 @@
 package virtual_robot.controller;
 
+import com.qualcomm.robotcore.hardware.DcMotorControllerImpl;
 import javafx.scene.Group;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -42,10 +43,12 @@ import org.dyn4j.world.World;
  *
  */
 public abstract class VirtualBot {
-
     protected static VirtualRobotController controller;
 
     protected HardwareMap hardwareMap;
+
+    protected DcMotorControllerImpl motorController0 = new DcMotorControllerImpl();
+    protected DcMotorControllerImpl motorController1 = new DcMotorControllerImpl();
 
     protected Group displayGroup = null;
 

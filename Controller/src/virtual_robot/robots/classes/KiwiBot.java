@@ -1,11 +1,7 @@
 package virtual_robot.robots.classes;
 
 import com.qualcomm.robotcore.hardware.DeadWheelEncoder;
-import com.qualcomm.robotcore.hardware.ServoImpl;
 import com.qualcomm.robotcore.hardware.configuration.MotorType;
-import javafx.fxml.FXML;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.transform.Rotate;
 import virtual_robot.controller.BotConfig;
 import virtual_robot.util.AngleUtils;
 
@@ -66,7 +62,9 @@ public class KiwiBot extends KiwiPhysicsBase {
         super.createHardwareMap();
         encoderMotorType = MotorType.Neverest40;
         String[] encoderNames = new String[] {"enc_right", "enc_left", "enc_x"};
-        for (String name: encoderNames) hardwareMap.put(name, new DeadWheelEncoder(encoderMotorType));
+        for (int i=0; i<3; i++){
+            hardwareMap.put(encoderNames[i], new DeadWheelEncoder(MOTOR_TYPE, motorController1, i));
+        }
     }
 
     public synchronized void updateStateAndSensors(double millis){

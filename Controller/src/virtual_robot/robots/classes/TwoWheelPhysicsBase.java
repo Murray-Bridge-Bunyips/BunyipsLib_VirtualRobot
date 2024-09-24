@@ -21,8 +21,8 @@ import virtual_robot.util.AngleUtils;
 public class TwoWheelPhysicsBase extends VirtualBot {
 
     private final MotorType MOTOR_TYPE = MotorType.Neverest40;
-    private DcMotorImplEx leftMotor = null;
-    private DcMotorImplEx rightMotor = null;
+    private DcMotorExImpl leftMotor = null;
+    private DcMotorExImpl rightMotor = null;
     private BNO055IMUImpl imu = null;
     private BNO055IMUNew imuNew = null;
     private VirtualRobotController.ColorSensorImpl colorSensor = null;
@@ -41,8 +41,8 @@ public class TwoWheelPhysicsBase extends VirtualBot {
         super.initialize();
 
         hardwareMap.setActive(true);
-        leftMotor = (DcMotorImplEx)hardwareMap.get(DcMotorEx.class, "left_motor");
-        rightMotor = (DcMotorImplEx)hardwareMap.get(DcMotorEx.class, "right_motor");
+        leftMotor = (DcMotorExImpl)hardwareMap.get(DcMotorEx.class, "left_motor");
+        rightMotor = (DcMotorExImpl)hardwareMap.get(DcMotorEx.class, "right_motor");
         distanceSensors = new VirtualRobotController.DistanceSensorImpl[]{
                 hardwareMap.get(VirtualRobotController.DistanceSensorImpl.class, "front_distance"),
                 hardwareMap.get(VirtualRobotController.DistanceSensorImpl.class, "left_distance"),
@@ -63,8 +63,8 @@ public class TwoWheelPhysicsBase extends VirtualBot {
 
     protected void createHardwareMap(){
         hardwareMap = new HardwareMap();
-        hardwareMap.put("left_motor", new DcMotorImplEx(MOTOR_TYPE));
-        hardwareMap.put("right_motor", new DcMotorImplEx(MOTOR_TYPE));
+        hardwareMap.put("left_motor", new DcMotorExImpl(MOTOR_TYPE, motorController0, 0));
+        hardwareMap.put("right_motor", new DcMotorExImpl(MOTOR_TYPE, motorController0, 1));
         String[] distNames = new String[]{"front_distance", "left_distance", "back_distance", "right_distance"};
         for (String name: distNames) hardwareMap.put(name, controller.new DistanceSensorImpl());
         hardwareMap.put("imu", new BNO055IMUImpl(this, 10));
