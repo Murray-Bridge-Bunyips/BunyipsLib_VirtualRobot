@@ -6,14 +6,18 @@ import static org.murraybridgebunyips.bunyipslib.external.units.Units.Inches;
 import static org.murraybridgebunyips.bunyipslib.external.units.Units.Radians;
 import static org.murraybridgebunyips.bunyipslib.tasks.bases.Task.INFINITE_TIMEOUT;
 
-import android.util.Pair;
 import androidx.annotation.NonNull;
+
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.path.Path;
 import com.acmerobotics.roadrunner.path.PathBuilder;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.murraybridgebunyips.bunyipslib.drive.MecanumDrive;
@@ -26,6 +30,7 @@ import org.murraybridgebunyips.bunyipslib.external.units.Distance;
 import org.murraybridgebunyips.bunyipslib.external.units.Measure;
 import org.murraybridgebunyips.bunyipslib.external.units.Time;
 import org.murraybridgebunyips.bunyipslib.roadrunner.drive.RoadRunnerDrive;
+import org.murraybridgebunyips.bunyipslib.roadrunner.util.DashboardUtil;
 import org.murraybridgebunyips.bunyipslib.tasks.PurePursuitTask;
 
 import java.util.ArrayList;
@@ -35,10 +40,13 @@ import java.util.function.Supplier;
 import kotlin.UninitializedPropertyAccessException;
 
 /**
- * Simple implementation of a Pure Pursuit controller designed for holonomic drivetrains.
+ * A parametric displacement-based implementation of a Pure Pursuit controller designed for holonomic drivetrains.
  * <p>
  * This system uses a series of suppliers and consumers to define odometry and drive power setting via
- * RoadRunner geometry utilities such as {@link Pose2d} along a {@link Path}.
+ * RoadRunner geometry utilities such as {@link Pose2d} along a {@link Path}. The actual lookahead, despite
+ * being usually rooted in a line-circle intersection, is performed by pose projection based on looking ahead
+ * on the path by displacement. By using displacement, the lookahead point naturally reduces for complex bends,
+ * and centers the process of calculating the lookahead as a simple vector projection.
  * <p>
  * A RoadRunner drive instance is not required to use this class, but since it provides odometry it is designed
  * to support consuming a {@link RoadRunnerDrive} instance if wanted.
@@ -49,26 +57,27 @@ import kotlin.UninitializedPropertyAccessException;
 @Config
 public class PurePursuit implements Runnable {
     /**
-     * Inches of how close together line segments should be to find the best lookahead point.
+     * Inches of how far apart guesses are made along the path for projecting the current robot pose on the path.
+     * Lower values will negatively impact loop times but increase the path accuracy.
      */
-    public static final int SEGMENTATION_APPROXIMATION_STEP = 4;
+    public static int PROJECTION_INTERVAL = 12;
     /**
-     * Inches of how close the lookahead point approximations should be to determine the best lookahead point.
+     * Milliseconds of the interval the projections are updated.
+     * Lower values will negatively impact loop times but increase the path accuracy.
      */
-    public static final int BEST_LOOKAHEAD_POINT_GUESS_STEP = 6;
-    /**
-     * Inches of how close the heading projection approximations should be to determine the closest point on the path.
-     */
-    public static final int HEADING_PROJECTION_GUESS_STEP = 2;
+    public static int PROJECTION_REFRESH_RATE = 50;
     /**
      * Inches of how close the robot should be to the end of the path to stop the Pure Pursuit controller and
      * to simple move to PID To Point.
      */
-    public static final int P2P_AT_END_INCHES = 10;
+    public static int P2P_AT_END_INCHES = 12;
 
     private final Consumer<Pose2d> power;
     private final Supplier<Pose2d> pose;
+    private final ElapsedTime time = new ElapsedTime();
 
+    private double pathProjection;
+    private Pose2d lookahead;
     private PIDF p2pX;
     private PIDF p2pY;
     private PIDF p2pHeading;
@@ -82,7 +91,7 @@ public class PurePursuit implements Runnable {
      * Construct a new component to run Pure Pursuit pathing with using your own
      * odometry implementation and drive powers.
      *
-     * @param setDrivePower a consumer that will take in a pose the motors should be commanded to move in during a path execution
+     * @param setDrivePower        a consumer that will take in a pose the motors should be commanded to move in during a path execution
      * @param poseEstimateSupplier a supplier that supplies the current robot pose as per your odometry
      */
     public PurePursuit(Consumer<Pose2d> setDrivePower, Supplier<Pose2d> poseEstimateSupplier) {
@@ -195,7 +204,7 @@ public class PurePursuit implements Runnable {
      * Set the tolerances that this Pure Pursuit controller will use to determine when to stop following a path.
      *
      * @param vectorDistance the distance tolerance for the path position
-     * @param headingDiff the heading tolerance for the path heading
+     * @param headingDiff    the heading tolerance for the path heading
      * @return this
      */
     public PurePursuit withTolerances(Measure<Distance> vectorDistance, Measure<Angle> headingDiff) {
@@ -254,76 +263,92 @@ public class PurePursuit implements Runnable {
      */
     @Override
     public void run() {
-        if (currentPath == null) return;
-        Pose2d poseEstimate = pose.get();
+        if (currentPath == null) {
+            time.reset();
+            return;
+        }
+        Pose2d currentPose = pose.get();
 
-        Pose2d targetPower = runPurePursuit(poseEstimate);
-        power.accept(targetPower);
+        if (time.milliseconds() >= PROJECTION_REFRESH_RATE) {
+            pathProjection = currentPath.project(currentPose.vec(), PROJECTION_INTERVAL);
+            time.reset();
+        }
+
+        // This is where the actual lookahead is calculated, by parametrically "looking ahead" on the curve
+        // to calculate the new vector that should be driven to. This will also ensure the path is always being followed,
+        // as this is a parametric equation.
+        lookahead = currentPath.get(pathProjection + laRadius.in(Inches));
+
+        // Swap to P2P at the end of the path
+        boolean isCloseToEnd = currentPath.get(pathProjection).vec().distTo(currentPath.end().vec()) < P2P_AT_END_INCHES;
+
+        // Rotate vectors to field frame to ensure PID controllers are in the same frame of reference
+        Vector2d rotCurr = currentPose.vec().rotated(-currentPose.getHeading());
+        Vector2d rotLook = isCloseToEnd ? currentPath.end().vec().rotated(-currentPose.getHeading()) : lookahead.vec().rotated(-currentPose.getHeading());
+
+        // Wrap angle between -180 to 180 degrees, heading is calculated by projecting the current
+        // pose onto the path to get the best target that the path is desiring near this point
+        double headingError = Mathf.inputModulus(lookahead.getHeading() - currentPose.getHeading(), -Math.PI, Math.PI);
+        if (Mathf.isNear(Math.abs(headingError), Math.PI, 0.1))
+            headingError = Math.PI;
+
+        power.accept(new Pose2d(
+                Mathf.clamp(p2pX.calculate(rotCurr.getX(), rotLook.getX()), -1, 1),
+                Mathf.clamp(p2pY.calculate(rotCurr.getY(), rotLook.getY()), -1, 1),
+                Mathf.clamp(-p2pHeading.calculate(headingError, 0), -1, 1)
+        ));
+
+        BunyipsOpMode opMode = BunyipsOpMode.isRunning() ? BunyipsOpMode.getInstance() : null;
+        TelemetryPacket packet = opMode == null ? new TelemetryPacket() : null;
+        Canvas canvas = opMode != null ? opMode.telemetry.dashboardFieldOverlay() : packet.fieldOverlay();
+
+        // Path drawing
+        canvas.setStroke("#7C4DFF");
+        DashboardUtil.drawSampledPath(canvas, currentPath);
+        // Circle at the end of the path
+        Pose2d end = currentPath.end();
+        canvas.setFill("#7C4DFF");
+        canvas.fillCircle(end.getX(), end.getY(), 2);
+        // Lookahead
+        canvas.setFill("#4CAF50");
+        canvas.setStroke("#4CAF50");
+        canvas.strokeLine(currentPose.getX(), currentPose.getY(), lookahead.getX(), lookahead.getY());
+        canvas.fillCircle(lookahead.getX(), lookahead.getY(), 1.5);
+        canvas.setStroke("#4CAF507F");
+        canvas.strokeCircle(currentPose.getX(), currentPose.getY(), laRadius.in(Inches));
+        // Lookahead path projection
+        canvas.setStroke("#DD2C0076");
+        canvas.setStrokeWidth(2);
+        canvas.strokeCircle(lookahead.getX(), lookahead.getY(), 4);
+        Vector2d v = lookahead.headingVec().times(4);
+        canvas.strokeLine(
+                lookahead.getX() + v.getX() / 2,
+                lookahead.getY() + v.getY() / 2,
+                lookahead.getX() + v.getX(),
+                lookahead.getY() + v.getY()
+        );
+        canvas.setStrokeWidth(1);
+        // P2P circle
+        canvas.setStroke("#4CAF507A");
+        canvas.strokeCircle(end.getX(), end.getY(), P2P_AT_END_INCHES);
+
+        if (packet != null)
+            FtcDashboard.getInstance().sendTelemetryPacket(packet);
 
         // Path position and heading tolerance finish condition check, which simply checks for the robot being close
         // to the end position. This is a simple check that is not perfect but is good enough for most cases, as
         // paths that go to the same point should probably be split into separate paths.
-        if (poseEstimate.vec().distTo(currentPath.end().vec()) < tolerance.in(Inches) &&
-                Mathf.isNear(poseEstimate.getHeading(), currentPath.end().getHeading(), angleTolerance.in(Radians))) {
+        // Note: intersecting paths don't work very nicely
+        if (currentPose.vec().distTo(currentPath.end().vec()) < tolerance.in(Inches) &&
+                Mathf.isNear(
+                        Mathf.inputModulus(currentPose.getHeading(), -Math.PI, Math.PI),
+                        Mathf.inputModulus(currentPath.end().getHeading(), -Math.PI, Math.PI),
+                        angleTolerance.in(Radians)
+                )) {
             // Stop motors and release path
             power.accept(new Pose2d());
             currentPath = null;
         }
-    }
-
-    private Pose2d runPurePursuit(Pose2d currentPose) {
-        Vector2d lookahead = null;
-
-        for (int i = 0; i < currentPath.length(); i += SEGMENTATION_APPROXIMATION_STEP) {
-            // Using a line segment which traces from approximately small segments of the path to find the best lookahead
-            Vector2d start = currentPath.get(i).vec();
-            Vector2d end = currentPath.get(i + SEGMENTATION_APPROXIMATION_STEP).vec();
-            try {
-                // We now apply the lookahead radius to get the 2 solutions from the quadratic
-                Pair<Vector2d, Vector2d> intersections = Mathf.lineSegmentCircleIntersection(
-                        start, end, currentPose.vec(), laRadius.in(Inches)
-                );
-                // We then project the intersections onto the path to get the best lookahead point, as one will
-                // likely be behind the robot (not progressed on the path)
-                double s1 = currentPath.project(intersections.first, BEST_LOOKAHEAD_POINT_GUESS_STEP);
-                double s2 = currentPath.project(intersections.second, BEST_LOOKAHEAD_POINT_GUESS_STEP);
-                // Maximisation of the parameter to get the best lookahead point
-                if (s1 > s2) {
-                    lookahead = intersections.first;
-                } else {
-                    lookahead = intersections.second;
-                }
-                break;
-            } catch (Mathf.NoInterceptException e) {
-                // No intercept, continue to next segment
-            }
-        }
-
-        Pose2d pathProjection = currentPath.get(currentPath.project(currentPose.vec(), HEADING_PROJECTION_GUESS_STEP));
-        if (lookahead == null) {
-            // Travel to the closest projection of the path if the circle has no intercepts anywhere along the path
-            lookahead = pathProjection.vec();
-        }
-
-        // Swap to P2P at the end of the path
-        boolean isCloseToEnd = pathProjection.vec().distTo(currentPath.end().vec()) < P2P_AT_END_INCHES;
-
-        // Rotate vectors to field frame to ensure PID controllers are in the same frame of reference
-        Vector2d rotCurr = currentPose.vec().rotated(-currentPose.getHeading());
-        Vector2d rotLook = isCloseToEnd ? currentPath.end().vec().rotated(-currentPose.getHeading()) : lookahead.rotated(-currentPose.getHeading());
-
-        // Wrap angle between -180 to 180 degrees, heading is calculated by projecting the current
-        // pose onto the path to get the best target that the path is desiring near this point
-        double targetHeading = Mathf.inputModulus(pathProjection.getHeading(), -Math.PI, Math.PI);
-        // The heading at the modulus boundary acts strangely, so we'll just lock it when it gets close
-        if (Mathf.approximatelyEquals(Math.abs(currentPath.end().getHeading()), Math.PI) && isCloseToEnd)
-            targetHeading = Math.PI;
-
-        return new Pose2d(
-                p2pX.calculate(rotCurr.getX(), rotLook.getX()),
-                p2pY.calculate(rotCurr.getY(), rotLook.getY()),
-                p2pHeading.calculate(Mathf.inputModulus(currentPose.getHeading(), -Math.PI, Math.PI), targetHeading)
-        );
     }
 
     /**
@@ -398,7 +423,7 @@ public class PurePursuit implements Runnable {
          * Run this path with this defined starting tangent.
          *
          * @param tangent the tangent to start with
-         * @param unit the unit of the tangent
+         * @param unit    the unit of the tangent
          * @return this
          */
         public PathMaker withStartTangent(double tangent, Angle unit) {
@@ -410,7 +435,7 @@ public class PurePursuit implements Runnable {
          * Adds a line segment with tangent heading interpolation.
          *
          * @param endPosition the end position
-         * @param unit units of the supplied vector
+         * @param unit        units of the supplied vector
          * @return this
          */
         public PathMaker lineTo(Vector2d endPosition, Distance unit) {
@@ -427,7 +452,7 @@ public class PurePursuit implements Runnable {
          * Adds a line segment with constant heading interpolation.
          *
          * @param endPosition the end position
-         * @param unit units of the supplied vector
+         * @param unit        units of the supplied vector
          * @return this
          */
         public PathMaker lineToConstantHeading(Vector2d endPosition, Distance unit) {
@@ -444,7 +469,7 @@ public class PurePursuit implements Runnable {
          * Adds a strafe segment (i.e., a line segment with constant heading interpolation).
          *
          * @param endPosition the end position
-         * @param unit units of the supplied vector
+         * @param unit        units of the supplied vector
          * @return this
          */
         public PathMaker strafeTo(Vector2d endPosition, Distance unit) {
@@ -460,9 +485,9 @@ public class PurePursuit implements Runnable {
         /**
          * Adds a line segment with linear heading interpolation.
          *
-         * @param endPose the end pose
+         * @param endPose    the end pose
          * @param vectorUnit units of the supplied vector
-         * @param angleUnit units of the supplied angle
+         * @param angleUnit  units of the supplied angle
          * @return this
          */
         public PathMaker lineToLinearHeading(Pose2d endPose, Distance vectorUnit, Angle angleUnit) {
@@ -479,9 +504,9 @@ public class PurePursuit implements Runnable {
         /**
          * Adds a line segment with spline heading interpolation.
          *
-         * @param endPose the end pose
+         * @param endPose    the end pose
          * @param vectorUnit units of the supplied vector
-         * @param angleUnit units of the supplied angle
+         * @param angleUnit  units of the supplied angle
          * @return this
          */
         public PathMaker lineToSplineHeading(Pose2d endPose, Distance vectorUnit, Angle angleUnit) {
@@ -499,7 +524,7 @@ public class PurePursuit implements Runnable {
          * Adds a line straight forward.
          *
          * @param distance the distance to travel forward
-         * @param unit the unit of the distance
+         * @param unit     the unit of the distance
          * @return this
          */
         public PathMaker forward(double distance, Distance unit) {
@@ -513,7 +538,7 @@ public class PurePursuit implements Runnable {
          * Adds a line straight backward.
          *
          * @param distance the distance to travel backward
-         * @param unit the unit of the distance
+         * @param unit     the unit of the distance
          * @return this
          */
         public PathMaker back(double distance, Distance unit) {
@@ -527,7 +552,7 @@ public class PurePursuit implements Runnable {
          * Adds a segment that strafes left in the robot reference frame.
          *
          * @param distance the distance to strafe left
-         * @param unit the unit of the distance
+         * @param unit     the unit of the distance
          * @return this
          */
         public PathMaker strafeLeft(double distance, Distance unit) {
@@ -541,7 +566,7 @@ public class PurePursuit implements Runnable {
          * Adds a segment that strafes right in the robot reference frame.
          *
          * @param distance the distance to strafe right
-         * @param unit the unit of the distance
+         * @param unit     the unit of the distance
          * @return this
          */
         public PathMaker strafeRight(double distance, Distance unit) {
@@ -554,10 +579,10 @@ public class PurePursuit implements Runnable {
         /**
          * Adds a spline segment with tangent heading interpolation.
          *
-         * @param endPosition the end position
+         * @param endPosition  the end position
          * @param distanceUnit units of the supplied vector
-         * @param endTangent the end tangent
-         * @param angleUnit units of the supplied angle
+         * @param endTangent   the end tangent
+         * @param angleUnit    units of the supplied angle
          * @return this
          */
         public PathMaker splineTo(Vector2d endPosition, Distance distanceUnit, double endTangent, Angle angleUnit) {
@@ -573,10 +598,10 @@ public class PurePursuit implements Runnable {
         /**
          * Adds a spline segment with constant heading interpolation.
          *
-         * @param endPosition the end position
+         * @param endPosition  the end position
          * @param distanceUnit units of the supplied vector
-         * @param endTangent the end tangent
-         * @param angleUnit units of the supplied angle
+         * @param endTangent   the end tangent
+         * @param angleUnit    units of the supplied angle
          * @return this
          */
         public PathMaker splineToConstantHeading(Vector2d endPosition, Distance distanceUnit, double endTangent, Angle angleUnit) {
@@ -592,10 +617,10 @@ public class PurePursuit implements Runnable {
         /**
          * Adds a spline segment with linear heading interpolation.
          *
-         * @param endPose the end pose
-         * @param vectorUnit units of the supplied vector in the end pose
-         * @param angleUnit units of the supplied angle in the end pose
-         * @param endTangent the end tangent
+         * @param endPose        the end pose
+         * @param vectorUnit     units of the supplied vector in the end pose
+         * @param angleUnit      units of the supplied angle in the end pose
+         * @param endTangent     the end tangent
          * @param endTangentUnit units of the supplied angle for the end tangent
          * @return this
          */
@@ -613,10 +638,10 @@ public class PurePursuit implements Runnable {
         /**
          * Adds a spline segment with spline heading interpolation.
          *
-         * @param endPose the end pose
-         * @param vectorUnit units of the supplied vector in the end pose
-         * @param angleUnit units of the supplied angle in the end pose
-         * @param endTangent the end tangent
+         * @param endPose        the end pose
+         * @param vectorUnit     units of the supplied vector in the end pose
+         * @param angleUnit      units of the supplied angle in the end pose
+         * @param endTangent     the end tangent
          * @param endTangentUnit units of the supplied angle for the end tangent
          * @return this
          */
@@ -721,6 +746,7 @@ public class PurePursuit implements Runnable {
          * <b>Note!</b> Unlike the other drive tasks, this task does not automatically attach itself to a {@link BunyipsSubsystem}
          * on construction, and needs to be done manually via the {@code onSubsystem} method.
          *
+         * @return the task instance to allow for {@code onSubsystem} chaining
          * @throws UninitializedPropertyAccessException if the task is added outside of an {@link AutonomousBunyipsOpMode}
          */
         public PurePursuitTask addTask() throws UninitializedPropertyAccessException {
@@ -748,6 +774,7 @@ public class PurePursuit implements Runnable {
          * <b>Note!</b> Unlike the other drive tasks, this task does not automatically attach itself to a {@link BunyipsSubsystem}
          * on construction, and needs to be done manually via the {@code onSubsystem} method.
          *
+         * @return the task instance to allow for {@code onSubsystem} chaining
          * @throws UninitializedPropertyAccessException if the task is added outside of an {@link AutonomousBunyipsOpMode}
          */
         public PurePursuitTask addTaskNow() throws UninitializedPropertyAccessException {
