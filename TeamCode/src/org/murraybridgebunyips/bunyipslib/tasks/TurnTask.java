@@ -26,6 +26,7 @@ import java.util.function.Supplier;
  * A simple task that turns the robot to a specific angle using a PIDF controller.
  *
  * @author Lucas Bubner, 2024
+ * @see DriveToPoseTask
  * @since 5.1.0
  */
 public class TurnTask extends Task {
@@ -94,7 +95,8 @@ public class TurnTask extends Task {
     @Override
     protected void periodic() {
         Pose2d pose = poseEstimate.get();
-        powerIn.accept(new Pose2d(0, 0, pidf.calculate(Mathf.inputModulus(pose.getHeading(), -Math.PI, Math.PI), angRad)));
+        double errRad = Mathf.inputModulus(pose.getHeading(), -Math.PI, Math.PI) - angRad;
+        powerIn.accept(new Pose2d(0, 0, pidf.calculate(Mathf.inputModulus(errRad, -Math.PI, Math.PI), 0)));
 
         TelemetryPacket packet = opMode == null ? new TelemetryPacket() : null;
         Canvas canvas = opMode != null ? opMode.telemetry.dashboardFieldOverlay() : packet.fieldOverlay();
