@@ -53,7 +53,72 @@ public interface DcMotor extends DcMotorSimple {
      *     will set the power to zero and zero the encoder. To run the motor again, the mode must be set to
      *     either RUN_USING_ENCODER, RUN_WITHOUT_ENCODER, or RUN_TO_POSITION.
      */
-    public enum RunMode {RUN_TO_POSITION, RUN_USING_ENCODER, RUN_WITHOUT_ENCODER, STOP_AND_RESET_ENCODER}
+    enum RunMode
+    {
+        /** The motor is simply to run at whatever velocity is achieved by apply a particular
+         * power level to the motor.
+         */
+        RUN_WITHOUT_ENCODER,
+
+        /** The motor is to do its best to run at targeted velocity. An encoder must be affixed
+         * to the motor in order to use this mode. This is a PID mode.
+         */
+        RUN_USING_ENCODER,
+
+        /** The motor is to attempt to rotate in whatever direction is necessary to cause the
+         * encoder reading to advance or retreat from its current setting to the setting which
+         * has been provided through the {@link #setTargetPosition(int) setTargetPosition()} method.
+         * An encoder must be affixed to this motor in order to use this mode. This is a PID mode.
+         */
+        RUN_TO_POSITION,
+
+        /** The motor is to set the current encoder position to zero. In contrast to
+         * {@link com.qualcomm.robotcore.hardware.DcMotor.RunMode#RUN_TO_POSITION RUN_TO_POSITION},
+         * the motor is not rotated in order to achieve this; rather, the current rotational
+         * position of the motor is simply reinterpreted as the new zero value. However, as
+         * a side effect of placing a motor in this mode, power is removed from the motor, causing
+         * it to stop, though it is unspecified whether the motor enters brake or float mode.
+         *
+         * Further, it should be noted that setting a motor to{@link RunMode#STOP_AND_RESET_ENCODER
+         * STOP_AND_RESET_ENCODER} may or may not be a transient state: motors connected to some motor
+         * controllers will remain in this mode until explicitly transitioned to a different one, while
+         * motors connected to other motor controllers will automatically transition to a different
+         * mode after the reset of the encoder is complete.
+         */
+        STOP_AND_RESET_ENCODER,
+
+        /** @deprecated Use {@link #RUN_WITHOUT_ENCODER} instead */
+        @Deprecated RUN_WITHOUT_ENCODERS,
+
+        /** @deprecated Use {@link #RUN_USING_ENCODER} instead */
+        @Deprecated RUN_USING_ENCODERS,
+
+        /** @deprecated Use {@link #STOP_AND_RESET_ENCODER} instead */
+        @Deprecated RESET_ENCODERS;
+
+        /** Returns the new new constant corresponding to old constant names.
+         * @deprecated Replace use of old constants with new */
+        @Deprecated
+        public RunMode migrate()
+        {
+            switch (this)
+            {
+                case RUN_WITHOUT_ENCODERS: return RUN_WITHOUT_ENCODER;
+                case RUN_USING_ENCODERS: return RUN_USING_ENCODER;
+                case RESET_ENCODERS: return STOP_AND_RESET_ENCODER;
+                default: return this;
+            }
+        }
+
+        /**
+         * Returns whether this RunMode is a PID-controlled mode or not
+         * @return whether this RunMode is a PID-controlled mode or not
+         */
+        public boolean isPIDMode()
+        {
+            return this==RUN_USING_ENCODER || this==RUN_USING_ENCODERS || this==RUN_TO_POSITION;
+        }
+    }
 
     /**
      * Enum of ZeroPowerBehavior
@@ -130,4 +195,10 @@ public interface DcMotor extends DcMotorSimple {
      * @see #getController()
      */
     int getPortNumber();
+
+    @Deprecated
+    void setPowerFloat();
+
+    @Deprecated
+    boolean getPowerFloat();
 }

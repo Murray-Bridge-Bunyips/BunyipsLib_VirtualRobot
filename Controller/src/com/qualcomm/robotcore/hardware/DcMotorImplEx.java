@@ -168,6 +168,17 @@ public class DcMotorImplEx implements DcMotorEx {
     }
 
     @Override
+    public void setPowerFloat() {
+        setZeroPowerBehavior(ZeroPowerBehavior.FLOAT);
+        setPower(0);
+    }
+
+    @Override
+    public boolean getPowerFloat() {
+        return getZeroPowerBehavior() == ZeroPowerBehavior.FLOAT && getPower() == 0;
+    }
+
+    @Override
     public void setDirection(Direction direction) {
         con.getMotor(port).setDirection(direction);
     }

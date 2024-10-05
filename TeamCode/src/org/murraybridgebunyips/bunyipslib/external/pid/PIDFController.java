@@ -2,6 +2,7 @@ package org.murraybridgebunyips.bunyipslib.external.pid;
 
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import org.murraybridgebunyips.bunyipslib.external.Mathf;
 import org.murraybridgebunyips.bunyipslib.external.PIDF;
 
 /**
@@ -36,6 +37,9 @@ public class PIDFController implements PIDF {
 
     private double lastTimeStamp;
     private double period;
+
+    private double lowerLim = -Double.MAX_VALUE;
+    private double upperLim = Double.MAX_VALUE;
 
     /**
      * The base constructor for the PIDF controller
@@ -96,10 +100,25 @@ public class PIDFController implements PIDF {
      *
      * @param positionTolerance Position error which is tolerable.
      * @param velocityTolerance Velocity error which is tolerable.
+     * @return this
      */
-    public void setTolerance(double positionTolerance, double velocityTolerance) {
+    public PIDFController setTolerance(double positionTolerance, double velocityTolerance) {
         errorTolerance_p = positionTolerance;
         errorTolerance_v = velocityTolerance;
+        return this;
+    }
+
+    /**
+     * Clamps the maximum output magnitude that can be achieved via {@link #calculate()}.
+     *
+     * @param lower the lower clamp
+     * @param upper the upper clamp
+     * @return this
+     */
+    public PIDFController setOutputClamps(double lower, double upper) {
+        lowerLim = lower;
+        upperLim = upper;
+        return this;
     }
 
     /**
@@ -115,11 +134,13 @@ public class PIDFController implements PIDF {
      * Sets the setpoint for the PIDFController
      *
      * @param sp The desired setpoint.
+     * @return this
      */
-    public void setSetPoint(double sp) {
+    public PIDFController setSetPoint(double sp) {
         setPoint = sp;
         errorVal_p = setPoint - measuredValue;
         errorVal_v = (errorVal_p - prevErrorVal) / period;
+        return this;
     }
 
     /**
@@ -170,9 +191,11 @@ public class PIDFController implements PIDF {
      * Sets the error which is considered tolerable for use with {@link #atSetPoint()}.
      *
      * @param positionTolerance Position error which is tolerable.
+     * @return this
      */
-    public void setTolerance(double positionTolerance) {
+    public PIDFController setTolerance(double positionTolerance) {
         setTolerance(positionTolerance, Double.POSITIVE_INFINITY);
+        return this;
     }
 
     /**
@@ -242,7 +265,8 @@ public class PIDFController implements PIDF {
         totalError = totalError < minIntegral ? minIntegral : Math.min(maxIntegral, totalError);
 
         // Returns u(t)
-        return kP * errorVal_p + kI * totalError + kD * errorVal_v + kF * setPoint;
+        double ut = kP * errorVal_p + kI * totalError + kD * errorVal_v + kF * setPoint;
+        return Mathf.clamp(ut, lowerLim, upperLim);
     }
 
     /**
@@ -252,36 +276,42 @@ public class PIDFController implements PIDF {
      * @param ki The value of kI for the coefficients.
      * @param kd The value of kD for the coefficients.
      * @param kf The value of kF for the coefficients.
+     * @return this
      */
-    public void setPIDF(double kp, double ki, double kd, double kf) {
+    public PIDFController setPIDF(double kp, double ki, double kd, double kf) {
         kP = kp;
         kI = ki;
         kD = kd;
         kF = kf;
+        return this;
     }
 
     /**
      * Set the current controller PID coefficients to the given coefficients.
      *
      * @param coefficients the coefficients to set
+     * @return this
      */
-    public void setPIDF(PIDFCoefficients coefficients) {
+    public PIDFController setPIDF(PIDFCoefficients coefficients) {
         kP = coefficients.p;
         kI = coefficients.i;
         kD = coefficients.d;
         kF = coefficients.f;
+        return this;
     }
 
     /**
      * Update the supplied PID coefficients with the current controller values.
      *
      * @param coefficients the coefficients to update
+     * @return this
      */
-    public void updatePIDF(PIDFCoefficients coefficients) {
+    public PIDFController updatePIDF(PIDFCoefficients coefficients) {
         coefficients.p = kP;
         coefficients.i = kI;
         coefficients.d = kD;
         coefficients.f = kF;
+        return this;
     }
 
     /**
@@ -289,17 +319,22 @@ public class PIDFController implements PIDF {
      *
      * @param integralMin The minimum value for the integral term.
      * @param integralMax The maximum value for the integral term.
+     * @return this
      */
-    public void setIntegrationBounds(double integralMin, double integralMax) {
+    public PIDFController setIntegrationBounds(double integralMin, double integralMax) {
         minIntegral = integralMin;
         maxIntegral = integralMax;
+        return this;
     }
 
     /**
      * Clear the integral term.
+     *
+     * @return this
      */
-    public void clearTotalError() {
+    public PIDFController clearTotalError() {
         totalError = 0;
+        return this;
     }
 
     public double getP() {

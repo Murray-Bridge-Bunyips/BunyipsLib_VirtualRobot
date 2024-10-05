@@ -54,6 +54,11 @@ public final class MotorConfigurationType implements Cloneable{
     private double achieveableMaxRPMFraction = 1.0; //In FTC SDK, this is 0.85 by default
     private Rotation orientation;
 
+    public static MotorConfigurationType getUnspecifiedMotorType()
+    {
+        return new MotorConfigurationType(MotorType.Neverest40);
+    }
+
     //----------------------------------------------------------------------------------------------
     // Accessing
     //----------------------------------------------------------------------------------------------

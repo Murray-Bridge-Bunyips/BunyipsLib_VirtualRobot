@@ -14,10 +14,12 @@ public class Encoder {
     private static final int CPS_STEP = 0x10000;
     private final Supplier<Integer> position;
     private final Supplier<Double> velocity;
+    private Filter.LowPass accelFilter = new Filter.LowPass(0.95);
     private int resetVal, lastPosition;
     private DcMotorSimple.Direction direction;
     private double lastTimestamp, veloEstimate, accel, lastVelo;
     private boolean overflowCorrection;
+    private Supplier<DcMotorSimple.Direction> directionSupplier;
 
     /**
      * The encoder object for the motor.
@@ -38,6 +40,21 @@ public class Encoder {
     }
 
     /**
+     * Set a supplier that will be used to auto-set encoder direction.
+     *
+     * @param supplier the supplier to use
+     */
+    public void trackDirection(Supplier<DcMotorSimple.Direction> supplier) {
+        directionSupplier = supplier;
+    }
+
+    private DcMotorSimple.Direction getOperationalDirection() {
+        if (directionSupplier != null)
+            direction = directionSupplier.get();
+        return direction;
+    }
+
+    /**
      * Call to use encoder overflow (exceeding 32767 ticks/sec) correction on {@link #getVelocity()}.
      */
     public void useEncoderOverflowCorrection() {
@@ -48,7 +65,7 @@ public class Encoder {
      * @return the current position of the encoder
      */
     public int getPosition() {
-        int currentPosition = position.get();
+        int currentPosition = (getOperationalDirection() == DcMotorSimple.Direction.FORWARD ? 1 : -1) * position.get();
         if (currentPosition != lastPosition) {
             double currentTime = System.nanoTime() / 1.0E9;
             double dt = currentTime - lastTimestamp;
@@ -56,7 +73,7 @@ public class Encoder {
             lastPosition = currentPosition;
             lastTimestamp = currentTime;
         }
-        return (direction == DcMotorSimple.Direction.FORWARD ? 1 : -1) * currentPosition - resetVal;
+        return currentPosition - resetVal;
     }
 
     /**
@@ -73,6 +90,15 @@ public class Encoder {
      */
     public void setDirection(DcMotorSimple.Direction direction) {
         this.direction = direction;
+    }
+
+    /**
+     * Set a new Low Pass filter gain for use with acceleration estimation readings.
+     *
+     * @param gain the gain in the interval (0, 1) exclusive; default of 0.95
+     */
+    public void setAccelLowPassGain(double gain) {
+        accelFilter = new Filter.LowPass(gain);
     }
 
     /**
@@ -96,11 +122,12 @@ public class Encoder {
      * @return the raw velocity of the motor reported by the encoder, may overflow if ticks/sec exceed 32767/sec
      */
     public double getRawVelocity() {
-        double velo = velocity.get();
-        if (velo != lastVelo) {
-            double currentTime = System.nanoTime() / 1.0E9;
-            double dt = currentTime - lastTimestamp;
-            accel = (velo - lastVelo) / dt;
+        double velo = (getOperationalDirection() == DcMotorSimple.Direction.FORWARD ? 1 : -1) * velocity.get();
+        double currentTime = System.nanoTime() / 1.0E9;
+        double dt = currentTime - lastTimestamp;
+        // Too small of measurements are incalculable due to floating-point error
+        if (dt > 1.0E-3) {
+            accel = accelFilter.apply((velo - lastVelo) / dt);
             lastVelo = velo;
             lastTimestamp = currentTime;
         }

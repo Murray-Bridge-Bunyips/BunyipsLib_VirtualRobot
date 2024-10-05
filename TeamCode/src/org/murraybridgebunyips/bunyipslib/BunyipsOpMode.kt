@@ -42,8 +42,7 @@ import kotlin.math.abs
  * @author Lucas Bubner, 2024
  * @since 1.0.0-pre
  */
-// FIXME: Broken for servos
-//@Photon
+@Photon
 abstract class BunyipsOpMode : BOMInternal() {
     /**
      * The moving average timer for the OpMode, which is used to calculate time

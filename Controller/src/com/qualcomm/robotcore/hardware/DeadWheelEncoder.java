@@ -237,4 +237,14 @@ public class DeadWheelEncoder implements DcMotorEx {
 
     public int getPortNumber(){ return portNumber; }
 
+    @Override
+    public void setPowerFloat() {
+        // no operation indeed
+    }
+
+    @Override
+    public boolean getPowerFloat() {
+        return true;
+    }
+
 }

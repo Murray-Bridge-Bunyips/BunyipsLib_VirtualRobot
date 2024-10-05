@@ -1,20 +1,22 @@
 package com.qualcomm.robotcore.hardware;
 
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import virtual_robot.controller.VirtualBot;
 
 import java.util.Arrays;
 
-public class DcMotorControllerImpl implements DcMotorController{
+public class DcMotorControllerImpl implements DcMotorControllerEx{
 
-    DcMotor[] motors = new DcMotor[8];
+    DcMotorEx[] motors = new DcMotorEx[8];
 
     public void setMotor(int n, DcMotor motor){
-        motors[n] = motor;
+        motors[n] = (DcMotorEx) motor;
     }
 
     public DcMotorEx getMotor(int n){
-        return (DcMotorEx) motors[n];
+        return motors[n];
     }
 
     public DcMotorControllerImpl(){
@@ -91,5 +93,86 @@ public class DcMotorControllerImpl implements DcMotorController{
     @Override
     public void resetDeviceConfigurationForOpMode(int motor) {
         motors[motor].resetDeviceConfigurationForOpMode();
+    }
+
+    @Override
+    public void setMotorEnable(int motor) {
+        motors[motor].setMotorEnable();
+    }
+
+    @Override
+    public void setMotorDisable(int motor) {
+        motors[motor].setMotorDisable();
+    }
+
+    @Override
+    public boolean isMotorEnabled(int motor) {
+        return motors[motor].isMotorEnabled();
+    }
+
+    @Override
+    public void setMotorVelocity(int motor, double ticksPerSecond) {
+        motors[motor].setVelocity(ticksPerSecond);
+    }
+
+    @Override
+    public void setMotorVelocity(int motor, double angularRate, AngleUnit unit) {
+        motors[motor].setVelocity(angularRate, unit);
+    }
+
+    @Override
+    public double getMotorVelocity(int motor) {
+        return motors[motor].getVelocity();
+    }
+
+    @Override
+    public double getMotorVelocity(int motor, AngleUnit unit) {
+        return motors[motor].getVelocity(unit);
+    }
+
+    @Override
+    public void setPIDCoefficients(int motor, DcMotor.RunMode mode, PIDCoefficients pidCoefficients) {
+        motors[motor].setPIDCoefficients(mode, pidCoefficients);
+    }
+
+    @Override
+    public void setPIDFCoefficients(int motor, DcMotor.RunMode mode, PIDFCoefficients pidfCoefficients) throws UnsupportedOperationException {
+        motors[motor].setPIDFCoefficients(mode, pidfCoefficients);
+    }
+
+    @Override
+    public PIDCoefficients getPIDCoefficients(int motor, DcMotor.RunMode mode) {
+        return motors[motor].getPIDCoefficients(mode);
+    }
+
+    @Override
+    public PIDFCoefficients getPIDFCoefficients(int motor, DcMotor.RunMode mode) {
+        return motors[motor].getPIDFCoefficients(mode);
+    }
+
+    @Override
+    public void setMotorTargetPosition(int motor, int position, int tolerance) {
+        motors[motor].setTargetPositionTolerance(tolerance);
+        motors[motor].setTargetPosition(position);
+    }
+
+    @Override
+    public double getMotorCurrent(int motor, CurrentUnit unit) {
+        return motors[motor].getCurrent(unit);
+    }
+
+    @Override
+    public double getMotorCurrentAlert(int motor, CurrentUnit unit) {
+        return motors[motor].getCurrentAlert(unit);
+    }
+
+    @Override
+    public void setMotorCurrentAlert(int motor, double current, CurrentUnit unit) {
+        motors[motor].setCurrentAlert(current, unit);
+    }
+
+    @Override
+    public boolean isMotorOverCurrent(int motor) {
+        return motors[motor].isOverCurrent();
     }
 }

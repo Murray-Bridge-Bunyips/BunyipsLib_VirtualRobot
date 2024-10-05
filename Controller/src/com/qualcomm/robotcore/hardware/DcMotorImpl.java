@@ -365,4 +365,15 @@ public class DcMotorImpl implements DcMotor {
         return portNumber;
     }
 
+    @Override
+    public void setPowerFloat() {
+        setZeroPowerBehavior(ZeroPowerBehavior.FLOAT);
+        setPower(0);
+    }
+
+    @Override
+    public boolean getPowerFloat() {
+        return getZeroPowerBehavior() == ZeroPowerBehavior.FLOAT && getPower() == 0;
+    }
+
 }
