@@ -23,19 +23,19 @@ public class ImposterTeleOpCmd extends CommandBasedBunyipsOpMode {
     private DoubleSupplier model = () -> config.back_left_motor.getVelocity();
     private DoubleSupplier sensor = () -> config.back_left_motor.getVelocity() + ((Math.random() - 0.5) * 40) + 10;
     private final Filter.Kalman filter = new Filter.Kalman(8, 0.00001);
-    private PrintWriter logWriter;
+//    private PrintWriter logWriter;
 
     @Override
     protected void onInitialise() {
         config.init();
         drive = new TriDeadwheelMecanumDrive(config.driveConstants, config.mecanumCoefficients, config.imu, config.front_left_motor, config.front_right_motor, config.back_left_motor, config.back_right_motor, config.localizerCoefficients, config.enc_left, config.enc_right, config.enc_x);
 
-        try {
-            logWriter = new PrintWriter(new FileWriter("telemetry_log.csv", false));
-            logWriter.println("timestamp,ang_velo,lowpass_angvelo,ang_velo_false");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            logWriter = new PrintWriter(new FileWriter("telemetry_log.csv", false));
+//            logWriter.println("timestamp,ang_velo,lowpass_angvelo,ang_velo_false");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 
     @Override
@@ -51,14 +51,14 @@ public class ImposterTeleOpCmd extends CommandBasedBunyipsOpMode {
         double lowPassAngVelo = filter.calculate(angVelo, angVelo2);
         long timestamp = System.currentTimeMillis();
 
-        logWriter.printf("%d,%.6f,%.6f,%.6f%n", timestamp, angVelo, lowPassAngVelo, angVelo2);
-        logWriter.flush();
+//        logWriter.printf("%d,%.6f,%.6f,%.6f%n", timestamp, angVelo, lowPassAngVelo, angVelo2);
+//        logWriter.flush();
     }
 
     @Override
     public void onStop() {
-        if (logWriter != null) {
-            logWriter.close();
-        }
+//        if (logWriter != null) {
+//            logWriter.close();
+//        }
     }
 }

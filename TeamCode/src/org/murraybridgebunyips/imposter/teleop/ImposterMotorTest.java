@@ -17,7 +17,7 @@ public class ImposterMotorTest extends BunyipsOpMode {
     private Motor motor;
     private int setpoint;
 
-    private PrintWriter logWriter;
+//    private PrintWriter logWriter;
 
     @Override
     protected void onInit() {
@@ -25,12 +25,12 @@ public class ImposterMotorTest extends BunyipsOpMode {
         motor = new Motor(m);
         motor.setRunToPositionController(new PController(0.001));
         motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        try {
-            logWriter = new PrintWriter(new FileWriter("motor_log.csv", false));
-            logWriter.println("timestamp,process,setpoint,response");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            logWriter = new PrintWriter(new FileWriter("motor_log.csv", false));
+//            logWriter.println("timestamp,process,setpoint,response");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 
     @Override
@@ -47,14 +47,14 @@ public class ImposterMotorTest extends BunyipsOpMode {
         t.addData("response_power", motor.getPower());
         motor.setPower(1);
 
-        logWriter.printf("%d,%d,%d,%f%n", System.currentTimeMillis(), motor.getCurrentPosition(), motor.getTargetPosition(), motor.getPower());
-        logWriter.flush();
+//        logWriter.printf("%d,%d,%d,%f%n", System.currentTimeMillis(), motor.getCurrentPosition(), motor.getTargetPosition(), motor.getPower());
+//        logWriter.flush();
     }
 
     @Override
     public void onStop() {
-        if (logWriter != null) {
-            logWriter.close();
-        }
+//        if (logWriter != null) {
+//            logWriter.close();
+//        }
     }
 }
