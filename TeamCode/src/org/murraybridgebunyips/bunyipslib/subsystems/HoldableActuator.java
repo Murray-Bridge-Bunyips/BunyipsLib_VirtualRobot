@@ -1,9 +1,6 @@
 package org.murraybridgebunyips.bunyipslib.subsystems;
 
-import static org.murraybridgebunyips.bunyipslib.Text.round;
 import static org.murraybridgebunyips.bunyipslib.external.units.Units.Amps;
-import static org.murraybridgebunyips.bunyipslib.external.units.Units.DegreesPerSecond;
-import static org.murraybridgebunyips.bunyipslib.external.units.Units.RevolutionsPerSecond;
 import static org.murraybridgebunyips.bunyipslib.external.units.Units.Seconds;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -11,10 +8,10 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.murraybridgebunyips.bunyipslib.BunyipsSubsystem;
 import org.murraybridgebunyips.bunyipslib.Dbg;
+import org.murraybridgebunyips.bunyipslib.Motor;
 import org.murraybridgebunyips.bunyipslib.external.Mathf;
 import org.murraybridgebunyips.bunyipslib.external.units.Current;
 import org.murraybridgebunyips.bunyipslib.external.units.Measure;
@@ -67,7 +64,11 @@ public class HoldableActuator extends BunyipsSubsystem {
     private boolean userLatch;
     private double userPower;
     private double motorPower;
-    private Mode inputMode = Mode.USER;
+    // 5.1.0, user controls can now opt to adjust the setpoint instead of the power
+    // but this functionality is disabled by default for consistency
+    private boolean userControlsSetpoint;
+    private Mode inputMode = Mode.USER_POWER;
+    private DoubleSupplier setpointDeltaMultiplier = () -> 1;
 
     /**
      * Create a new HoldableActuator.
@@ -280,6 +281,37 @@ public class HoldableActuator extends BunyipsSubsystem {
     }
 
     /**
+     * Calling this method will enable the user input mode to instead adjust the setpoint dynamically, rather
+     * than unlocking the setpoint then relocking it when the mode transitions to holding.
+     * <p>
+     * This mode is useful to call on high-frequency system controllers (like those accomplished via {@link Motor},
+     * and switches over the manual control from raw input to system controls.
+     *
+     * @param setpointDeltaMultiplier the multiplicative scale to translate power into target position delta, which is a supplier
+     *                                to allow for any functional patterns (e.g. deltaTime). Default of {@code () -> 1}.
+     * @return this
+     * @see #disableHomingOvercurrent()
+     */
+    public HoldableActuator enableUserSetpointControl(DoubleSupplier setpointDeltaMultiplier) {
+        this.setpointDeltaMultiplier = setpointDeltaMultiplier;
+        userControlsSetpoint = true;
+        if (inputMode == Mode.USER_POWER)
+            inputMode = Mode.USER_SETPOINT;
+        return this;
+    }
+
+    /**
+     * Calling this method will restore the user input functionality translating into direct power on the motor.
+     *
+     * @return this
+     * @see #enableUserSetpointControl(DoubleSupplier)
+     */
+    public HoldableActuator disableUserSetpointControl() {
+        userControlsSetpoint = false;
+        return this;
+    }
+
+    /**
      * Instantaneously set the user input power for the actuator.
      *
      * @param p power level in domain [-1.0, 1.0], will be clamped
@@ -292,6 +324,10 @@ public class HoldableActuator extends BunyipsSubsystem {
 
     @Override
     protected void periodic() {
+        double current = motor.getCurrentPosition();
+        double target = motor.getTargetPosition();
+        double newTarget = -1;
+
         switch (inputMode) {
             case AUTO:
                 // Paranoia safety guard to ensure the motor does not enter RUN_TO_POSITION mode without a target
@@ -300,46 +336,55 @@ public class HoldableActuator extends BunyipsSubsystem {
                 } catch (Exception e) {
                     // Cannot catch ActionNotSupportedException due to package protections, so we will handle a generic exception
                     // In the event this does fail, we will fallback to the default mode.
-                    inputMode = Mode.USER;
+                    setInputModeToUser();
                     break;
                 }
-                motorPower = MOVING_POWER;
-                opMode(o -> o.telemetry.add("%: <font color='#FF5F1F'>MOVING -> %/% ticks</font> [%rps]", name, motor.getCurrentPosition(), motor.getTargetPosition(), round(DegreesPerSecond.of(motor.getVelocity(AngleUnit.DEGREES)).in(RevolutionsPerSecond), 1)));
+                motorPower = MOVING_POWER * Math.signum(target - current);
+                opMode(o -> o.telemetry.add("%: <font color='#FF5F1F'>MOVING -> %/% ticks</font> [%tps]", name, current, target, Math.round(motor.getVelocity())));
                 break;
             case HOMING:
                 motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 motorPower = -MOVING_POWER;
-                opMode(o -> o.telemetry.add("%: <font color='yellow'><b>HOMING</b></font> [%rps]", name, round(DegreesPerSecond.of(motor.getVelocity(AngleUnit.DEGREES)).in(RevolutionsPerSecond), 1)));
+                opMode(o -> o.telemetry.add("%: <font color='yellow'><b>HOMING</b></font> [%tps]", name, Math.round(motor.getVelocity())));
                 break;
-            case USER:
+            case USER_POWER:
                 if (userPower == 0.0) {
                     // Hold arm in place
                     if (!userLatch) {
-                        motor.setTargetPosition(motor.getCurrentPosition());
+                        newTarget = current;
+                        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                         userLatch = true;
                     }
-                    motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    motorPower = HOLDING_POWER;
+                    motorPower = HOLDING_POWER * Math.signum(target - current);
                 } else {
                     userLatch = false;
                     // Move arm in accordance with the user's input
                     motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     motorPower = userPower;
                 }
-                opMode(o -> o.telemetry.add("%: % at % ticks [%tps]", name, userPower == 0.0 ? "<font color='green'>HOLDING</font>" : "<font color='#FF5F1F'><b>MOVING</b></font>", motor.getCurrentPosition(), Math.round(motor.getVelocity())));
+                opMode(o -> o.telemetry.add("%: % at % ticks [%tps]", name, userPower == 0.0 ? "<font color='green'>HOLDING</font>" : "<font color='#FF5F1F'><b>MOVING</b></font>", current, Math.round(motor.getVelocity())));
+                break;
+            case USER_SETPOINT:
+                newTarget = target + userPower * setpointDeltaMultiplier.getAsDouble();
+                boolean systemResponse = motor.isBusy();
+                motorPower = (systemResponse ? MOVING_POWER : HOLDING_POWER) * Math.signum(target - current);
+                opMode(o -> o.telemetry.add("%: % at % ticks, % error [%tps]", name, !systemResponse ? "<font color='green'>SUSTAINING</font>" : "<font color='#FF5F1F'><b>RESPONDING</b></font>", current, target - current, Math.round(motor.getVelocity())));
                 break;
         }
 
         if (bottomSwitch != null) {
             if (bottomSwitch.isPressed() && motorPower < 0) {
                 // Cancel and stop any tasks that would move the actuator out of bounds as defined by the limit switch
-                inputMode = Mode.USER;
+                setInputModeToUser();
                 motorPower = 0;
+                if (target < 0)
+                    newTarget = 0;
             }
 
             if (bottomSwitch.isPressed() && !zeroed) {
                 DcMotor.RunMode prev = motor.getMode();
                 motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                // Must propagate now as we're switching the mode
                 motor.setTargetPosition(0);
                 motor.setMode(prev);
                 // Ensure we only run the reset once every time the switch is pressed
@@ -351,20 +396,26 @@ public class HoldableActuator extends BunyipsSubsystem {
         }
 
         if (topSwitch != null && topSwitch.isPressed() && motorPower > 0) {
-            inputMode = Mode.USER;
+            setInputModeToUser();
             motorPower = 0;
+            if (target > current)
+                newTarget = current;
         }
 
         if (topSwitch != null && bottomSwitch != null && topSwitch.isPressed() && bottomSwitch.isPressed()) {
             Dbg.warn(getClass(), "%Warning: Both limit switches were pressed at the same time. This indicates an impossible system state.", isDefaultName() ? "" : "(" + name + ") ");
         }
 
-        if ((motor.getCurrentPosition() < MIN_LIMIT && motorPower < 0.0) || (motor.getCurrentPosition() > MAX_LIMIT && motorPower > 0.0)) {
-            // Cancel any tasks that would move the actuator out of bounds
-            inputMode = Mode.USER;
+        if (inputMode != Mode.HOMING && ((current < MIN_LIMIT && motorPower < 0.0) || (current > MAX_LIMIT && motorPower > 0.0))) {
+            // Cancel any tasks that would move the actuator out of bounds by autonomous operation
+            setInputModeToUser();
             motorPower = 0.0;
         }
 
+        if (newTarget != -1) {
+            motor.setTargetPosition((int) Math.round(newTarget));
+            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        }
         motor.setPower(Mathf.clamp(motorPower, LOWER_POWER, UPPER_POWER));
     }
 
@@ -373,10 +424,16 @@ public class HoldableActuator extends BunyipsSubsystem {
         motor.setPower(0);
     }
 
+    private void setInputModeToUser() {
+        userLatch = false;
+        inputMode = userControlsSetpoint ? Mode.USER_SETPOINT : Mode.USER_POWER;
+    }
+
     private enum Mode {
         AUTO,
         HOMING,
-        USER
+        USER_POWER,
+        USER_SETPOINT
     }
 
     /**
@@ -418,7 +475,7 @@ public class HoldableActuator extends BunyipsSubsystem {
             return new Task(time) {
                 @Override
                 public void init() {
-                    inputMode = Mode.USER;
+                    setInputModeToUser();
                 }
 
                 @Override
@@ -440,7 +497,8 @@ public class HoldableActuator extends BunyipsSubsystem {
         }
 
         /**
-         * Home the actuator based on encoders against a hard stop or limit switch.
+         * Home the actuator based on encoders against a hard stop or limit switch. This task ignores
+         * the lower and upper limits as defined by this class.
          *
          * @return a task to home the actuator
          */
@@ -477,7 +535,7 @@ public class HoldableActuator extends BunyipsSubsystem {
                 protected void onFinish() {
                     motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     motor.setCurrentAlert(previousAmpAlert, CurrentUnit.AMPS);
-                    inputMode = Mode.USER;
+                    setInputModeToUser();
                 }
 
                 @Override
@@ -494,6 +552,68 @@ public class HoldableActuator extends BunyipsSubsystem {
                     return inputMode != Mode.HOMING || (bottomedOut || velocityZeroed || sustainedOvercurrent);
                 }
             }.onSubsystem(HoldableActuator.this, true).withName("Return To Home");
+        }
+
+        /**
+         * Send the actuator to the top limit, using the constants for homing. This effectively is a
+         * home task, but instead runs in the opposite direction.
+         * <p>
+         * Note: Without an interrupt or top limit switch, this may be a dangerous task to call. Use with care, as
+         * this task is intended for homing operations in the opposite direction instead of simply travelling
+         * to some arbitrary limit while respecting the upper and lower bounds.
+         *
+         * @return a task to ceiling the actuator
+         */
+        public Task ceil() {
+            return new Task(HOMING_TIMEOUT) {
+                private ElapsedTime overcurrentTimer;
+                private double previousAmpAlert;
+                private double zeroHits;
+
+                @Override
+                protected void init() {
+                    previousAmpAlert = motor.getCurrentAlert(CurrentUnit.AMPS);
+                    // Stop now if the switch is already pressed
+                    if (topSwitch != null && topSwitch.isPressed()) {
+                        finishNow();
+                        return;
+                    }
+                    motor.setCurrentAlert(OVERCURRENT.in(Amps), CurrentUnit.AMPS);
+                    zeroHits = 0;
+                    inputMode = Mode.HOMING;
+                }
+
+                @Override
+                protected void periodic() {
+                    if (ZERO_HIT_THRESHOLD <= 0) return;
+                    if (motor.getVelocity() <= 0) {
+                        zeroHits++;
+                    } else {
+                        zeroHits = 0;
+                    }
+                }
+
+                @Override
+                protected void onFinish() {
+                    motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    motor.setCurrentAlert(previousAmpAlert, CurrentUnit.AMPS);
+                    setInputModeToUser();
+                }
+
+                @Override
+                protected boolean isTaskFinished() {
+                    boolean toppedOut = topSwitch != null && topSwitch.isPressed();
+                    boolean velocityZeroed = ZERO_HIT_THRESHOLD > 0 && zeroHits >= ZERO_HIT_THRESHOLD;
+                    boolean overCurrent = OVERCURRENT.magnitude() > 0 && motor.isOverCurrent();
+                    if (OVERCURRENT_TIME.magnitude() > 0 && overCurrent && overcurrentTimer == null) {
+                        overcurrentTimer = new ElapsedTime();
+                    } else if (!overCurrent) {
+                        overcurrentTimer = null;
+                    }
+                    boolean sustainedOvercurrent = overcurrentTimer != null && overcurrentTimer.seconds() >= OVERCURRENT_TIME.in(Seconds);
+                    return inputMode != Mode.HOMING || (toppedOut || velocityZeroed || sustainedOvercurrent);
+                }
+            }.onSubsystem(HoldableActuator.this, true).withName("Travel To Ceiling");
         }
 
         /**
@@ -521,7 +641,7 @@ public class HoldableActuator extends BunyipsSubsystem {
 
                 @Override
                 public void onFinish() {
-                    inputMode = Mode.USER;
+                    setInputModeToUser();
                 }
 
                 @Override
@@ -557,7 +677,7 @@ public class HoldableActuator extends BunyipsSubsystem {
 
                 @Override
                 public void onFinish() {
-                    inputMode = Mode.USER;
+                    setInputModeToUser();
                 }
 
                 @Override

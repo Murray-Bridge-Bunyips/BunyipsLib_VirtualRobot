@@ -78,6 +78,14 @@ public class RobotLog {
 
     private static Calendar matchStartTime = null;
 
+    public static WarningMessage getGlobalWarningMessage() {
+        return new WarningMessage();
+    }
+
+    public static class WarningMessage {
+        public String message;
+    }
+
     //------------------------------------------------------------------------------------------------
     // Time Synchronization
     //------------------------------------------------------------------------------------------------

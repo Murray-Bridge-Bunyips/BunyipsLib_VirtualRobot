@@ -2,13 +2,19 @@ package org.murraybridgebunyips.bunyipslib.drive;
 
 import static org.murraybridgebunyips.bunyipslib.external.units.Units.Radians;
 
+import androidx.annotation.Nullable;
+
+import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.localization.Localizer;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.Range;
 
 import org.murraybridgebunyips.bunyipslib.BunyipsSubsystem;
+import org.murraybridgebunyips.bunyipslib.Cartesian;
 import org.murraybridgebunyips.bunyipslib.Controls;
 import org.murraybridgebunyips.bunyipslib.external.units.Angle;
 import org.murraybridgebunyips.bunyipslib.external.units.Measure;
+import org.murraybridgebunyips.bunyipslib.roadrunner.util.DashboardUtil;
 
 import java.util.Locale;
 
@@ -24,7 +30,7 @@ import java.util.Locale;
  * @see MecanumDrive
  * @since 1.0.0-pre
  */
-public class CartesianMecanumDrive extends BunyipsSubsystem {
+public class CartesianMecanumDrive extends BunyipsSubsystem implements Moveable {
     // Fields left public for legacy reasons
     /**
      * Horizontal speed of the robot.
@@ -43,6 +49,7 @@ public class CartesianMecanumDrive extends BunyipsSubsystem {
     private DcMotor backLeft;
     private DcMotor frontRight;
     private DcMotor backRight;
+    private Localizer localizer;
 
     private Priority priority = Priority.NORMALISED;
 
@@ -217,6 +224,14 @@ public class CartesianMecanumDrive extends BunyipsSubsystem {
         backLeft.setPower(backLeftPower);
         backRight.setPower(backRightPower);
 
+        if (localizer != null) {
+            localizer.update();
+            DashboardUtil.useCanvas(canvas -> {
+                canvas.setStroke("#3F51B5");
+                DashboardUtil.drawRobot(canvas, localizer.getPoseEstimate());
+            });
+        }
+
         opMode(o -> o.telemetry.add(String.format(Locale.getDefault(), "Mecanum Drive: X: %.2f, Y: %.2f, R: %.2f", speedX, speedY, speedR)));
     }
 
@@ -272,6 +287,35 @@ public class CartesianMecanumDrive extends BunyipsSubsystem {
         frontLeft.setMode(mode);
         frontRight.setMode(mode);
         return this;
+    }
+
+    /**
+     * Set the current commanded state of the robot in the Robot Coordinate System.
+     *
+     * @param directionalPower the state this robot should now try to represent via motors
+     */
+    @Override
+    public void setPower(Pose2d directionalPower) {
+        Pose2d cPower = Cartesian.fromPose(directionalPower);
+        setSpeedXYR(cPower.getX(), cPower.getY(), cPower.getHeading());
+    }
+
+    /**
+     * Get the currently used localizer attached to this drive instance.
+     *
+     * @return the localizer in use, may be null in drives that do not offer a localizer
+     */
+    @Nullable
+    @Override
+    public Localizer getLocalizer() {
+        return localizer;
+    }
+
+    /**
+     * Set a localizer to attach to this drive. Optional.
+     */
+    public void setLocalizer(Localizer localizer) {
+        this.localizer = localizer;
     }
 
     /**
