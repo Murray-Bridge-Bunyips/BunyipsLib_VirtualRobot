@@ -10,6 +10,8 @@ import org.murraybridgebunyips.bunyipslib.tasks.bases.Task;
 
 import java.util.function.DoubleSupplier;
 
+import static org.murraybridgebunyips.bunyipslib.Text.round;
+
 /**
  * A generic servo controller subsystem that may be used to hold two positions and to control movements in between
  * these setpoints. Includes a built-in delta step configuration that may be used to control servo speed.
@@ -100,12 +102,22 @@ public class Switch extends BunyipsSubsystem {
      */
     public void toggle() {
         double pos = servo.getPosition();
+
+        if (pos == openPosition) {
+            close();
+            return;
+        }
+        if (pos == closePosition) {
+            open();
+            return;
+        }
+
         double distanceToOpen = Math.abs(pos - openPosition);
         double distanceToClose = Math.abs(pos - closePosition);
 
-        if (pos == closePosition || distanceToOpen < distanceToClose) {
+        if (distanceToOpen < distanceToClose) {
             open();
-        } else if (pos == openPosition || distanceToClose < distanceToOpen) {
+        } else {
             close();
         }
     }
@@ -155,7 +167,10 @@ public class Switch extends BunyipsSubsystem {
 
     @Override
     protected void periodic() {
-        opMode(o -> o.telemetry.add("%: %", name, target == openPosition ? "<font color='orange'><b>OPEN</b></font>" : target == closePosition ? "<font color='green'>CLOSE</font>" : "<font color='white'>" + target + "/1.0</font>"));
+        opMode(o -> o.telemetry.add("%: %", name, target == openPosition
+                ? "<font color='orange'><b>OPEN</b></font> (" + round(openPosition, 1) + ")"
+                : target == closePosition ? "<font color='green'>CLOSE</font> (" + round(closePosition, 1) + ")"
+                : "<font color='white'>" + round(target, 2) + "/1.00</font>"));
         servo.setPosition(target);
     }
 
