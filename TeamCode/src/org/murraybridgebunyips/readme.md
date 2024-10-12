@@ -14,6 +14,7 @@ When copying BunyipsLib to org.murraybridgebunyips, you will need to do the foll
 4. Remove deleted import from `bunyipslib/roadrunner/drive/tuning/opmodes/AutomaticFeedforwardTuner.java` and import `deps/LoggingUtil`
 5. Remove deleted import from `bunyipslib/roadrunner/trajectorysequence/TrajectorySequenceRunner.java` and import `deps/LogFiles`
 6. Revert any changes done to `bunyipslib/Storage.java`
+7. Revert any changes done to `bunyipslib/ProfiledServo.java`
 
 BunyipsLib will now compile, although missing some features.
 An alternative & faster method of converting changes can be accomplished via the Patch system via JetBrains IDEs.
