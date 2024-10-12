@@ -8,6 +8,9 @@ import org.murraybridgebunyips.bunyipslib.external.TrapezoidProfile;
 import org.murraybridgebunyips.bunyipslib.subsystems.Switch;
 import org.murraybridgebunyips.imposter.components.ImposterConfig;
 
+import static org.murraybridgebunyips.bunyipslib.external.units.Units.Milliseconds;
+import static org.murraybridgebunyips.bunyipslib.external.units.Units.Seconds;
+
 @TeleOp
 public class ImposterSwitchTest extends BunyipsOpMode {
     private final ImposterConfig config = new ImposterConfig();
@@ -18,12 +21,14 @@ public class ImposterSwitchTest extends BunyipsOpMode {
     protected void onInit() {
         config.init();
         servo = new ProfiledServo(config.back_servo);
-        servo.setConstraints(new TrapezoidProfile.Constraints(1, 0.8));
+        servo.setConstraints(new TrapezoidProfile.Constraints(2, 0.8));
+        servo.setPositionRefreshRate(Milliseconds.of(250));
+        servo.setPositionDeltaThreshold(0.005);
     }
 
     @Override
     protected void activeLoop() {
-        servo.setPosition(gamepad1.a ? 0.5 : 0.3);
+        servo.setPosition(gamepad1.a ? 1 : 0);
         t.add("servo pos %", servo.getPosition());
     }
 }
