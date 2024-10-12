@@ -24,6 +24,6 @@ public class ImposterStartingConfTest extends AutonomousBunyipsOpMode {
 
     @Override
     protected void onReady(@Nullable Reference<?> selectedOpMode, Controls selectedButton) {
-        telemetry.log(((StartingConfiguration.Position)selectedOpMode.require()).toFieldPose());
+        telemetry.log(((StartingConfiguration.Position) selectedOpMode.require()).toFieldPose());
     }
 }

@@ -4,28 +4,23 @@ import androidx.annotation.NonNull;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import org.jetbrains.annotations.Nullable;
-import org.murraybridgebunyips.bunyipslib.*;
+import org.murraybridgebunyips.bunyipslib.AutonomousBunyipsOpMode;
+import org.murraybridgebunyips.bunyipslib.Controls;
+import org.murraybridgebunyips.bunyipslib.Reference;
+import org.murraybridgebunyips.bunyipslib.RoadRunner;
 import org.murraybridgebunyips.bunyipslib.drive.MecanumDrive;
-import org.murraybridgebunyips.bunyipslib.drive.TriDeadwheelMecanumDrive;
 import org.murraybridgebunyips.bunyipslib.external.pid.PIDController;
-import org.murraybridgebunyips.bunyipslib.roadrunner.trajectorysequence.TrajectorySequence;
 import org.murraybridgebunyips.bunyipslib.tasks.DriveToPoseTask;
-import org.murraybridgebunyips.bunyipslib.tasks.RunTask;
-import org.murraybridgebunyips.bunyipslib.tasks.WaitTask;
 import org.murraybridgebunyips.bunyipslib.tasks.bases.Task;
-import org.murraybridgebunyips.bunyipslib.tasks.groups.ParallelTaskGroup;
 import org.murraybridgebunyips.imposter.components.ImposterConfig;
-
-import static org.murraybridgebunyips.bunyipslib.external.units.Units.*;
 
 @Autonomous
 public class ImposterPoseAlignmentTest extends AutonomousBunyipsOpMode implements RoadRunner {
     private final ImposterConfig config = new ImposterConfig();
-    private MecanumDrive drive;
-
     private final PIDController forwardController = new PIDController(8, 0, 0);
     private final PIDController strafeController = new PIDController(8, 0, 0);
     private final PIDController headingController = new PIDController(10, 0, 0);
+    private MecanumDrive drive;
 
     @Override
     protected void onInitialise() {

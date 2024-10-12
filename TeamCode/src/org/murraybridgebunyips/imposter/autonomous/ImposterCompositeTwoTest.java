@@ -10,22 +10,34 @@ import org.murraybridgebunyips.bunyipslib.tasks.groups.ParallelTaskGroup;
 import java.util.Objects;
 
 import static org.murraybridgebunyips.bunyipslib.external.units.Units.*;
-import static org.murraybridgebunyips.bunyipslib.external.units.Units.Degrees;
 
 @Autonomous
 public class ImposterCompositeTwoTest extends ImposterCompositeOneTest {
-    /** extension/retraction ticks */
+    /**
+     * extension/retraction ticks
+     */
     public static int ARM_DELTA = 2000;
-    /** angled spike mark, move forward initially, field tiles */
+    /**
+     * angled spike mark, move forward initially, field tiles
+     */
     public static double ANGLED_INITIAL_FORWARD_DIST_FT = 0.8;
-    /** forward spike mark, move forward initially, field tiles */
+    /**
+     * forward spike mark, move forward initially, field tiles
+     */
     public static double M_FORWARD_INITIAL_FORWARD_DIST_FT = 0.7;
-    /** forward spike mark, forward centimeters */
+    /**
+     * forward spike mark, forward centimeters
+     */
     public static double M_FORWARD_DIST_CM = 20;
-    /** left spike mark, degrees turn */
+    /**
+     * left spike mark, degrees turn
+     */
     public static double M_LEFT_TURN_DEG = 40;
-    /** right spike mark, degrees turn */
+    /**
+     * right spike mark, degrees turn
+     */
     public static double M_RIGHT_TURN_DEG = -40;
+
     @Override
     protected void onStart() {
         super.onStart();

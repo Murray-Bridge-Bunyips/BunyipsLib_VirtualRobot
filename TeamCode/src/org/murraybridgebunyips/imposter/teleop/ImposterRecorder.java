@@ -10,7 +10,7 @@ import org.murraybridgebunyips.imposter.components.ImposterConfig;
 
 @TeleOp
 public class ImposterRecorder extends PathRecorderOpMode {
-    private ImposterConfig config = new ImposterConfig();
+    private final ImposterConfig config = new ImposterConfig();
 
     @Override
     protected void configureRobot() {

@@ -40,9 +40,9 @@ public class ImposterConfig extends RobotConfig {
 
     private SystemController getController(Motor motor) {
         return new PIDFFController(
-            new PIDController(1, 0, 0),
-            new SimpleMotorFeedforward(0, 0, 0),
-            motor.getEncoder()
+                new PIDController(1, 0, 0),
+                new SimpleMotorFeedforward(0, 0, 0),
+                motor.getEncoder()
         );
     }
 

@@ -3,16 +3,14 @@ package org.murraybridgebunyips.imposter.autonomous;
 import androidx.annotation.NonNull;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import org.jetbrains.annotations.Nullable;
 import org.murraybridgebunyips.bunyipslib.*;
 import org.murraybridgebunyips.bunyipslib.drive.MecanumDrive;
-import org.murraybridgebunyips.bunyipslib.drive.TriDeadwheelMecanumDrive;
-import org.murraybridgebunyips.bunyipslib.roadrunner.drive.localizers.IntrinsicMecanumLocalizer;
 import org.murraybridgebunyips.bunyipslib.roadrunner.trajectorysequence.TrajectorySequence;
 import org.murraybridgebunyips.bunyipslib.tasks.RunTask;
 import org.murraybridgebunyips.bunyipslib.tasks.WaitTask;
 import org.murraybridgebunyips.bunyipslib.tasks.groups.ParallelTaskGroup;
 import org.murraybridgebunyips.imposter.components.ImposterConfig;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 

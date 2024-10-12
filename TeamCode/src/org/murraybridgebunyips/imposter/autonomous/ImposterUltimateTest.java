@@ -1,48 +1,30 @@
 package org.murraybridgebunyips.imposter.autonomous;
-import static org.murraybridgebunyips.bunyipslib.external.units.Units.Centimeters;
-import static org.murraybridgebunyips.bunyipslib.external.units.Units.Degrees;
-import static org.murraybridgebunyips.bunyipslib.external.units.Units.FieldTile;
-import static org.murraybridgebunyips.bunyipslib.external.units.Units.FieldTiles;
-import static org.murraybridgebunyips.bunyipslib.external.units.Units.Second;
-import static org.murraybridgebunyips.bunyipslib.external.units.Units.Seconds;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagMetadata;
-import org.murraybridgebunyips.bunyipslib.AutonomousBunyipsOpMode;
-import org.murraybridgebunyips.bunyipslib.Controls;
-import org.murraybridgebunyips.bunyipslib.Direction;
-import org.murraybridgebunyips.bunyipslib.Reference;
-import org.murraybridgebunyips.bunyipslib.RoadRunner;
-import org.murraybridgebunyips.bunyipslib.StartingPositions;
-import org.murraybridgebunyips.bunyipslib.drive.DualDeadwheelMecanumDrive;
+import org.murraybridgebunyips.bunyipslib.*;
 import org.murraybridgebunyips.bunyipslib.drive.MecanumDrive;
 import org.murraybridgebunyips.bunyipslib.external.pid.PIDController;
 import org.murraybridgebunyips.bunyipslib.roadrunner.drive.RoadRunnerDrive;
 import org.murraybridgebunyips.bunyipslib.roadrunner.trajectorysequence.TrajectorySequence;
-import org.murraybridgebunyips.bunyipslib.subsystems.DualServos;
-import org.murraybridgebunyips.bunyipslib.subsystems.HoldableActuator;
 import org.murraybridgebunyips.bunyipslib.tasks.DriveToPoseTask;
 import org.murraybridgebunyips.bunyipslib.tasks.DynamicTask;
-import org.murraybridgebunyips.bunyipslib.tasks.GetDualSplitContourTask;
 import org.murraybridgebunyips.bunyipslib.tasks.WaitTask;
 import org.murraybridgebunyips.bunyipslib.tasks.groups.ParallelTaskGroup;
-import org.murraybridgebunyips.bunyipslib.vision.AprilTagPoseEstimator;
-import org.murraybridgebunyips.bunyipslib.vision.Vision;
-import org.murraybridgebunyips.bunyipslib.vision.processors.AprilTag;
-import org.murraybridgebunyips.bunyipslib.vision.processors.ColourThreshold;
 import org.murraybridgebunyips.bunyipslib.vision.processors.centerstage.SpikeMarkBackdropId;
 import org.murraybridgebunyips.imposter.components.ImposterConfig;
-import org.reflections.vfs.Vfs;
 
-/** virtual test opmode for gladosultimatepreload of bunyipsftc */
+import static org.murraybridgebunyips.bunyipslib.external.units.Units.*;
+
+/**
+ * virtual test opmode for gladosultimatepreload of bunyipsftc
+ */
 @Autonomous
 public class ImposterUltimateTest extends AutonomousBunyipsOpMode implements RoadRunner {
     // virtual config, the robot is assumed to be perfect with no scaling required
@@ -51,29 +33,53 @@ public class ImposterUltimateTest extends AutonomousBunyipsOpMode implements Roa
     public static Direction parkingDirection = Direction.LEFT;
 
 
-    /** X offset to DriveToPose AprilTag in inches */
+    /**
+     * X offset to DriveToPose AprilTag in inches
+     */
     public static float APRILTAG_FORWARD_OFFSET = 9.0f;
-    /** Y offset to DriveToPose AprilTag in inches */
+    /**
+     * Y offset to DriveToPose AprilTag in inches
+     */
     public static float APRILTAG_SIDE_OFFSET = 0;
-    /** Position delta (in ticks) of the arm extension at backboard */
+    /**
+     * Position delta (in ticks) of the arm extension at backboard
+     */
     public static int ARM_DELTA_BACKDROP = 1600;
-    /** Whether a heading estimate is also used from AprilTag data. */
+    /**
+     * Whether a heading estimate is also used from AprilTag data.
+     */
     public static boolean USING_HEADING_ESTIMATE = true;
-    /** Arm to ground from stow in ticks. */
+    /**
+     * Arm to ground from stow in ticks.
+     */
     public static int ARM_DELTA_GROUND = 2000;
-    /** Strafe left distance for left park, field tiles. */
+    /**
+     * Strafe left distance for left park, field tiles.
+     */
     public static double PARK_LEFT_TILES = 1.1;
-    /** Strafe right distance for right park, field tiles. Used in the Right Park override. */
+    /**
+     * Strafe right distance for right park, field tiles. Used in the Right Park override.
+     */
     public static double PARK_RIGHT_TILES = 1.1;
-    /** Angled spike mark, move forward initially, field tiles */
+    /**
+     * Angled spike mark, move forward initially, field tiles
+     */
     public static double ANGLED_INIT_FWD_TILES = 0.8;
-    /** Forward spike mark, move forward initially, field tiles */
+    /**
+     * Forward spike mark, move forward initially, field tiles
+     */
     public static double M_FORWARD_INIT_FWD_TILES = 0.7;
-    /** Forward spike mark, forward centimeters */
+    /**
+     * Forward spike mark, forward centimeters
+     */
     public static double M_FORWARD_ALIGN_FWD_CM = 20;
-    /** Left spike mark, degrees turn */
+    /**
+     * Left spike mark, degrees turn
+     */
     public static double M_LEFT_ALIGN_TURN_DEG = 40;
-    /** Right spike mark, degrees turn */
+    /**
+     * Right spike mark, degrees turn
+     */
     public static double M_RIGHT_ALIGN_TURN_DEG = -40;
 
     private final ImposterConfig config = new ImposterConfig();

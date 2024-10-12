@@ -1,15 +1,12 @@
 package org.murraybridgebunyips.imposter.teleop;
 
-import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.util.Angle;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.murraybridgebunyips.bunyipslib.*;
-import org.murraybridgebunyips.bunyipslib.Scheduler;
 import org.murraybridgebunyips.bunyipslib.BunyipsOpMode;
+import org.murraybridgebunyips.bunyipslib.Direction;
+import org.murraybridgebunyips.bunyipslib.IMUEx;
+import org.murraybridgebunyips.bunyipslib.Scheduler;
 import org.murraybridgebunyips.bunyipslib.drive.CartesianFieldCentricMecanumDrive;
 import org.murraybridgebunyips.bunyipslib.drive.CartesianMecanumDrive;
-import org.murraybridgebunyips.bunyipslib.IMUEx;
 import org.murraybridgebunyips.bunyipslib.tasks.HolonomicDriveTask;
 import org.murraybridgebunyips.imposter.components.ImposterConfig;
 

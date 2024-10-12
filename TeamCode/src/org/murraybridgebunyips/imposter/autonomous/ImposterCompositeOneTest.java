@@ -38,15 +38,15 @@ public class ImposterCompositeOneTest extends AutonomousBunyipsOpMode implements
     public static int ARM_DELTA = 1600;
 
     private final ImposterConfig config = new ImposterConfig();
-//    protected HoldableActuator arm;
-//    protected DualServos claws;
-//    protected Direction spikeMark;
-    private MecanumDrive drive;
-//    private Vision vision;
+    //    private Vision vision;
 //    private AprilTag aprilTag;
 //    private ColourThreshold teamProp;
 //    private GetTriPositionContourTask getTeamProp;
     protected StartingPositions startingPosition;
+    //    protected HoldableActuator arm;
+//    protected DualServos claws;
+//    protected Direction spikeMark;
+    private MecanumDrive drive;
 
     @Override
     protected void onInitialise() {

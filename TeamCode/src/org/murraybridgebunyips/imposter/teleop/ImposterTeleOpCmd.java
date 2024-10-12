@@ -1,28 +1,29 @@
 package org.murraybridgebunyips.imposter.teleop;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.function.DoubleSupplier;
-
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import org.murraybridgebunyips.bunyipslib.*;
+import org.murraybridgebunyips.bunyipslib.CommandBasedBunyipsOpMode;
+import org.murraybridgebunyips.bunyipslib.Controls;
+import org.murraybridgebunyips.bunyipslib.Filter;
 import org.murraybridgebunyips.bunyipslib.drive.MecanumDrive;
 import org.murraybridgebunyips.bunyipslib.drive.TriDeadwheelMecanumDrive;
-import org.murraybridgebunyips.bunyipslib.tasks.*;
+import org.murraybridgebunyips.bunyipslib.tasks.HolonomicVectorDriveTask;
 import org.murraybridgebunyips.imposter.components.ImposterConfig;
 
-import static org.murraybridgebunyips.bunyipslib.external.units.Units.*;
+import java.util.function.DoubleSupplier;
 
-/** bunyipslib virtual testing ground */
+import static org.murraybridgebunyips.bunyipslib.external.units.Units.Degrees;
+
+/**
+ * bunyipslib virtual testing ground
+ */
 @TeleOp
 
 public class ImposterTeleOpCmd extends CommandBasedBunyipsOpMode {
     private final ImposterConfig config = new ImposterConfig();
-    private MecanumDrive drive;
-    private DoubleSupplier model = () -> config.back_left_motor.getVelocity();
-    private DoubleSupplier sensor = () -> config.back_left_motor.getVelocity() + ((Math.random() - 0.5) * 40) + 10;
     private final Filter.Kalman filter = new Filter.Kalman(8, 0.00001);
+    private MecanumDrive drive;
+    private final DoubleSupplier model = () -> config.back_left_motor.getVelocity();
+    private final DoubleSupplier sensor = () -> config.back_left_motor.getVelocity() + ((Math.random() - 0.5) * 40) + 10;
 //    private PrintWriter logWriter;
 
     @Override

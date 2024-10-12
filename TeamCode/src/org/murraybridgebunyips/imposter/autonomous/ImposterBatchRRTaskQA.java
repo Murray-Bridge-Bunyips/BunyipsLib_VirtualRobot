@@ -15,6 +15,7 @@ import org.murraybridgebunyips.imposter.components.ImposterConfig;
 public class ImposterBatchRRTaskQA extends AutonomousBunyipsOpMode implements RoadRunner {
     private final ImposterConfig config = new ImposterConfig();
     private MecanumDrive drive;
+
     @Override
     protected void onInitialise() {
         config.init();

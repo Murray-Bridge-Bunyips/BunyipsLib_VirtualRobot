@@ -13,9 +13,8 @@ import static org.murraybridgebunyips.bunyipslib.external.units.Units.Seconds;
 @TeleOp
 public class ImposterSlipperyDrive extends BunyipsOpMode {
     private final ImposterConfig config = new ImposterConfig();
-    private CartesianMecanumDrive d;
-
     private final Reference<Double> x = Reference.empty(), y = Reference.empty(), r = Reference.empty();
+    private CartesianMecanumDrive d;
 
     @Override
     protected void onInit() {

@@ -26,7 +26,7 @@ public class ImposterDrive extends BunyipsOpMode {
                 round(config.front_left_motor.getPower(), 3, 4),
                 round(config.front_right_motor.getPower(), 3, 4),
                 round(config.back_left_motor.getPower(), 3, 4),
-                round(config.back_right_motor.getPower(), 3,4)
+                round(config.back_right_motor.getPower(), 3, 4)
         );
     }
 }
