@@ -1,10 +1,12 @@
 package au.edu.sa.mbhs.studentrobotics.virtual.imposter.teleop;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsOpMode;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.MecanumLocalizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive.MecanumDrive;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls;
 import au.edu.sa.mbhs.studentrobotics.virtual.imposter.components.ImposterConfig;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 @TeleOp
 public class ImposterDrive extends BunyipsOpMode {
@@ -15,6 +17,9 @@ public class ImposterDrive extends BunyipsOpMode {
     protected void onInit() {
         config.init();
         drive = new MecanumDrive(config.driveModel, config.motionProfile, config.mecanumGains, config.front_left_motor, config.back_left_motor, config.back_right_motor, config.front_right_motor, config.lazyImu, hardwareMap.voltageSensor);
+        MecanumLocalizer l = (MecanumLocalizer) drive.getLocalizer();
+        l.leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        l.leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     @Override
