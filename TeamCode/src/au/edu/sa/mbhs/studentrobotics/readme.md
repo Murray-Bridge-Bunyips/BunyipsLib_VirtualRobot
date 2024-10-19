@@ -11,7 +11,7 @@ When copying BunyipsLib to org.murraybridgebunyips, you will need to do the foll
 1. Copy the `bunyipslib` folder to `TeamCode/src/org/murraybridgebunyips/`
 2. Remove the `throwIfModulesAreOutdated(hardwareMap)` invocation and import from `bunyipslib/BunyipsOpMode.kt`
 3. Import `deps/BuildConfig` in `bunyipslib/BunyipsOpMode.kt`, `bunyipslib/Text.java`, `bunyipslib/Scheduler.java`
-4. Comment out instances of `FtcDashboard.getInstance()` accesses in `bunyipslib/DualTelemetry.kt`
+4. Comment out instances of `FtcDashboard.getInstance()` accesses in `bunyipslib/DualTelemetry.kt`, `bunyipslib/integrated/VisionTest.java`, `bunyipslib/vision/SwitchableVisionSender.java`
 5. Comment out the entire `bunyipslib/roadrunner/tuning/RoadRunnerTuningOpMode.java` file
 6. Change the `bunyipslib/RobotConfig.kt` `getLazyIMU` method to return null
 7. Comment out instances of `FlightRecorder` in `bunyipslib/localization/TwoWheelLocalizer.java`, `bunyipslib/localization/ThreeWheelLocalizer.java`, `bunyipslib/localization/TankLocalizer.java`, `bunyipslib/localization/MecanumLocalizer.java`

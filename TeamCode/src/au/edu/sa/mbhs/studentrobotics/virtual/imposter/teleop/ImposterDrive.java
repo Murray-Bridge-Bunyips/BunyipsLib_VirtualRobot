@@ -1,32 +1,25 @@
 package au.edu.sa.mbhs.studentrobotics.virtual.imposter.teleop;
 
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsOpMode;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive.MecanumDrive;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls;
 import au.edu.sa.mbhs.studentrobotics.virtual.imposter.components.ImposterConfig;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import org.murraybridgebunyips.bunyipslib.BunyipsOpMode;
-import org.murraybridgebunyips.bunyipslib.drive.CartesianMecanumDrive;
-
-import static org.murraybridgebunyips.bunyipslib.Text.round;
 
 @TeleOp
 public class ImposterDrive extends BunyipsOpMode {
     private final ImposterConfig config = new ImposterConfig();
-    private CartesianMecanumDrive drive;
+    private MecanumDrive drive;
 
     @Override
     protected void onInit() {
         config.init();
-        drive = new CartesianMecanumDrive(config.front_left_motor, config.front_right_motor, config.back_left_motor, config.back_right_motor);
+        drive = new MecanumDrive(config.driveModel, config.motionProfile, config.mecanumGains, config.front_left_motor, config.back_left_motor, config.back_right_motor, config.front_right_motor, config.lazyImu, hardwareMap.voltageSensor);
     }
 
     @Override
     protected void activeLoop() {
-        drive.setSpeedUsingController(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
+        drive.setPower(Controls.makeRobotVel(gamepad1.lsx, gamepad1.lsy, gamepad1.rsx));
         drive.update();
-        telemetry.add("actual speeds: fl:%, fr:%, bl:%, br:%",
-                round(config.front_left_motor.getPower(), 3, 4),
-                round(config.front_right_motor.getPower(), 3, 4),
-                round(config.back_left_motor.getPower(), 3, 4),
-                round(config.back_right_motor.getPower(), 3, 4)
-        );
     }
 }
