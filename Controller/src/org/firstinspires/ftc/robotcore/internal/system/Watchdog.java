@@ -32,7 +32,6 @@ package org.firstinspires.ftc.robotcore.internal.system;
 
 import com.qualcomm.robotcore.util.RobotLog;
 import com.qualcomm.robotcore.util.ThreadPool;
-import org.murraybridgebunyips.bunyipslib.Dbg;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
