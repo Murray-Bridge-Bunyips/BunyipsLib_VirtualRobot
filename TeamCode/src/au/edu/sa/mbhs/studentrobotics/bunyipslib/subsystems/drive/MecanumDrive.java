@@ -8,6 +8,7 @@ import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Sec
 
 import androidx.annotation.NonNull;
 
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg;
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.roadrunner.AccelConstraint;
 import com.acmerobotics.roadrunner.Actions;
@@ -251,10 +252,10 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
             maxPowerMag = Math.max(maxPowerMag, power.value());
         }
 
-        leftFrontPower = wheelVels.leftFront.get(0) / maxPowerMag;
-        leftBackPower = wheelVels.leftBack.get(0) / maxPowerMag;
-        rightBackPower = wheelVels.rightBack.get(0) / maxPowerMag;
-        rightFrontPower = wheelVels.rightFront.get(0) / maxPowerMag;
+        leftFrontPower = Mathf.clamp(wheelVels.leftFront.get(0) / maxPowerMag, -1, 1);
+        leftBackPower = Mathf.clamp(wheelVels.leftBack.get(0) / maxPowerMag, -1, 1);
+        rightBackPower = Mathf.clamp(wheelVels.rightBack.get(0) / maxPowerMag, -1, 1);
+        rightFrontPower = Mathf.clamp(wheelVels.rightFront.get(0) / maxPowerMag, -1, 1);
     }
 
     /**
