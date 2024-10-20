@@ -3,6 +3,8 @@ package au.edu.sa.mbhs.studentrobotics.virtual.imposter.teleop;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.CommandBasedBunyipsOpMode;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.MecanumLocalizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive.MecanumDrive;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.HolonomicDriveTask;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls;
 import au.edu.sa.mbhs.studentrobotics.virtual.imposter.components.ImposterConfig;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -23,6 +25,6 @@ public class ImposterDrive extends CommandBasedBunyipsOpMode {
 
     @Override
     protected void assignCommands() {
-        
+        driver().whenPressed(Controls.A).run(new HolonomicDriveTask(gamepad1, drive));
     }
 }
