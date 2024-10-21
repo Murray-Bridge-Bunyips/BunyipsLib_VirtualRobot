@@ -61,7 +61,7 @@ public class TwoWheelLocalizer implements Localizer {
      * @param perp       the perpendicular encoder
      * @param imu        the IMU to use for heading
      */
-    public TwoWheelLocalizer(DriveModel driveModel, Params params, RawEncoder par, RawEncoder perp, IMU imu) {
+    public TwoWheelLocalizer(@NonNull DriveModel driveModel, @NonNull Params params, @NonNull RawEncoder par, @NonNull RawEncoder perp, @NonNull IMU imu) {
         this.driveModel = driveModel;
         this.params = params;
         this.par = new OverflowEncoder(par);
@@ -154,6 +154,7 @@ public class TwoWheelLocalizer implements Localizer {
              * @param parYTicks the y position of the parallel encoder (in tick units), as determined by tuning the deadwheel localizer
              * @return the builder
              */
+            @NonNull
             public Builder setParYTicks(double parYTicks) {
                 params.parYTicks = parYTicks;
                 return this;
@@ -165,6 +166,7 @@ public class TwoWheelLocalizer implements Localizer {
              * @param perpXTicks the x position of the perpendicular encoder (in tick units), as determined by tuning the deadwheel localizer
              * @return the builder
              */
+            @NonNull
             public Builder setPerpXTicks(double perpXTicks) {
                 params.perpXTicks = perpXTicks;
                 return this;
@@ -175,6 +177,7 @@ public class TwoWheelLocalizer implements Localizer {
              *
              * @return the parameters
              */
+            @NonNull
             public Params build() {
                 return params;
             }

@@ -3,6 +3,8 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Inches;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Meters;
 
+import androidx.annotation.NonNull;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -37,6 +39,7 @@ public class MoveToAprilTagTask extends Task {
     /**
      * The desired distance from the tag.
      */
+    @NonNull
     public static Measure<Distance> DESIRED_DISTANCE = Meters.of(1);
     /**
      * The speed gain for the distance error.
@@ -89,7 +92,7 @@ public class MoveToAprilTagTask extends Task {
      * @param aprilTag  the AprilTag processor to use
      * @param targetTag the tag to target. -1 for any tag
      */
-    public MoveToAprilTagTask(Measure<Time> timeout, Moveable drive, AprilTag aprilTag, int targetTag) {
+    public MoveToAprilTagTask(@NonNull Measure<Time> timeout, @NonNull Moveable drive, @NonNull AprilTag aprilTag,  int targetTag) {
         super(timeout);
         if (drive instanceof BunyipsSubsystem)
             onSubsystem((BunyipsSubsystem) drive, false);
@@ -109,7 +112,7 @@ public class MoveToAprilTagTask extends Task {
      * @param aprilTag  the AprilTag processor to use
      * @param targetTag the tag to target. -1 for any tag
      */
-    public MoveToAprilTagTask(DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier rSupplier, Moveable drive, AprilTag aprilTag, int targetTag) {
+    public MoveToAprilTagTask(@NonNull DoubleSupplier xSupplier, @NonNull DoubleSupplier ySupplier, @NonNull DoubleSupplier rSupplier, @NonNull Moveable drive, @NonNull AprilTag aprilTag,  int targetTag) {
         if (drive instanceof BunyipsSubsystem)
             onSubsystem((BunyipsSubsystem) drive, false);
         this.drive = drive;
@@ -129,7 +132,7 @@ public class MoveToAprilTagTask extends Task {
      * @param aprilTag  the AprilTag processor to use
      * @param targetTag the tag to target. -1 for any tag
      */
-    public MoveToAprilTagTask(Gamepad gamepad, Moveable drive, AprilTag aprilTag, int targetTag) {
+    public MoveToAprilTagTask(@NonNull Gamepad gamepad, @NonNull Moveable drive, @NonNull AprilTag aprilTag,  int targetTag) {
         this(() -> gamepad.left_stick_x, () -> gamepad.left_stick_y, () -> gamepad.right_stick_x, drive, aprilTag, targetTag);
     }
 
@@ -139,7 +142,8 @@ public class MoveToAprilTagTask extends Task {
      * @param desiredDistance the desired distance from the tag
      * @return this
      */
-    public MoveToAprilTagTask withDesiredDistance(Measure<Distance> desiredDistance) {
+    @NonNull
+    public MoveToAprilTagTask withDesiredDistance(@NonNull Measure<Distance> desiredDistance) {
         DESIRED_DISTANCE = desiredDistance;
         return this;
     }
@@ -150,6 +154,7 @@ public class MoveToAprilTagTask extends Task {
      * @param speedGain the speed gain for the distance error
      * @return this
      */
+    @NonNull
     public MoveToAprilTagTask withSpeedGain(double speedGain) {
         SPEED_GAIN = speedGain;
         return this;
@@ -161,6 +166,7 @@ public class MoveToAprilTagTask extends Task {
      * @param strafeGain the strafe gain for the yaw error
      * @return this
      */
+    @NonNull
     public MoveToAprilTagTask withStrafeGain(double strafeGain) {
         STRAFE_GAIN = strafeGain;
         return this;
@@ -172,6 +178,7 @@ public class MoveToAprilTagTask extends Task {
      * @param turnGain the turn gain for the heading error
      * @return this
      */
+    @NonNull
     public MoveToAprilTagTask withTurnGain(double turnGain) {
         TURN_GAIN = turnGain;
         return this;
@@ -183,6 +190,7 @@ public class MoveToAprilTagTask extends Task {
      * @param maxAutoSpeed the maximum speed the robot can move at
      * @return this
      */
+    @NonNull
     public MoveToAprilTagTask withMaxAutoSpeed(double maxAutoSpeed) {
         MAX_AUTO_SPEED = maxAutoSpeed;
         return this;
@@ -194,6 +202,7 @@ public class MoveToAprilTagTask extends Task {
      * @param maxAutoStrafe the maximum strafe the robot can move at
      * @return this
      */
+    @NonNull
     public MoveToAprilTagTask withMaxAutoStrafe(double maxAutoStrafe) {
         MAX_AUTO_STRAFE = maxAutoStrafe;
         return this;
@@ -205,6 +214,7 @@ public class MoveToAprilTagTask extends Task {
      * @param maxAutoTurn the maximum turn the robot can move at
      * @return this
      */
+    @NonNull
     public MoveToAprilTagTask withMaxAutoTurn(double maxAutoTurn) {
         MAX_AUTO_TURN = maxAutoTurn;
         return this;
@@ -216,6 +226,7 @@ public class MoveToAprilTagTask extends Task {
      * @param targetTag the tag ID to target
      * @return this
      */
+    @NonNull
     public MoveToAprilTagTask withTargetTag(int targetTag) {
         TARGET_TAG = targetTag;
         return this;

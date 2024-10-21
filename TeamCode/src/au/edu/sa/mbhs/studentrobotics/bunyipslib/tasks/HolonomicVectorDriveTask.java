@@ -80,7 +80,7 @@ public class HolonomicVectorDriveTask extends ForeverTask {
      *                            if possible. A localizer attached is required.
      * @param fieldCentricEnabled A BooleanSupplier that returns whether field centric drive is enabled
      */
-    public HolonomicVectorDriveTask(Supplier<Float> xSupplier, Supplier<Float> ySupplier, Supplier<Float> rSupplier, @NonNull Moveable drive, BooleanSupplier fieldCentricEnabled) {
+    public HolonomicVectorDriveTask(@NonNull Supplier<Float> xSupplier, @NonNull Supplier<Float> ySupplier, @NonNull Supplier<Float> rSupplier, @NonNull Moveable drive, @NonNull BooleanSupplier fieldCentricEnabled) {
         if (drive instanceof BunyipsSubsystem)
             onSubsystem((BunyipsSubsystem) drive, false);
         this.drive = drive;
@@ -107,7 +107,7 @@ public class HolonomicVectorDriveTask extends ForeverTask {
      *                  called unlike the differential control task. This task will be auto-attached to this BunyipsSubsystem
      *                  if possible. A localizer attached is required.
      */
-    public HolonomicVectorDriveTask(Supplier<Float> xSupplier, Supplier<Float> ySupplier, Supplier<Float> rSupplier, @NonNull Moveable drive) {
+    public HolonomicVectorDriveTask(@NonNull Supplier<Float> xSupplier, @NonNull Supplier<Float> ySupplier, @NonNull Supplier<Float> rSupplier, @NonNull Moveable drive) {
         this(xSupplier, ySupplier, rSupplier, drive, () -> false);
     }
 
@@ -121,7 +121,7 @@ public class HolonomicVectorDriveTask extends ForeverTask {
      *                            if possible. A localizer attached is required.
      * @param fieldCentricEnabled A BooleanSupplier that returns whether field centric drive is enabled
      */
-    public HolonomicVectorDriveTask(Gamepad driver, @NonNull Moveable drive, BooleanSupplier fieldCentricEnabled) {
+    public HolonomicVectorDriveTask(@NonNull Gamepad driver, @NonNull Moveable drive, @NonNull BooleanSupplier fieldCentricEnabled) {
         this(() -> driver.left_stick_x, () -> driver.left_stick_y, () -> driver.right_stick_x, drive, fieldCentricEnabled);
     }
 
@@ -134,7 +134,7 @@ public class HolonomicVectorDriveTask extends ForeverTask {
      *               called unlike the differential control task. This task will be auto-attached to this BunyipsSubsystem
      *               if possible. A localizer attached is required.
      */
-    public HolonomicVectorDriveTask(Gamepad driver, @NonNull Moveable drive) {
+    public HolonomicVectorDriveTask(@NonNull Gamepad driver, @NonNull Moveable drive) {
         this(() -> driver.left_stick_x, () -> driver.left_stick_y, () -> driver.right_stick_x, drive, () -> false);
     }
 
@@ -146,6 +146,7 @@ public class HolonomicVectorDriveTask extends ForeverTask {
      * @param kd derivative
      * @return this
      */
+    @NonNull
     public HolonomicVectorDriveTask withTranslationalPID(double kp, double ki, double kd) {
         xController.setPID(kp, ki, kd);
         yController.setPID(kp, ki, kd);
@@ -160,6 +161,7 @@ public class HolonomicVectorDriveTask extends ForeverTask {
      * @param kd derivative
      * @return this
      */
+    @NonNull
     public HolonomicVectorDriveTask withRotationalPID(double kp, double ki, double kd) {
         rController.setPID(kp, ki, kd);
         return this;
@@ -171,7 +173,8 @@ public class HolonomicVectorDriveTask extends ForeverTask {
      * @param inchRad a pose in inches and radians that represents the admissible error for robot auto-correction
      * @return this
      */
-    public HolonomicVectorDriveTask withTolerance(Pose2d inchRad) {
+    @NonNull
+    public HolonomicVectorDriveTask withTolerance(@NonNull Pose2d inchRad) {
         toleranceInchRad = inchRad;
         return this;
     }
@@ -184,7 +187,8 @@ public class HolonomicVectorDriveTask extends ForeverTask {
      *                    values will yield more stable poses, but slower time to lock
      * @return this
      */
-    public HolonomicVectorDriveTask withStabilisationTimeout(Measure<Time> lockTimeout) {
+    @NonNull
+    public HolonomicVectorDriveTask withStabilisationTimeout(@NonNull Measure<Time> lockTimeout) {
         lockingTimeout = lockTimeout;
         return this;
     }
@@ -197,7 +201,8 @@ public class HolonomicVectorDriveTask extends ForeverTask {
      * @param poseR r (heading) admissible error
      * @return this
      */
-    public HolonomicVectorDriveTask withTolerance(Measure<Distance> poseX, Measure<Distance> poseY, Measure<Angle> poseR) {
+    @NonNull
+    public HolonomicVectorDriveTask withTolerance(@NonNull Measure<Distance> poseX, @NonNull Measure<Distance> poseY, @NonNull Measure<Angle> poseR) {
         return withTolerance(new Pose2d(poseX.in(Inches), poseY.in(Inches), poseR.in(Radians)));
     }
 
@@ -208,7 +213,7 @@ public class HolonomicVectorDriveTask extends ForeverTask {
      *
      * @param heading the angle to rotate to, will be wrapped from [0, 2pi] radians
      */
-    public void setHeadingTarget(Measure<Angle> heading) {
+    public void setHeadingTarget(@NonNull Measure<Angle> heading) {
         headingLock = Mathf.normaliseAngle(heading).in(Radians);
     }
 
@@ -220,7 +225,7 @@ public class HolonomicVectorDriveTask extends ForeverTask {
      * @param forwardX Forward X component of the locking vector
      * @param strafeY  Strafe Y component of the locking vector
      */
-    public void setVectorTarget(Measure<Distance> forwardX, Measure<Distance> strafeY) {
+    public void setVectorTarget(@NonNull Measure<Distance> forwardX, @NonNull Measure<Distance> strafeY) {
         vectorLock = new Vector2d(forwardX.in(Inches), strafeY.in(Inches));
     }
 

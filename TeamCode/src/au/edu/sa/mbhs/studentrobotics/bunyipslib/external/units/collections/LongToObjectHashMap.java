@@ -4,6 +4,8 @@
 
 package au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.collections;
 
+import androidx.annotation.NonNull;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,6 +17,7 @@ import java.util.Collection;
  * @param <V> the type of the values stored in the map
  * @since 1.0.0-pre
  */
+@SuppressWarnings("UnknownNullness")
 public class LongToObjectHashMap<V> {
     private static final int INITIAL_SIZE = 0;
     private static final int INITIAL_CAPACITY = 8; // NOTE: Must be a power of two
@@ -205,6 +208,7 @@ public class LongToObjectHashMap<V> {
      *
      * @return a read-only set of keys
      */
+    @NonNull
     public ReadOnlyPrimitiveLongSet keySet() {
         // Copy the sparse key array into a compact array
         long[] keys = new long[size];
@@ -225,6 +229,7 @@ public class LongToObjectHashMap<V> {
      *
      * @return a read-only collection of values
      */
+    @NonNull
     public Collection<V> values() {
         Collection<V> vals = new ArrayList<>();
         for (int bucket = 0; bucket < capacity; bucket++) {
@@ -240,7 +245,7 @@ public class LongToObjectHashMap<V> {
      *
      * @param function the function to apply to every key-value pair.
      */
-    public void forEach(IteratorFunction<? super V> function) {
+    public void forEach(@NonNull IteratorFunction<? super V> function) {
         for (int bucket = 0; bucket < capacity; bucket++) {
             if (uses[bucket]) {
                 function.accept(keys[bucket], values[bucket]);

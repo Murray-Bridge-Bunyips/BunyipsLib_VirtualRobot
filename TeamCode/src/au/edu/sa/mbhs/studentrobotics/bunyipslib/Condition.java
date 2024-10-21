@@ -21,6 +21,7 @@ public class Condition implements BooleanSupplier {
     /**
      * The currently set edge detection to use for the {@link BooleanSupplier} {@link #getAsBoolean()} method.
      */
+    @NonNull
     public Edge edge;
     private long delayNs;
     private long capture;
@@ -29,10 +30,10 @@ public class Condition implements BooleanSupplier {
     /**
      * Creates a new Condition with the given {@link BooleanSupplier}.
      *
-     * @param condition The {@link BooleanSupplier} to use.
      * @param edge      The edge detection to use.
+     * @param condition The {@link BooleanSupplier} to use.
      */
-    public Condition(BooleanSupplier condition, Edge edge) {
+    public Condition(@NonNull Edge edge, @NonNull BooleanSupplier condition) {
         this.condition = condition;
         this.edge = edge;
     }
@@ -42,8 +43,8 @@ public class Condition implements BooleanSupplier {
      *
      * @param condition The {@link BooleanSupplier} to use.
      */
-    public Condition(BooleanSupplier condition) {
-        this(condition, Edge.ACTIVE);
+    public Condition(@NonNull BooleanSupplier condition) {
+        this(Edge.ACTIVE, condition);
     }
 
     /**
@@ -58,6 +59,7 @@ public class Condition implements BooleanSupplier {
      * @param delay the delay to apply to the condition. Zero or negative values will disable the delay (default).
      * @return this Condition with the delay applied
      */
+    @NonNull
     public Condition withActiveDelay(@Nullable Measure<Time> delay) {
         if (delay == null) {
             delayNs = 0;
@@ -71,6 +73,7 @@ public class Condition implements BooleanSupplier {
     /**
      * @return the currently set delay for the condition.
      */
+    @NonNull
     public Measure<Time> getActiveDelay() {
         return Nanoseconds.of(delayNs);
     }
@@ -147,8 +150,9 @@ public class Condition implements BooleanSupplier {
      * @param other The other {@link BooleanSupplier} to OR with.
      * @return A new Condition that is the logical OR of this Condition and the other {@link BooleanSupplier}.
      */
-    public Condition or(BooleanSupplier other) {
-        return new Condition(() -> getAsBoolean() || other.getAsBoolean(), edge);
+    @NonNull
+    public Condition or(@NonNull BooleanSupplier other) {
+        return new Condition(edge, () -> getAsBoolean() || other.getAsBoolean());
     }
 
     /**
@@ -157,8 +161,9 @@ public class Condition implements BooleanSupplier {
      * @param other The other {@link BooleanSupplier} to AND with.
      * @return A new Condition that is the logical AND of this Condition and the other {@link BooleanSupplier}.
      */
-    public Condition and(BooleanSupplier other) {
-        return new Condition(() -> getAsBoolean() && other.getAsBoolean(), edge);
+    @NonNull
+    public Condition and(@NonNull BooleanSupplier other) {
+        return new Condition(edge, () -> getAsBoolean() && other.getAsBoolean());
     }
 
     /**
@@ -167,8 +172,9 @@ public class Condition implements BooleanSupplier {
      * @param other The other {@link BooleanSupplier} to XOR with.
      * @return A new Condition that is the logical XOR of this Condition and the other {@link BooleanSupplier}.
      */
-    public Condition xor(BooleanSupplier other) {
-        return new Condition(() -> getAsBoolean() ^ other.getAsBoolean(), edge);
+    @NonNull
+    public Condition xor(@NonNull BooleanSupplier other) {
+        return new Condition(edge, () -> getAsBoolean() ^ other.getAsBoolean());
     }
 
     /**
@@ -176,8 +182,9 @@ public class Condition implements BooleanSupplier {
      *
      * @return A new Condition that is the logical NOT of this Condition.
      */
+    @NonNull
     public Condition not() {
-        return new Condition(() -> !getAsBoolean(), edge);
+        return new Condition(edge, () -> !getAsBoolean());
     }
 
     @NonNull

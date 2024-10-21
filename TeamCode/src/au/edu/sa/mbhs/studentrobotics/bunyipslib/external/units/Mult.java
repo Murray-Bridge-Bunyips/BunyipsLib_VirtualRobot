@@ -19,6 +19,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.collections.Long
  * @param <B> the type of the second unit in the result
  * @since 1.0.0-pre
  */
+@SuppressWarnings("UnknownNullness")
 public class Mult<A extends Unit<A>, B extends Unit<B>> extends Unit<Mult<A, B>> {
     @SuppressWarnings("rawtypes")
     private static final LongToObjectHashMap<Mult> cache = new LongToObjectHashMap<>();
@@ -69,6 +70,7 @@ public class Mult<A extends Unit<A>, B extends Unit<B>> extends Unit<Mult<A, B>>
      * @param b   the second unit
      * @return the combined unit
      */
+    @NonNull
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static <A extends Unit<A>, B extends Unit<B>> Mult<A, B> combine(A a, B b) {
         long key = ((long) a.hashCode()) << 32L | (b.hashCode() & 0xFFFFFFFFL);

@@ -5,6 +5,8 @@ import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Mil
 import android.graphics.Color;
 import android.util.Pair;
 
+import androidx.annotation.NonNull;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.IMU;
 
@@ -51,21 +53,20 @@ public class DebugMode extends BunyipsComponent implements Runnable {
      *
      * @return instance of this to use with a builder pattern
      */
+    @NonNull
     public static DebugMode enable() {
         return new DebugMode();
     }
 
     /**
      * Add a custom actionable condition.
-     * <p>
-     * For Kotlin users, calling this method can be done with the notation {@code `when`}
-     * (see <a href="https://kotlinlang.org/docs/java-interop.html#escaping-for-java-identifiers-that-are-keywords-in-kotlin">here</a>).
      *
-     * @param stopCondition the condition to periodically check
      * @param action        the action to take if the condition is met
+     * @param stopCondition the condition to periodically check
      * @return this
      */
-    public DebugMode when(BooleanSupplier stopCondition, TriggerAction action) {
+    @NonNull
+    public DebugMode trigger(@NonNull TriggerAction action, @NonNull BooleanSupplier stopCondition) {
         actions.add(new Pair<>(stopCondition, action));
         return this;
     }
@@ -77,7 +78,8 @@ public class DebugMode extends BunyipsComponent implements Runnable {
      * @param action the action to take on a roll/pitch violation
      * @return this
      */
-    public DebugMode whenRobotRolled(IMU imu, TriggerAction action) {
+    @NonNull
+    public DebugMode whenRobotRolled(@NonNull IMU imu, @NonNull TriggerAction action) {
         actions.add(new Pair<>(() -> {
             YawPitchRollAngles angles = imu.getRobotYawPitchRollAngles();
             double roll = angles.getRoll(AngleUnit.DEGREES);
@@ -94,7 +96,8 @@ public class DebugMode extends BunyipsComponent implements Runnable {
      * @param action the action to take on pressing START+BACK on either gamepad1 or gamepad2
      * @return this
      */
-    public DebugMode whenGamepadKillSwitch(TriggerAction action) {
+    @NonNull
+    public DebugMode whenGamepadKillSwitch(@NonNull TriggerAction action) {
         actions.add(new Pair<>(() ->
                 (require(opMode).gamepad1.back && opMode.gamepad1.start) || (opMode.gamepad2.back && opMode.gamepad2.start),
                 action
@@ -110,7 +113,8 @@ public class DebugMode extends BunyipsComponent implements Runnable {
      * @param action  the action to take on timeout
      * @return this
      */
-    public DebugMode whenWatchdogExpires(Measure<Time> timeout, TriggerAction action) {
+    @NonNull
+    public DebugMode whenWatchdogExpires(@NonNull Measure<Time> timeout, @NonNull TriggerAction action) {
         Watchdog w = new Watchdog(() -> {
             // no-op, we check for running state not a callback
         }, 50, (long) timeout.in(Milliseconds), TimeUnit.MILLISECONDS);
@@ -125,6 +129,7 @@ public class DebugMode extends BunyipsComponent implements Runnable {
      *
      * @return the added watchdogs
      */
+    @NonNull
     public Watchdog[] getWatchdogs() {
         return watchdogs.toArray(new Watchdog[0]);
     }

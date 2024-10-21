@@ -17,6 +17,7 @@ import java.util.Objects;
  * @param <U> the unit type of the measure
  * @since 1.0.0-pre
  */
+@SuppressWarnings("UnknownNullness")
 public class ImmutableMeasure<U extends Unit<U>> implements Measure<U> {
     private final double magnitude;
     private final double baseUnitMagnitude;
@@ -45,8 +46,9 @@ public class ImmutableMeasure<U extends Unit<U>> implements Measure<U> {
      * @param unit              the unit of measure
      * @return a new measure
      */
+    @NonNull
     public static <U extends Unit<U>> ImmutableMeasure<U> ofBaseUnits(
-            double baseUnitMagnitude, Unit<U> unit) {
+            double baseUnitMagnitude, @NonNull Unit<U> unit) {
         return new ImmutableMeasure<>(unit.fromBaseUnits(baseUnitMagnitude), baseUnitMagnitude, unit);
     }
 
@@ -58,8 +60,9 @@ public class ImmutableMeasure<U extends Unit<U>> implements Measure<U> {
      * @param unit              the unit of measure
      * @return a new measure
      */
+    @NonNull
     public static <U extends Unit<U>> ImmutableMeasure<U> ofRelativeUnits(
-            double relativeMagnitude, Unit<U> unit) {
+            double relativeMagnitude, @NonNull Unit<U> unit) {
         return new ImmutableMeasure<>(relativeMagnitude, unit.toBaseUnits(relativeMagnitude), unit);
     }
 
@@ -105,6 +108,7 @@ public class ImmutableMeasure<U extends Unit<U>> implements Measure<U> {
         return Objects.hash(magnitude, unit);
     }
 
+    @NonNull
     @Override
     public Measure<U> copy() {
         return this; // Already immutable, no need to allocate a new object

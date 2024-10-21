@@ -60,7 +60,7 @@ public class DriveToPoseTask extends Task {
      * @param headingController The system/PID controller for heading.
      */
     public DriveToPoseTask(@NonNull Measure<Time> timeout, @NonNull Moveable driveInstance,
-                           Pose2d targetPose, SystemController forwardController, SystemController strafeController, SystemController headingController) {
+                           @NonNull Pose2d targetPose, @NonNull SystemController forwardController, @NonNull SystemController strafeController,  @NonNull SystemController headingController) {
         super(timeout);
         if (driveInstance instanceof BunyipsSubsystem)
             onSubsystem((BunyipsSubsystem) driveInstance, true);
@@ -70,7 +70,7 @@ public class DriveToPoseTask extends Task {
         this.forwardController = forwardController;
         this.strafeController = strafeController;
         this.headingController = headingController;
-        withName("Drive To Pose: " + targetPose.toString());
+        withName("Drive To Pose: " + targetPose);
     }
 
     /**
@@ -80,7 +80,8 @@ public class DriveToPoseTask extends Task {
      * @param translation The tolerance for the translation vector.
      * @return this
      */
-    public DriveToPoseTask withTolerances(Measure<Angle> heading, Measure<Distance> translation) {
+    @NonNull
+    public DriveToPoseTask withTolerances(@NonNull Measure<Angle> heading, @NonNull Measure<Distance> translation) {
         headingTolerance = heading;
         vectorTolerance = translation;
         return this;
@@ -92,6 +93,7 @@ public class DriveToPoseTask extends Task {
      * @param speed The maximum forward speed magnitude.
      * @return this
      */
+    @NonNull
     public DriveToPoseTask withMaxForwardSpeed(double speed) {
         MAX_FORWARD_SPEED = Math.abs(speed);
         return this;
@@ -103,6 +105,7 @@ public class DriveToPoseTask extends Task {
      * @param speed The maximum strafe speed magnitude.
      * @return this
      */
+    @NonNull
     public DriveToPoseTask withMaxStrafeSpeed(double speed) {
         MAX_STRAFE_SPEED = Math.abs(speed);
         return this;
@@ -114,6 +117,7 @@ public class DriveToPoseTask extends Task {
      * @param speed The maximum rotation speed magnitude.
      * @return this
      */
+    @NonNull
     public DriveToPoseTask withMaxRotationSpeed(double speed) {
         MAX_ROTATION_SPEED = Math.abs(speed);
         return this;

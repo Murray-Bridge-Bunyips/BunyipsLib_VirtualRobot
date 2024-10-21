@@ -45,7 +45,7 @@ public class HolonomicDriveTask extends ForeverTask {
      * @param fieldCentricEnabled A BooleanSupplier that returns whether field centric drive is enabled,
      *                            note this will only work on a drive that has a {@link Localizer} attached to it.
      */
-    public HolonomicDriveTask(Supplier<Float> xSupplier, Supplier<Float> yInvSupplier, Supplier<Float> rSupplier, @NonNull Moveable drive, BooleanSupplier fieldCentricEnabled) {
+    public HolonomicDriveTask(@NonNull Supplier<Float> xSupplier, @NonNull Supplier<Float> yInvSupplier, @NonNull Supplier<Float> rSupplier, @NonNull Moveable drive, @NonNull BooleanSupplier fieldCentricEnabled) {
         if (drive instanceof BunyipsSubsystem)
             onSubsystem((BunyipsSubsystem) drive, false);
         this.drive = drive;
@@ -66,7 +66,7 @@ public class HolonomicDriveTask extends ForeverTask {
      *                     called unlike the differential control task. This task will be auto-attached to this BunyipsSubsystem
      *                     if possible.
      */
-    public HolonomicDriveTask(Supplier<Float> xSupplier, Supplier<Float> yInvSupplier, Supplier<Float> rSupplier, @NonNull Moveable drive) {
+    public HolonomicDriveTask(@NonNull Supplier<Float> xSupplier, @NonNull Supplier<Float> yInvSupplier, @NonNull Supplier<Float> rSupplier, @NonNull Moveable drive) {
         this(xSupplier, yInvSupplier, rSupplier, drive, () -> false);
     }
 
@@ -81,7 +81,7 @@ public class HolonomicDriveTask extends ForeverTask {
      * @param fieldCentricEnabled A BooleanSupplier that returns whether field centric drive is enabled,
      *                            note this will only work on a drive that has a {@link Localizer} attached to it.
      */
-    public HolonomicDriveTask(Gamepad driver, @NonNull Moveable drive, BooleanSupplier fieldCentricEnabled) {
+    public HolonomicDriveTask(@NonNull Gamepad driver, @NonNull Moveable drive, @NonNull BooleanSupplier fieldCentricEnabled) {
         this(() -> driver.left_stick_x, () -> driver.left_stick_y, () -> driver.right_stick_x, drive, fieldCentricEnabled);
     }
 
@@ -94,7 +94,7 @@ public class HolonomicDriveTask extends ForeverTask {
      *               called unlike the differential control task. This task will be auto-attached to this BunyipsSubsystem
      *               if possible.
      */
-    public HolonomicDriveTask(Gamepad driver, @NonNull Moveable drive) {
+    public HolonomicDriveTask(@NonNull Gamepad driver, @NonNull Moveable drive) {
         this(driver, drive, () -> false);
     }
 

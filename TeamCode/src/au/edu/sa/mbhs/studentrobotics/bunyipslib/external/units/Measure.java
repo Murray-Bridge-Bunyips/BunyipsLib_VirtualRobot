@@ -6,6 +6,9 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units;
 
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.util.Locale;
 
 /**
@@ -29,8 +32,9 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      * @param measures the set of measures to compare
      * @return the measure with the greatest positive magnitude, or null if no measures were provided
      */
+    @Nullable
     @SafeVarargs
-    static <U extends Unit<U>> Measure<U> max(Measure<U>... measures) {
+    static <U extends Unit<U>> Measure<U> max(@NonNull Measure<U>... measures) {
         if (measures.length == 0) {
             return null; // nothing to compare
         }
@@ -52,8 +56,9 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      * @param measures the set of measures to compare
      * @return the measure with the greatest negative magnitude
      */
+    @Nullable
     @SafeVarargs
-    static <U extends Unit<U>> Measure<U> min(Measure<U>... measures) {
+    static <U extends Unit<U>> Measure<U> min(@NonNull Measure<U>... measures) {
         if (measures.length == 0) {
             return null; // nothing to compare
         }
@@ -95,7 +100,8 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      * seconds. Converting to the same unit is equivalent to calling {@link #magnitude()}.
      * <p>
      * For Kotlin users, calling this method can be done with the notation {@code `in`}
-     * (see <a href="https://kotlinlang.org/docs/java-interop.html#escaping-for-java-identifiers-that-are-keywords-in-kotlin">here</a>).
+     * (see <a href="https://kotlinlang.org/docs/java-interop.html#escaping-for-java-identifiers-that-are-keywords-in-kotlin">here</a>),
+     * or by calling the alias {@code to}.
      *
      * <pre>
      *   Meters.of(12).in(Feet) // 39.3701
@@ -105,12 +111,29 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      * @param unit the unit to convert this measure to
      * @return the value of this measure in the given unit
      */
-    default double in(Unit<U> unit) {
+    @SuppressWarnings("NoHardKeywords")
+    default double in(@NonNull Unit<U> unit) {
         if (unit().equals(unit)) {
             return magnitude();
         } else {
             return unit.fromBaseUnits(baseUnitMagnitude());
         }
+    }
+
+    /**
+     * Converts this measure to a measure with a different unit of the same type, eg minutes to
+     * seconds. Converting to the same unit is equivalent to calling {@link #magnitude()}.
+     *
+     * <pre>
+     *   Meters.of(12).in(Feet) // 39.3701
+     *   Seconds.of(15).in(Minutes) // 0.25
+     * </pre>
+     *
+     * @param unit the unit to convert this measure to
+     * @return the value of this measure in the given unit
+     */
+    default double to(@NonNull Unit<U> unit) {
+        return in(unit);
     }
 
     /**
@@ -122,6 +145,7 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      * @param multiplier the constant to multiply by
      * @return the resulting measure
      */
+    @NonNull
     default Measure<U> times(double multiplier) {
         return ImmutableMeasure.ofBaseUnits(baseUnitMagnitude() * multiplier, unit());
     }
@@ -137,8 +161,9 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      * @param other the unit to multiply by
      * @return the multiplicative unit
      */
+    @NonNull
     @SuppressWarnings("unchecked")
-    default <U2 extends Unit<U2>> Measure<?> times(Measure<U2> other) {
+    default <U2 extends Unit<U2>> Measure<?> times(@NonNull Measure<U2> other) {
         if (other.unit() instanceof Dimensionless) {
             // scalar multiplication
             return times(other.baseUnitMagnitude());
@@ -184,6 +209,7 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      * @return the resulting measure
      * @see #times(double)
      */
+    @NonNull
     default Measure<U> divide(double divisor) {
         return times(1 / divisor);
     }
@@ -196,7 +222,8 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      * @param other the unit to multiply by
      * @return the resulting measure
      */
-    default <U2 extends Unit<U2>> Measure<?> divide(Measure<U2> other) {
+    @NonNull
+    default <U2 extends Unit<U2>> Measure<?> divide(@NonNull Measure<U2> other) {
         if (unit().getBaseUnit().equals(other.unit().getBaseUnit())) {
             return Units.Value.ofBaseUnits(baseUnitMagnitude() / other.baseUnitMagnitude());
         }
@@ -228,7 +255,8 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      * @param period the time period to divide by.
      * @return the velocity result
      */
-    default Measure<Velocity<U>> per(Measure<Time> period) {
+    @NonNull
+    default Measure<Velocity<U>> per(@NonNull Measure<Time> period) {
         Velocity<U> newUnit = unit().per(period.unit());
         return ImmutableMeasure.ofBaseUnits(baseUnitMagnitude() / period.baseUnitMagnitude(), newUnit);
     }
@@ -244,6 +272,7 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      * @param denominator the denominator unit being divided by
      * @return the relational measure
      */
+    @NonNull
     default <U2 extends Unit<U2>> Measure<Per<U, U2>> per(U2 denominator) {
         Per<U, U2> newUnit = unit().per(denominator);
         return newUnit.of(magnitude());
@@ -259,7 +288,8 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      * @param time the unit of time
      * @return the velocity measure
      */
-    default Measure<Velocity<U>> per(Time time) {
+    @NonNull
+    default Measure<Velocity<U>> per(@NonNull Time time) {
         Velocity<U> newUnit = unit().per(time);
         return newUnit.of(magnitude());
     }
@@ -270,7 +300,8 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      * @param other the measure to add to this one
      * @return a new measure containing the result
      */
-    default Measure<U> plus(Measure<U> other) {
+    @NonNull
+    default Measure<U> plus(@NonNull Measure<U> other) {
         return unit().ofBaseUnits(baseUnitMagnitude() + other.baseUnitMagnitude());
     }
 
@@ -280,7 +311,8 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      * @param other the measure to subtract from this one
      * @return a new measure containing the result
      */
-    default Measure<U> minus(Measure<U> other) {
+    @NonNull
+    default Measure<U> minus(@NonNull Measure<U> other) {
         return unit().ofBaseUnits(baseUnitMagnitude() - other.baseUnitMagnitude());
     }
 
@@ -289,6 +321,7 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      *
      * @return the resulting measure
      */
+    @NonNull
     default Measure<U> negate() {
         return times(-1);
     }
@@ -299,6 +332,7 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      *
      * @return the copied measure
      */
+    @NonNull
     Measure<U> copy();
 
     /**
@@ -306,6 +340,7 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      *
      * @return a mutable measure initialized to be identical to this measure
      */
+    @NonNull
     default MutableMeasure<U> mutableCopy() {
         return MutableMeasure.mutable(this);
     }
@@ -325,7 +360,7 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      *                          checking if a value is within 1% means a value of 0.01 should be passed, and so on.
      * @return true if this unit is near the other measure, otherwise false
      */
-    default boolean isNear(Measure<?> other, double varianceThreshold) {
+    default boolean isNear(@NonNull Measure<?> other, double varianceThreshold) {
         if (!unit().getBaseUnit().equivalent(other.unit().getBaseUnit())) {
             return false; // Disjoint units, not compatible
         }
@@ -350,7 +385,7 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      *                  other.
      * @return true if this unit is near the other measure, otherwise false.
      */
-    default boolean isNear(Measure<U> other, Measure<U> tolerance) {
+    default boolean isNear(@NonNull Measure<U> other, @NonNull Measure<U> tolerance) {
         return Math.abs(baseUnitMagnitude() - other.baseUnitMagnitude())
                 <= Math.abs(tolerance.baseUnitMagnitude());
     }
@@ -361,7 +396,7 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      * @param other the measure to compare to
      * @return true if this measure is equivalent, false otherwise
      */
-    default boolean isEquivalent(Measure<?> other) {
+    default boolean isEquivalent(@NonNull Measure<?> other) {
         if (!unit().getBaseUnit().equals(other.unit().getBaseUnit())) {
             return false; // Disjoint units, not compatible
         }
@@ -380,7 +415,7 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      * @param o the other measure to compare to
      * @return true if this measure has a greater equivalent magnitude, false otherwise
      */
-    default boolean gt(Measure<U> o) {
+    default boolean gt(@NonNull Measure<U> o) {
         return compareTo(o) > 0;
     }
 
@@ -390,7 +425,7 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      * @param o the other measure to compare to
      * @return true if this measure has an equal or greater equivalent magnitude, false otherwise
      */
-    default boolean gte(Measure<U> o) {
+    default boolean gte(@NonNull Measure<U> o) {
         return compareTo(o) > 0 || isEquivalent(o);
     }
 
@@ -400,7 +435,7 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      * @param o the other measure to compare to
      * @return true if this measure has a lesser equivalent magnitude, false otherwise
      */
-    default boolean lt(Measure<U> o) {
+    default boolean lt(@NonNull Measure<U> o) {
         return compareTo(o) < 0;
     }
 
@@ -410,7 +445,7 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      * @param o the other measure to compare to
      * @return true if this measure has an equal or lesser equivalent magnitude, false otherwise
      */
-    default boolean lte(Measure<U> o) {
+    default boolean lte(@NonNull Measure<U> o) {
         return compareTo(o) < 0 || isEquivalent(o);
     }
 
@@ -421,6 +456,7 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      *
      * @return the scientific shorthand form representation of this measurement
      */
+    @NonNull
     default String toScientificString() {
         // eg 1.234e+04 V/m (1234 Volt per Meter in long form)
         return String.format(Locale.getDefault(), "%.3e %s", magnitude(), unit().symbol());
@@ -433,6 +469,7 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      *
      * @return the short/default form representation of this measurement
      */
+    @NonNull
     default String toShortString() {
         // BunyipsLib change: The old short string for most applications did not fit purpose, since all values in FTC
         // are fairly small quantity and large values are already represented in scientific notation. Short string
@@ -449,6 +486,7 @@ public interface Measure<U extends Unit<U>> extends Comparable<Measure<U>> {
      *
      * @return the long form representation of this measurement
      */
+    @NonNull
     default String toLongString() {
         // eg 1234 Volt per Meter (1.234e+04 V/m in scientific form)
         return String.format("%s %s", magnitude(), unit().name());

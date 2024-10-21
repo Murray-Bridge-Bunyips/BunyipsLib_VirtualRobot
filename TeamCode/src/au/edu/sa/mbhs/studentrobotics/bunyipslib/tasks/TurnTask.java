@@ -3,6 +3,8 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Degrees;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Radians;
 
+import androidx.annotation.NonNull;
+
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 
@@ -47,7 +49,7 @@ public class TurnTask extends Task {
      * @param angle the angle to turn to, if this is a delta angle this will be counter-clockwise
      * @param delta if this angle is a delta from the current drive rotation at runtime
      */
-    public TurnTask(Moveable drive, Measure<Angle> angle, boolean delta) {
+    public TurnTask(@NonNull Moveable drive, @NonNull Measure<Angle> angle, boolean delta) {
         this(drive::setPower, () -> Objects.requireNonNull(drive.getPose(), "Drive instance requires a localizer attached to determine heading!"), angle, delta);
         if (drive instanceof BunyipsSubsystem)
             onSubsystem((BunyipsSubsystem) drive);
@@ -61,7 +63,7 @@ public class TurnTask extends Task {
      * @param angle        the angle to turn to, if this is a delta angle this will be counter-clockwise
      * @param delta        if this angle is a delta from the current drive rotation at runtime
      */
-    public TurnTask(Consumer<PoseVelocity2d> powerIn, Supplier<Pose2d> poseEstimate, Measure<Angle> angle, boolean delta) {
+    public TurnTask(@NonNull Consumer<PoseVelocity2d> powerIn, @NonNull Supplier<Pose2d> poseEstimate, @NonNull Measure<Angle> angle,  boolean delta) {
         this.powerIn = powerIn;
         this.poseEstimate = poseEstimate;
         setDelta = delta;
@@ -74,11 +76,22 @@ public class TurnTask extends Task {
     /**
      * Construct a new TurnTask that will turn the robot to the given global angle.
      *
+     * @param drive the drive instance to use, this subsystem will be automatically attached to the task
+     *              if it is a {@link BunyipsSubsystem}
+     * @param angle the angle to turn to in a global coordinate frame
+     */
+    public TurnTask(@NonNull Moveable drive,  @NonNull Measure<Angle> angle) {
+        this(drive, angle, false);
+    }
+
+    /**
+     * Construct a new TurnTask that will turn the robot to the given global angle.
+     *
      * @param powerIn      the consumer to set the power of the robot, can ignore the x and y values if not needed
      * @param poseEstimate the supplier to get the current pose of the robot, can ignore the x and y values if not needed
      * @param angle        the angle to turn to in a global coordinate frame
      */
-    public TurnTask(Consumer<PoseVelocity2d> powerIn, Supplier<Pose2d> poseEstimate, Measure<Angle> angle) {
+    public TurnTask(@NonNull Consumer<PoseVelocity2d> powerIn, @NonNull Supplier<Pose2d> poseEstimate,  @NonNull Measure<Angle> angle) {
         this(powerIn, poseEstimate, angle, false);
     }
 
@@ -89,7 +102,8 @@ public class TurnTask extends Task {
      * @param pidf the PIDF controller to use
      * @return this
      */
-    public TurnTask withPIDF(PIDF pidf) {
+    @NonNull
+    public TurnTask withPIDF(@NonNull PIDF pidf) {
         this.pidf = pidf;
         return this;
     }
@@ -100,7 +114,8 @@ public class TurnTask extends Task {
      * @param tolerance the tolerance to use
      * @return this
      */
-    public TurnTask withTolerance(Measure<Angle> tolerance) {
+    @NonNull
+    public TurnTask withTolerance(@NonNull Measure<Angle> tolerance) {
         if (tolerance.magnitude() <= 0) {
             throw new NotStrictlyPositiveException(tolerance.magnitude());
         }

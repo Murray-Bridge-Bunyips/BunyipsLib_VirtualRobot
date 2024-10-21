@@ -1,5 +1,7 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control;
 
+import androidx.annotation.NonNull;
+
 import java.util.Arrays;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.Encoder;
@@ -29,12 +31,13 @@ public class PIDFFController implements PIDF {
      * @param ff      the kV/kA feedforward to use
      * @param encoder the encoder to retrieve velocity/acceleration information from
      */
-    public PIDFFController(PIDF pid, SystemController ff, Encoder encoder) {
+    public PIDFFController(@NonNull PIDF pid, @NonNull SystemController ff,  @NonNull Encoder encoder) {
         this.pid = pid;
         this.ff = ff;
         this.encoder = encoder;
     }
 
+    @NonNull
     @Override
     public double[] getCoefficients() {
         double[] ffCoeffs = ff.getCoefficients();
@@ -48,7 +51,7 @@ public class PIDFFController implements PIDF {
     }
 
     @Override
-    public void setCoefficients(double... coeffs) {
+    public void setCoefficients(@NonNull double[] coeffs) {
         if (coeffs.length < 4) {
             throw new IllegalArgumentException("expected >=4 arguments, got " + coeffs.length);
         }
@@ -79,6 +82,7 @@ public class PIDFFController implements PIDF {
         ff.reset();
     }
 
+    @NonNull
     @Override
     public PIDFController getPIDFController() {
         return pid.getPIDFController();

@@ -6,6 +6,8 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units;
 
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Watts;
 
+import androidx.annotation.NonNull;
+
 /**
  * Unit of electric voltage dimension.
  *
@@ -17,6 +19,7 @@ import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Wat
  *
  * @since 1.0.0-pre
  */
+@SuppressWarnings("UnknownNullness")
 public class Voltage extends Unit<Voltage> {
     /**
      * @noinspection SameParameterValue
@@ -45,7 +48,8 @@ public class Voltage extends Unit<Voltage> {
      * @param symbol  the symbol used to represent the unit of power
      * @return the power unit
      */
-    public Power times(Unit<Current> current, String name, String symbol) {
+    @NonNull
+    public Power times(@NonNull Unit<Current> current, @NonNull String name, @NonNull String symbol) {
         return new Power(Watts, toBaseUnits(1) * current.toBaseUnits(1), name, symbol);
     }
 }

@@ -40,10 +40,10 @@ public class Unit<U extends Unit<U>> {
     @SuppressWarnings("unchecked")
     protected Unit(
             U baseUnit,
-            UnaryFunction toBaseConverter,
-            UnaryFunction fromBaseConverter,
-            String name,
-            String symbol) {
+            @NonNull UnaryFunction toBaseConverter,
+            @NonNull UnaryFunction fromBaseConverter,
+            @NonNull String name,
+            @NonNull String symbol) {
         this.baseUnit = baseUnit == null ? (U) this : baseUnit;
         this.toBaseConverter = Objects.requireNonNull(toBaseConverter);
         this.fromBaseConverter = Objects.requireNonNull(fromBaseConverter);
@@ -61,7 +61,7 @@ public class Unit<U extends Unit<U>> {
      * @param name               the name of the unit. This should be a singular noun (so "Meter", not "Meters")
      * @param symbol             the short symbol for the unit, such as "m" for meters or "lb." for pounds
      */
-    protected Unit(U baseUnit, double baseUnitEquivalent, String name, String symbol) {
+    protected Unit(U baseUnit, double baseUnitEquivalent, @NonNull String name, @NonNull String symbol) {
         this(baseUnit, x -> x * baseUnitEquivalent, x -> x / baseUnitEquivalent, name, symbol);
     }
 
@@ -125,7 +125,7 @@ public class Unit<U extends Unit<U>> {
      * @param otherUnit the unit to convert the magnitude to
      * @return the corresponding value in terms of this unit.
      */
-    public double convertFrom(double magnitude, Unit<U> otherUnit) {
+    public double convertFrom(double magnitude, @NonNull Unit<U> otherUnit) {
         if (equivalent(otherUnit)) {
             // same unit, don't bother converting
             return magnitude;
@@ -139,6 +139,7 @@ public class Unit<U extends Unit<U>> {
      *
      * @return the conversion function
      */
+    @NonNull
     public UnaryFunction getConverterToBase() {
         return toBaseConverter;
     }
@@ -149,6 +150,7 @@ public class Unit<U extends Unit<U>> {
      *
      * @return the conversion function
      */
+    @NonNull
     public UnaryFunction getConverterFromBase() {
         return fromBaseConverter;
     }
@@ -160,6 +162,7 @@ public class Unit<U extends Unit<U>> {
      * @param magnitude the magnitude of the measure to create
      * @return the measure
      */
+    @NonNull
     public Measure<U> of(double magnitude) {
         if (magnitude == 0) {
             // reuse static object
@@ -179,6 +182,7 @@ public class Unit<U extends Unit<U>> {
      * @param baseUnitMagnitude the magnitude of the measure in terms of the base unit
      * @return the measure
      */
+    @NonNull
     public Measure<U> ofBaseUnits(double baseUnitMagnitude) {
         return ImmutableMeasure.ofBaseUnits(baseUnitMagnitude, this);
     }
@@ -188,6 +192,7 @@ public class Unit<U extends Unit<U>> {
      *
      * @return the zero-valued measure
      */
+    @NonNull
     public Measure<U> zero() {
         // lazy init because 'this' is null in object initialization
         if (zero == null) {
@@ -201,6 +206,7 @@ public class Unit<U extends Unit<U>> {
      *
      * @return the 1-valued measure
      */
+    @NonNull
     public Measure<U> one() {
         // lazy init because 'this' is null in object initialization
         if (one == null) {
@@ -222,7 +228,8 @@ public class Unit<U extends Unit<U>> {
      * @param period the time period of the velocity, such as seconds or milliseconds
      * @return a velocity unit corresponding to the rate of change of this unit over time
      */
-    public Velocity<U> per(Time period) {
+    @NonNull
+    public Velocity<U> per(@NonNull Time period) {
         return Velocity.combine(this, period);
     }
 
@@ -238,6 +245,7 @@ public class Unit<U extends Unit<U>> {
      * @param denominator the denominator of the proportional unit
      * @return a combined proportional unit
      */
+    @NonNull
     @SuppressWarnings("unchecked")
     public <D extends Unit<D>> Per<U, D> per(D denominator) {
         return Per.combine((U) this, denominator);
@@ -255,6 +263,7 @@ public class Unit<U extends Unit<U>> {
      * @param other the unit to multiply by
      * @return a combined unit equivalent to this unit multiplied by the other
      */
+    @NonNull
     @SuppressWarnings("unchecked")
     public <U2 extends Unit<U2>> Mult<U, U2> mult(U2 other) {
         return Mult.combine((U) this, other);
@@ -268,7 +277,7 @@ public class Unit<U extends Unit<U>> {
      * @param other the unit to compare to.
      * @return true if both units are equivalent, false if not
      */
-    public boolean equivalent(Unit<?> other) {
+    public boolean equivalent(@NonNull Unit<?> other) {
         if (!getClass().equals(other.getClass())) {
             // different unit types, not compatible
             return false;
@@ -307,6 +316,7 @@ public class Unit<U extends Unit<U>> {
      *
      * @return the unit's name
      */
+    @NonNull
     public String name() {
         return name;
     }
@@ -316,6 +326,7 @@ public class Unit<U extends Unit<U>> {
      *
      * @return the unit's symbol
      */
+    @NonNull
     public String symbol() {
         return symbol;
     }

@@ -28,6 +28,7 @@ public abstract class CommandBasedBunyipsOpMode extends BunyipsOpMode {
      * Tasks may be scheduled and managed through this instance, with setup and subsystem management
      * being handled automatically. Common scheduling that are used in the Scheduler are available here as a proxy.
      */
+    @NonNull
     public Scheduler scheduler = new Scheduler();
     @NonNull
     private HashSet<BunyipsSubsystem> managedSubsystems = new HashSet<>();
@@ -36,12 +37,26 @@ public abstract class CommandBasedBunyipsOpMode extends BunyipsOpMode {
      * Create a new controller button trigger creator.
      * <p>
      * For Kotlin users, calling this method can be done with the notation {@code `when`}
-     * (see <a href="https://kotlinlang.org/docs/java-interop.html#escaping-for-java-identifiers-that-are-keywords-in-kotlin">here</a>).
+     * (see <a href="https://kotlinlang.org/docs/java-interop.html#escaping-for-java-identifiers-that-are-keywords-in-kotlin">here</a>),
+     * or by calling the alias {@code on}.
      *
      * @param user The Controller instance to use.
      * @return The controller button trigger creator.
      */
-    public Scheduler.ControllerTriggerCreator when(Controller user) {
+    @NonNull
+    
+    public Scheduler.ControllerTriggerCreator when(@NonNull Controller user) {
+        return scheduler.when(user);
+    }
+
+    /**
+     * Create a new controller button trigger creator.
+     *
+     * @param user The Controller instance to use.
+     * @return The controller button trigger creator.
+     */
+    @NonNull
+    public Scheduler.ControllerTriggerCreator on(@NonNull Controller user) {
         return scheduler.when(user);
     }
 
@@ -50,6 +65,7 @@ public abstract class CommandBasedBunyipsOpMode extends BunyipsOpMode {
      *
      * @return The controller button trigger creator.
      */
+    @NonNull
     public Scheduler.ControllerTriggerCreator driver() {
         return scheduler.driver();
     }
@@ -59,6 +75,7 @@ public abstract class CommandBasedBunyipsOpMode extends BunyipsOpMode {
      *
      * @return The controller button trigger creator.
      */
+    @NonNull
     public Scheduler.ControllerTriggerCreator operator() {
         return scheduler.operator();
     }
@@ -68,12 +85,27 @@ public abstract class CommandBasedBunyipsOpMode extends BunyipsOpMode {
      * This condition will be evaluated continuously.
      * <p>
      * For Kotlin users, calling this method can be done with the notation {@code `when`}
-     * (see <a href="https://kotlinlang.org/docs/java-interop.html#escaping-for-java-identifiers-that-are-keywords-in-kotlin">here</a>).
+     * (see <a href="https://kotlinlang.org/docs/java-interop.html#escaping-for-java-identifiers-that-are-keywords-in-kotlin">here</a>),
+     * or by calling the alias {@code on}.
      *
      * @param condition Supplier to provide a boolean value of when the task should be run.
      * @return Task scheduling builder
      */
-    public Scheduler.ScheduledTask when(BooleanSupplier condition) {
+    @NonNull
+    
+    public Scheduler.ScheduledTask when(@NonNull BooleanSupplier condition) {
+        return scheduler.when(condition);
+    }
+
+    /**
+     * Run a task when a condition is met.
+     * This condition will be evaluated continuously.
+     *
+     * @param condition Supplier to provide a boolean value of when the task should be run.
+     * @return Task scheduling builder
+     */
+    @NonNull
+    public Scheduler.ScheduledTask on(@NonNull BooleanSupplier condition) {
         return scheduler.when(condition);
     }
 
@@ -84,7 +116,8 @@ public abstract class CommandBasedBunyipsOpMode extends BunyipsOpMode {
      * @param condition Supplier to provide a boolean value of when the task should be run.
      * @return Task scheduling builder
      */
-    public Scheduler.ScheduledTask whenRising(BooleanSupplier condition) {
+    @NonNull
+    public Scheduler.ScheduledTask whenRising(@NonNull BooleanSupplier condition) {
         return scheduler.whenRising(condition);
     }
 
@@ -95,7 +128,8 @@ public abstract class CommandBasedBunyipsOpMode extends BunyipsOpMode {
      * @param condition Supplier to provide a boolean value of when the task should be run.
      * @return Task scheduling builder
      */
-    public Scheduler.ScheduledTask whenFalling(BooleanSupplier condition) {
+    @NonNull
+    public Scheduler.ScheduledTask whenFalling(@NonNull BooleanSupplier condition) {
         return scheduler.whenFalling(condition);
     }
 
@@ -104,6 +138,7 @@ public abstract class CommandBasedBunyipsOpMode extends BunyipsOpMode {
      *
      * @return Task scheduling builder
      */
+    @NonNull
     public Scheduler.ScheduledTask always() {
         return scheduler.always();
     }
@@ -118,7 +153,7 @@ public abstract class CommandBasedBunyipsOpMode extends BunyipsOpMode {
      *
      * @param subsystems the restrictive list of subsystems to be managed and updated by the scheduler
      */
-    public void useSubsystems(BunyipsSubsystem... subsystems) {
+    public void useSubsystems(@NonNull BunyipsSubsystem... subsystems) {
         if (!NullSafety.assertNotNull(Arrays.stream(subsystems).toArray())) {
             throw new RuntimeException("Null subsystems were added in the useSubsystems() method!");
         }
