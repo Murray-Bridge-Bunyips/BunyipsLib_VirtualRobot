@@ -48,6 +48,9 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.Localizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.MecanumLocalizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.accumulators.Accumulator;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.RoadRunnerDrive;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.DriveCommandMessage;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.MecanumCommandMessage;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.PoseMessage;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.Constants;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.DriveModel;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.ErrorThresholds;
@@ -55,6 +58,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.MecanumGa
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.MotionProfile;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dashboard;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Storage;
 
 /**
@@ -121,8 +125,6 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
      * @param startPose            the starting pose of the robot
      */
     public MecanumDrive(DriveModel driveModel, MotionProfile motionProfile, MecanumGains mecanumGains, DcMotor leftFront, DcMotor leftBack, DcMotor rightBack, DcMotor rightFront, LazyImu lazyImu, HardwareMap.DeviceMapping<VoltageSensor> voltageSensorMapping, Pose2d startPose) {
-        assertParamsNotNull(driveModel, motionProfile, mecanumGains, leftFront, leftBack, rightBack, rightFront, lazyImu, voltageSensorMapping, startPose);
-
         accumulator = new Accumulator(startPose);
         Storage.memory().lastKnownPosition = startPose;
         pose = startPose;
@@ -130,17 +132,6 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
         gains = mecanumGains;
         model = driveModel;
         profile = motionProfile;
-
-        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        this.leftFront = (DcMotorEx) leftFront;
-        this.leftBack = (DcMotorEx) leftBack;
-        this.rightBack = (DcMotorEx) rightBack;
-        this.rightFront = (DcMotorEx) rightFront;
-        this.lazyImu = lazyImu;
 
         kinematics = new MecanumKinematics(driveModel.inPerTick * driveModel.trackWidthTicks, driveModel.inPerTick / driveModel.lateralInPerTick);
         defaultTurnConstraints = new TurnConstraints(motionProfile.maxAngVel, -motionProfile.maxAngAccel, motionProfile.maxAngAccel);
@@ -155,6 +146,19 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 //        FlightRecorder.write("MECANUM_GAINS", mecanumGains);
 //        FlightRecorder.write("MECANUM_DRIVE_MODEL", driveModel);
 //        FlightRecorder.write("MECANUM_PROFILE", motionProfile);
+
+        if (assertParamsNotNull(driveModel, motionProfile, mecanumGains, leftFront, leftBack, rightBack, rightFront, lazyImu, voltageSensorMapping, startPose)) {
+            leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }
+
+        this.leftFront = (DcMotorEx) leftFront;
+        this.leftBack = (DcMotorEx) leftBack;
+        this.rightBack = (DcMotorEx) rightBack;
+        this.rightFront = (DcMotorEx) rightFront;
+        this.lazyImu = lazyImu;
     }
 
     /**
@@ -362,7 +366,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
     public final class FollowTrajectoryTask extends Task {
         private final TimeTrajectory timeTrajectory;
         private final double[] xPoints, yPoints;
-        private Pose2d error;
+        private Pose2d error = Geometry.zeroPose();
         private double beginTs = -1;
         private double t;
 
@@ -465,7 +469,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
      */
     public final class TurnTask extends Task {
         private final TimeTurn turn;
-        private Pose2d error;
+        private Pose2d error = Geometry.zeroPose();
         private double beginTs = -1;
         private double t;
 
