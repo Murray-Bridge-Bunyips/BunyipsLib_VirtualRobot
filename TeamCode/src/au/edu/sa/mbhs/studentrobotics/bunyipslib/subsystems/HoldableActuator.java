@@ -12,10 +12,12 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
+import java.util.HashMap;
 import java.util.function.DoubleSupplier;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsSubsystem;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.Encoder;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Current;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Measure;
@@ -38,6 +40,7 @@ public class HoldableActuator extends BunyipsSubsystem {
      */
     public final Tasks tasks = new Tasks();
 
+    private final HashMap<TouchSensor, Integer> switchMapping = new HashMap<>();
     // Power to hold the actuator in place
     private double HOLDING_POWER = 1.0;
     // Power to move the actuator when in auto mode
@@ -61,6 +64,7 @@ public class HoldableActuator extends BunyipsSubsystem {
     // Tolerance for the actuator in ticks, default 2
     private int TOLERANCE = 2;
     private DcMotorEx motor;
+    private Encoder encoder;
     private TouchSensor topSwitch;
     private TouchSensor bottomSwitch;
     private boolean zeroed;
@@ -88,6 +92,14 @@ public class HoldableActuator extends BunyipsSubsystem {
         this.motor.setTargetPosition(0);
         this.motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         this.motor.setPower(HOLDING_POWER);
+        // Encoder instance is used for awareness of the encoder position, we generally don't care about direction
+        // as it is handled by the motor object itself, unless we're using a Motor object then we can conveniently
+        // hook into it
+        if (motor instanceof Motor) {
+            encoder = ((Motor) motor).getEncoder();
+        } else {
+            encoder = new Encoder(this.motor::getCurrentPosition, this.motor::getVelocity);
+        }
     }
 
     /**
@@ -200,6 +212,26 @@ public class HoldableActuator extends BunyipsSubsystem {
     @NonNull
     public HoldableActuator withBottomSwitch(@NonNull TouchSensor bottomLimitSwitch) {
         bottomSwitch = bottomLimitSwitch;
+        return this;
+    }
+
+    /**
+     * Map a limit switch to a position on the actuator, which will update the current encoder reading
+     * to the position of the switch when pressed.
+     * <p>
+     * This is different from the bottom switch, and top switches, which are used as software stops for the actuator.
+     * This method operates to reduce encoder drift, as if a switch is pressed by the actuator, the position can be mapped.
+     * It may be wise to map the top switch here if used, which will increase encoder accuracy.
+     * The bottom limit switch does not need to be mapped since it is used to reset the encoder, therefore
+     * setting the reading to 0.
+     *
+     * @param switchSensor the switch sensor to map
+     * @param position     the position to map the switch to in encoder ticks of the actuator
+     * @return this
+     */
+    @NonNull
+    public HoldableActuator map(@NonNull TouchSensor switchSensor, int position) {
+        switchMapping.put(switchSensor, position);
         return this;
     }
 
@@ -349,7 +381,7 @@ public class HoldableActuator extends BunyipsSubsystem {
 
     @Override
     protected void periodic() {
-        double current = motor.getCurrentPosition();
+        double current = encoder.getPosition();
         double target = motor.getTargetPosition();
         double newTarget = -1;
 
@@ -365,12 +397,12 @@ public class HoldableActuator extends BunyipsSubsystem {
                     break;
                 }
                 motorPower = MOVING_POWER * Math.signum(target - current);
-                opMode(o -> o.telemetry.add("%: <font color='#FF5F1F'>MOVING -> %/% ticks</font> [%tps]", this, current, target, Math.round(motor.getVelocity())));
+                opMode(o -> o.telemetry.add("%: <font color='#FF5F1F'>MOVING -> %/% ticks</font> [%tps]", this, current, target, Math.round(encoder.getVelocity())));
                 break;
             case HOMING:
                 motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 motorPower = -MOVING_POWER;
-                opMode(o -> o.telemetry.add("%: <font color='yellow'><b>HOMING</b></font> [%tps]", this, Math.round(motor.getVelocity())));
+                opMode(o -> o.telemetry.add("%: <font color='yellow'><b>HOMING</b></font> [%tps]", this, Math.round(encoder.getVelocity())));
                 break;
             case USER_POWER:
                 if (userPower == 0.0) {
@@ -387,14 +419,23 @@ public class HoldableActuator extends BunyipsSubsystem {
                     motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     motorPower = userPower;
                 }
-                opMode(o -> o.telemetry.add("%: % at % ticks [%tps]", this, userPower == 0.0 ? "<font color='green'>HOLDING</font>" : "<font color='#FF5F1F'><b>MOVING</b></font>", current, Math.round(motor.getVelocity())));
+                opMode(o -> o.telemetry.add("%: % at % ticks [%tps]", this, userPower == 0.0 ? "<font color='green'>HOLDING</font>" : "<font color='#FF5F1F'><b>MOVING</b></font>", current, Math.round(encoder.getVelocity())));
                 break;
             case USER_SETPOINT:
                 newTarget = target + userPower * setpointDeltaMultiplier.getAsDouble();
                 boolean systemResponse = motor.isBusy();
                 motorPower = (systemResponse ? MOVING_POWER : HOLDING_POWER) * Math.signum(target - current);
-                opMode(o -> o.telemetry.add("%: % at % ticks, % error [%tps]", this, !systemResponse ? "<font color='green'>SUSTAINING</font>" : "<font color='#FF5F1F'><b>RESPONDING</b></font>", current, target - current, Math.round(motor.getVelocity())));
+                opMode(o -> o.telemetry.add("%: % at % ticks, % error [%tps]", this, !systemResponse ? "<font color='green'>SUSTAINING</font>" : "<font color='#FF5F1F'><b>RESPONDING</b></font>", current, target - current, Math.round(encoder.getVelocity())));
                 break;
+        }
+
+        for (TouchSensor limitSwitch : switchMapping.keySet()) {
+            // Map encoder to limit switch positions
+            if (limitSwitch.isPressed()) {
+                Integer ticks = switchMapping.get(limitSwitch);
+                if (ticks != null)
+                    encoder.setKnownPosition(ticks);
+            }
         }
 
         if (bottomSwitch != null) {
@@ -553,7 +594,7 @@ public class HoldableActuator extends BunyipsSubsystem {
                 @Override
                 protected void periodic() {
                     if (ZERO_HIT_THRESHOLD <= 0) return;
-                    if (motor.getVelocity() >= 0) {
+                    if (encoder.getVelocity() >= 0) {
                         zeroHits++;
                     } else {
                         zeroHits = 0;
@@ -616,7 +657,7 @@ public class HoldableActuator extends BunyipsSubsystem {
                 @Override
                 protected void periodic() {
                     if (ZERO_HIT_THRESHOLD <= 0) return;
-                    if (motor.getVelocity() <= 0) {
+                    if (encoder.getVelocity() <= 0) {
                         zeroHits++;
                     } else {
                         zeroHits = 0;
@@ -677,7 +718,7 @@ public class HoldableActuator extends BunyipsSubsystem {
 
                 @Override
                 public boolean isTaskFinished() {
-                    return inputMode != Mode.AUTO || (!motor.isBusy() && Mathf.isNear(targetPosition, motor.getCurrentPosition(), TOLERANCE));
+                    return inputMode != Mode.AUTO || (!motor.isBusy() && Mathf.isNear(targetPosition, encoder.getPosition(), TOLERANCE));
                 }
             }.onSubsystem(HoldableActuator.this, true).withName("Run To Position");
         }
@@ -695,7 +736,7 @@ public class HoldableActuator extends BunyipsSubsystem {
 
                 @Override
                 public void init() {
-                    target = motor.getCurrentPosition() + deltaPosition;
+                    target = encoder.getPosition() + deltaPosition;
                     motor.setTargetPosition(target);
                     // Motor power is controlled in the periodic method
                     motor.setPower(0);
@@ -714,7 +755,7 @@ public class HoldableActuator extends BunyipsSubsystem {
 
                 @Override
                 public boolean isTaskFinished() {
-                    return inputMode != Mode.AUTO || (!motor.isBusy() && Mathf.isNear(target, motor.getCurrentPosition(), TOLERANCE));
+                    return inputMode != Mode.AUTO || (!motor.isBusy() && Mathf.isNear(target, encoder.getPosition(), TOLERANCE));
                 }
             }.onSubsystem(HoldableActuator.this, true).withName("Run To Delta");
         }
