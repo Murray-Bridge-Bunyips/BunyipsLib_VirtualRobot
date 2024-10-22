@@ -75,6 +75,12 @@ public class SimpleMecanumDrive extends BunyipsSubsystem implements Moveable {
         speedY = Mathf.clamp(speedY, -1, 1);
         speedR = Mathf.clamp(speedR, -1, 1);
 
+        // Convert from Robot to Cartesian form
+        //noinspection SuspiciousNameCombination
+        double cX = speedY;
+        double cY = -speedX;
+        double cR = -speedR;
+
         if (localizer != null) {
             Twist2dDual<Time> twist = localizer.update();
 
@@ -99,16 +105,16 @@ public class SimpleMecanumDrive extends BunyipsSubsystem implements Moveable {
         if (priority == Priority.ROTATIONAL) {
             // Raw powers for translation and rotation in configuration (front left, front right, back left, back right)
             double[] translationValues = {
-                    speedY + speedX,
-                    speedY - speedX,
-                    speedY - speedX,
-                    speedY + speedX
+                    cY + cX,
+                    cY - cX,
+                    cY - cX,
+                    cY + cX
             };
             double[] rotationValues = {
-                    speedR,
-                    -speedR,
-                    speedR,
-                    -speedR
+                    cR,
+                    -cR,
+                    cR,
+                    -cR
             };
 
             // Try to find the maximum power possible we can allocate to translation by scaling translation depending
@@ -137,10 +143,10 @@ public class SimpleMecanumDrive extends BunyipsSubsystem implements Moveable {
             rightBackPower = translationValues[3] * scaleFactor + rotationValues[3];
         } else {
             // Calculate motor powers
-            leftFrontPower = speedY + speedX + speedR;
-            rightFrontPower = speedY - speedX - speedR;
-            leftBackPower = speedY - speedX + speedR;
-            rightBackPower = speedY + speedX - speedR;
+            leftFrontPower = cY + cX + cR;
+            rightFrontPower = cY - cX - cR;
+            leftBackPower = cY - cX + cR;
+            rightBackPower = cY + cX - cR;
 
             double maxPower = Math.max(Math.abs(leftFrontPower), Math.max(Math.abs(rightFrontPower), Math.max(Math.abs(leftBackPower), Math.abs(rightBackPower))));
             // If the maximum number is greater than 1.0, then normalise by that number
@@ -158,9 +164,9 @@ public class SimpleMecanumDrive extends BunyipsSubsystem implements Moveable {
         rightFront.setPower(rightFrontPower);
 
         opMode(o -> o.telemetry.add("%: %\\% %, %\\% %, %\\% %", this,
-                Math.round(Math.abs(speedX * 100)), speedX >= 0 ? "↑" : "↓",
-                Math.round(Math.abs(speedY * 100)), speedY >= 0 ? "←" : "→",
-                Math.round(Math.abs(speedR * 100)), speedR >= 0 ? "↺" : "↻"
+                Math.round(Math.abs(cX * 100)), cX >= 0 ? "↑" : "↓",
+                Math.round(Math.abs(cY * 100)), cY >= 0 ? "←" : "→",
+                Math.round(Math.abs(cR * 100)), cR >= 0 ? "↺" : "↻"
         ));
     }
 

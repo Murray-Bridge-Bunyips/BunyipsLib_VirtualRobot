@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.Range;
 
@@ -15,7 +16,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagPoseFtc;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsSubsystem;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Distance;
@@ -76,9 +77,7 @@ public class MoveToAprilTagTask extends Task {
 
     private final Moveable drive;
     private final AprilTag aprilTag;
-    private DoubleSupplier x;
-    private DoubleSupplier y;
-    private DoubleSupplier r;
+    private Supplier<PoseVelocity2d> passthrough;
 
     private double rangeError;
     private double yawError;
@@ -92,7 +91,7 @@ public class MoveToAprilTagTask extends Task {
      * @param aprilTag  the AprilTag processor to use
      * @param targetTag the tag to target. -1 for any tag
      */
-    public MoveToAprilTagTask(@NonNull Measure<Time> timeout, @NonNull Moveable drive, @NonNull AprilTag aprilTag,  int targetTag) {
+    public MoveToAprilTagTask(@NonNull Measure<Time> timeout, @NonNull Moveable drive, @NonNull AprilTag aprilTag, int targetTag) {
         super(timeout);
         if (drive instanceof BunyipsSubsystem)
             onSubsystem((BunyipsSubsystem) drive, false);
@@ -105,21 +104,17 @@ public class MoveToAprilTagTask extends Task {
     /**
      * TeleOp constructor with default values.
      *
-     * @param xSupplier x (strafe) value
-     * @param ySupplier y (forward) value
-     * @param rSupplier r (rotate) value
+     * @param passthrough the pose velocity passthrough for the drivetrain
      * @param drive     the drivetrain to use, which may be a BunyipsSubsystem that will auto-attach
      * @param aprilTag  the AprilTag processor to use
      * @param targetTag the tag to target. -1 for any tag
      */
-    public MoveToAprilTagTask(@NonNull DoubleSupplier xSupplier, @NonNull DoubleSupplier ySupplier, @NonNull DoubleSupplier rSupplier, @NonNull Moveable drive, @NonNull AprilTag aprilTag,  int targetTag) {
+    public MoveToAprilTagTask(@NonNull Supplier<PoseVelocity2d> passthrough, @NonNull Moveable drive, @NonNull AprilTag aprilTag, int targetTag) {
         if (drive instanceof BunyipsSubsystem)
             onSubsystem((BunyipsSubsystem) drive, false);
         this.drive = drive;
         this.aprilTag = aprilTag;
-        x = xSupplier;
-        y = ySupplier;
-        r = rSupplier;
+        this.passthrough = passthrough;
         TARGET_TAG = targetTag;
         withName("Move to AprilTag");
     }
@@ -132,8 +127,8 @@ public class MoveToAprilTagTask extends Task {
      * @param aprilTag  the AprilTag processor to use
      * @param targetTag the tag to target. -1 for any tag
      */
-    public MoveToAprilTagTask(@NonNull Gamepad gamepad, @NonNull Moveable drive, @NonNull AprilTag aprilTag,  int targetTag) {
-        this(() -> gamepad.left_stick_x, () -> gamepad.left_stick_y, () -> gamepad.right_stick_x, drive, aprilTag, targetTag);
+    public MoveToAprilTagTask(@NonNull Gamepad gamepad, @NonNull Moveable drive, @NonNull AprilTag aprilTag, int targetTag) {
+        this(() -> Controls.vel(gamepad.left_stick_x, gamepad.left_stick_y, gamepad.right_stick_x), drive, aprilTag, targetTag);
     }
 
     /**
@@ -240,13 +235,13 @@ public class MoveToAprilTagTask extends Task {
 
     @Override
     protected void periodic() {
-        Pose2d pose = Controls.makeRobotPose(x.getAsDouble(), y.getAsDouble(), r.getAsDouble());
+        PoseVelocity2d vel = passthrough.get();
 
         List<AprilTagData> data = aprilTag.getData();
 
         Optional<AprilTagData> target = data.stream().filter(t -> TARGET_TAG == -1 || t.getId() == TARGET_TAG).findFirst();
         if (!target.isPresent() || !target.get().isInLibrary()) {
-            drive.setPower(Geometry.poseToVel(pose));
+            drive.setPower(vel);
             return;
         }
 
@@ -256,13 +251,11 @@ public class MoveToAprilTagTask extends Task {
         yawError = -camPose.yaw * STRAFE_GAIN;
         headingError = camPose.bearing * TURN_GAIN;
 
-        drive.setPower(
-                Geometry.poseToVel(new Pose2d(
-                        Range.clip(rangeError, -MAX_AUTO_SPEED, MAX_AUTO_SPEED),
-                        Range.clip(yawError, -MAX_AUTO_STRAFE, MAX_AUTO_STRAFE),
-                        Range.clip(headingError, -MAX_AUTO_TURN, MAX_AUTO_TURN)
-                ))
-        );
+        drive.setPower(Geometry.vel(
+                Range.clip(rangeError, -MAX_AUTO_SPEED, MAX_AUTO_SPEED),
+                Range.clip(yawError, -MAX_AUTO_STRAFE, MAX_AUTO_STRAFE),
+                Range.clip(headingError, -MAX_AUTO_TURN, MAX_AUTO_TURN)
+        ));
 
         Pose2d poseEstimate = drive.getPose();
         if (poseEstimate == null)
@@ -280,6 +273,6 @@ public class MoveToAprilTagTask extends Task {
 
     @Override
     protected boolean isTaskFinished() {
-        return x == null && Math.abs(rangeError) < AUTO_FINISH_ERROR_TOLERANCE && Math.abs(yawError) < AUTO_FINISH_ERROR_TOLERANCE && Math.abs(headingError) < AUTO_FINISH_ERROR_TOLERANCE;
+        return passthrough == null && Math.abs(rangeError) < AUTO_FINISH_ERROR_TOLERANCE && Math.abs(yawError) < AUTO_FINISH_ERROR_TOLERANCE && Math.abs(headingError) < AUTO_FINISH_ERROR_TOLERANCE;
     }
 }
