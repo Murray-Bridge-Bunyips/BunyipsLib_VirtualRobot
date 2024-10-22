@@ -44,10 +44,10 @@ public class Robot extends RobotConfig {
         hw.front_left_motor.setRunToPositionController(new PIDController(0.01, 0, 0));
         hw.front_right_motor.setRunToPositionController(new PIDController(0.01, 0, 0));
 
-        hw.back_right_motor.setRunUsingEncoderController(getController(hw.back_right_motor), 1);
-        hw.back_left_motor.setRunUsingEncoderController(getController(hw.back_left_motor), 1);
-        hw.front_right_motor.setRunUsingEncoderController(getController(hw.front_right_motor), 1);
-        hw.front_left_motor.setRunUsingEncoderController(getController(hw.front_left_motor), 1);
+        hw.back_right_motor.setRunUsingEncoderController(getController(hw.back_right_motor));
+        hw.back_left_motor.setRunUsingEncoderController(getController(hw.back_left_motor));
+        hw.front_right_motor.setRunUsingEncoderController(getController(hw.front_right_motor));
+        hw.front_left_motor.setRunUsingEncoderController(getController(hw.front_left_motor));
 
         hw.back_servo = getHardware("back_servo", Servo.class);
 
