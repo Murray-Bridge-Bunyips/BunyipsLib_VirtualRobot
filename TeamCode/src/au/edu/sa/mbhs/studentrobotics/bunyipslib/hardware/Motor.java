@@ -78,6 +78,7 @@ public class Motor implements DcMotorEx {
     private SystemController rueController;
     private Pair<Double, Double> rueInfo = null;
 
+    private int rawTargetPosition = 0;
     private double powerDeltaTolerance = 0;
     private double lastPower = 0;
     private long refreshRateNanos = 0;
@@ -103,7 +104,7 @@ public class Motor implements DcMotorEx {
         encoder = new Encoder(() -> controller.getMotorCurrentPosition(port), () -> controller.getMotorVelocity(port));
         encoder.setDirection(getOperationalDirection());
         encoder.trackDirection(this::getOperationalDirection);
-        setTargetPosition(getCurrentPosition());
+        rawTargetPosition = getCurrentPosition();
     }
 
     /**
@@ -188,7 +189,7 @@ public class Motor implements DcMotorEx {
      * @param controller the controller to use, recommended to use a PIDFF controller.
      */
     public void setRunUsingEncoderController(@NonNull SystemController controller) {
-        setRunUsingEncoderController(controller, 1, getMotorType().getAchieveableMaxTicksPerSecond());
+        setRunUsingEncoderController(1, getMotorType().getAchieveableMaxTicksPerSecond(), controller);
     }
 
     /**
@@ -204,11 +205,11 @@ public class Motor implements DcMotorEx {
      * Falling back on a default controller will also push a robot global warning as it is highly dangerous
      * to use the stock PIDF values in this context. Set your own controller using this method.
      *
-     * @param controller                  the controller to use, recommended to use a PIDFF controller.
      * @param bufferFraction              fractional value for velocity control, must be in (0, 1].
      * @param maxAchievableTicksPerSecond your motor's spec for how many ticks/sec it can reach
+     * @param controller                  the controller to use, recommended to use a PIDFF controller.
      */
-    public void setRunUsingEncoderController(@NonNull SystemController controller, double bufferFraction, double maxAchievableTicksPerSecond) {
+    public void setRunUsingEncoderController(double bufferFraction, double maxAchievableTicksPerSecond, @NonNull SystemController controller) {
         if (bufferFraction <= 0 || bufferFraction > 1) {
             throw new OutOfRangeException(LocalizedFormats.OUT_OF_RANGE_LEFT, bufferFraction, 0, 1);
         }
@@ -229,10 +230,10 @@ public class Motor implements DcMotorEx {
      * Falling back on a default controller will also push a robot global warning as it is highly dangerous
      * to use the stock PIDF values in this context. Set your own controller using this method.
      *
-     * @param controller     the controller to use, recommended to use a PIDFF controller.
      * @param bufferFraction fractional value for velocity control, must be in (0, 1].
+     * @param controller     the controller to use, recommended to use a PIDFF controller.
      */
-    public void setRunUsingEncoderController(@NonNull SystemController controller, double bufferFraction) {
+    public void setRunUsingEncoderController(double bufferFraction, @NonNull SystemController controller) {
         if (bufferFraction <= 0 || bufferFraction > 1) {
             throw new OutOfRangeException(LocalizedFormats.OUT_OF_RANGE_LEFT, bufferFraction, 0, 1);
         }
@@ -352,7 +353,7 @@ public class Motor implements DcMotorEx {
         if (mode == DcMotor.RunMode.RUN_TO_POSITION) {
             setRunToPositionController(new PIDController(pidCoefficients.p, pidCoefficients.i, pidCoefficients.d));
         } else if (mode == DcMotor.RunMode.RUN_USING_ENCODER) {
-            setRunUsingEncoderController(new PIDController(pidCoefficients.p, pidCoefficients.i, pidCoefficients.d), 1, getMotorType().getAchieveableMaxTicksPerSecond());
+            setRunUsingEncoderController(1, getMotorType().getAchieveableMaxTicksPerSecond(), new PIDController(pidCoefficients.p, pidCoefficients.i, pidCoefficients.d));
         }
     }
 
@@ -380,7 +381,7 @@ public class Motor implements DcMotorEx {
             }
         } else if (mode == DcMotor.RunMode.RUN_USING_ENCODER) {
             if (rueController == null) {
-                setRunUsingEncoderController(new PIDFController(pidfCoefficients.p, pidfCoefficients.i, pidfCoefficients.d, pidfCoefficients.f), 1, getMotorType().getAchieveableMaxTicksPerSecond());
+                setRunUsingEncoderController(1, getMotorType().getAchieveableMaxTicksPerSecond(), new PIDFController(pidfCoefficients.p, pidfCoefficients.i, pidfCoefficients.d, pidfCoefficients.f));
             } else if (rueController instanceof PIDF) {
                 ((PIDF) rueController).getPIDFController().setPIDF(pidfCoefficients);
             } else {
@@ -403,7 +404,7 @@ public class Motor implements DcMotorEx {
     @Override
     public void setVelocityPIDFCoefficients(double p, double i, double d, double f) {
         if (rueController == null) {
-            setRunUsingEncoderController(new PIDFController(p, i, d, f), 1, getMotorType().getAchieveableMaxTicksPerSecond());
+            setRunUsingEncoderController(1, getMotorType().getAchieveableMaxTicksPerSecond(), new PIDFController(p, i, d, f));
         } else if (rueController instanceof PIDF) {
             ((PIDF) rueController).getPIDFController().setPIDF(p, i, d, f);
         } else {
@@ -742,7 +743,7 @@ public class Motor implements DcMotorEx {
     @Override
     public synchronized int getTargetPosition() {
         // May as well let the motor controller manage target position, there is nothing interfering with doing so
-        return controller.getMotorTargetPosition(port) * (getOperationalDirection() == Direction.FORWARD ? 1 : -1);
+        return rawTargetPosition * (getOperationalDirection() == Direction.FORWARD ? 1 : -1);
     }
 
     /**
@@ -769,7 +770,7 @@ public class Motor implements DcMotorEx {
      */
     @Override
     public synchronized void setTargetPosition(int position) {
-        controller.setMotorTargetPosition(port, position * (getOperationalDirection() == Direction.FORWARD ? 1 : -1));
+        rawTargetPosition = position * (getOperationalDirection() == Direction.FORWARD ? 1 : -1);
     }
 
     /**
