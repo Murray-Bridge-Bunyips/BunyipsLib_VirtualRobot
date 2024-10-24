@@ -19,6 +19,7 @@ When copying BunyipsLib to org.murraybridgebunyips, you will need to do the foll
 9. Comment out instances of `DownsampledWriter` in `bunyipslib/localization/accumulators/Accumulator.java`
 10. Revert any changes done to `bunyipslib/Storage.java`
 11. Revert any changes done to `bunyipslib/ProfiledServo.java`
+12. Revert any changes done to `bunyipslib/integrated/HardwareTest.java`
 
 BunyipsLib will now compile, although missing some features and stubbing others.
 An alternative & faster method of converting changes can be accomplished via the Patch system via JetBrains IDEs.

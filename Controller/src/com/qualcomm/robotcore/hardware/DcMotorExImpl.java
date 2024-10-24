@@ -22,12 +22,10 @@ public class DcMotorExImpl extends DcMotorImpl implements DcMotorEx{
 
     @Override
     public void setMotorEnable() {
-        throw new NotImplementedException("setMotorEnable method has not been implemented in DcMotorExImpl.");
     }
 
     @Override
     public void setMotorDisable() {
-        throw new NotImplementedException("setMotorDisable method has not been implemented in DcMotorExImpl.");
     }
 
     @Override

@@ -29,27 +29,71 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
-/*
-Modified by FTC Team Beta 8397 for use in the Virtual_Robot Simulator
- */
-
 package com.qualcomm.robotcore.hardware;
 
-import com.qualcomm.robotcore.hardware.HardwareDevice;
-
 /**
- * Represents a simple Gyro Sensor.
- * The sensor must be initialized prior to use.
+ * Gyro Sensor
  */
 public interface GyroSensor extends HardwareDevice {
-    /**
-     * Initialize the sensor.
-     */
-    public void init();
 
     /**
-     * Get robot heading in degrees
-     * @return robot heading (-180 to +180 degrees)
+     * Calibrate the gyro.  For the Modern Robotics device this will null, or reset,
+     * the Z axis heading.
+     * @throws UnsupportedOperationException if unsupported; not all gyro devices support this feature
      */
-    public double getHeading();
+    void calibrate();
+
+    /**
+     * Is the gyro performing a calibration operation?
+     * @return true if yes, false otherwise
+     * @throws UnsupportedOperationException if unsupported; not all gyro devices support this feature
+     */
+    boolean isCalibrating();
+
+    /**
+     * Return the integrated Z axis as a cartesian heading.
+     * @return heading between 0-360.
+     * @throws UnsupportedOperationException if unsupported; not all gyro devices support this feature
+     */
+    int getHeading();
+
+    /**
+     * Return the rotation of this sensor expressed as a fraction of the maximum possible reportable rotation
+     * @return the current fractional rotation of this gyro (a value between 0.0 and 1.0)
+     * @throws UnsupportedOperationException if unsupported; not all gyro devices support this feature
+     */
+    double getRotationFraction();
+
+    /**
+     * Return the gyro's raw X value.
+     * @return X value
+     * @throws UnsupportedOperationException if unsupported; not all gyro devices support this feature
+     */
+    int rawX();
+
+    /**
+     * Return the gyro's raw Y value.
+     * @return Y value
+     * @throws UnsupportedOperationException if unsupported; not all gyro devices support this feature
+     */
+    int rawY();
+
+    /**
+     * Return the gyro's raw Z value.
+     * @return Z value
+     * @throws UnsupportedOperationException if unsupported; not all gyro devices support this feature
+     */
+    int rawZ();
+
+    /**
+     * Set the integrated Z axis to zero.
+     * @throws UnsupportedOperationException if unsupported; not all gyro devices support this feature
+     */
+    void resetZAxisIntegrator();
+
+    /**
+     * Status of this sensor, in string form
+     * @return status
+     */
+    String status();
 }

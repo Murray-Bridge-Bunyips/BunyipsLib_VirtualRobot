@@ -1,13 +1,15 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib.integrated;
 
+import com.qualcomm.hardware.digitalchickenlabs.OctoQuad;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.AccelerationSensor;
+//import com.qualcomm.robotcore.hardware.AccelerationSensor;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.ColorSensor;
-import com.qualcomm.robotcore.hardware.CompassSensor;
+//import com.qualcomm.robotcore.hardware.CompassSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -17,15 +19,15 @@ import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.IrSeekerSensor;
-import com.qualcomm.robotcore.hardware.LED;
+//import com.qualcomm.robotcore.hardware.IrSeekerSensor;
+//import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.hardware.LightSensor;
-import com.qualcomm.robotcore.hardware.PWMOutput;
+//import com.qualcomm.robotcore.hardware.PWMOutput;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.ServoImplEx;
+//import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.hardware.TouchSensor;
-import com.qualcomm.robotcore.hardware.TouchSensorMultiplexer;
-import com.qualcomm.robotcore.hardware.UltrasonicSensor;
+//import com.qualcomm.robotcore.hardware.TouchSensorMultiplexer;
+//import com.qualcomm.robotcore.hardware.UltrasonicSensor;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
@@ -34,6 +36,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -51,7 +54,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.TelemetryMenu;
  * @since 6.0.0
  */
 @TeleOp(name = "Hardware Tester", group = "BunyipsLib")
-@Disabled
+//@Disabled
 public final class HardwareTest extends BunyipsOpMode {
     private TelemetryMenu menu;
 
@@ -62,7 +65,7 @@ public final class HardwareTest extends BunyipsOpMode {
     @SuppressWarnings("unchecked")
     protected void onInit() {
         Map<String, List<HardwareDevice>> hardware;
-        hardwareMap.logDevices();
+//        hardwareMap.logDevices();
         try {
             Field allDevicesMapField = HardwareMap.class.getDeclaredField("allDevicesMap");
             allDevicesMapField.setAccessible(true);
@@ -79,10 +82,11 @@ public final class HardwareTest extends BunyipsOpMode {
             TelemetryMenu.MenuElement deviceMapping = new TelemetryMenu.MenuElement(entry.getKey(), false);
             // Each device in the category may have multiple mappings, so we add them to the category
             for (HardwareDevice device : entry.getValue()) {
-                TelemetryMenu.MenuElement dev = new TelemetryMenu.MenuElement(device.getDeviceName(), false);
+                TelemetryMenu.MenuElement dev = new TelemetryMenu.MenuElement(entry.getKey() + " (" + device.getDeviceName() + ", v" +  device.getVersion() + ")", false);
                 // For each device, we add hardware-specific information
                 TelemetryMenu.StaticItem deviceType = new TelemetryMenu.StaticItem("Manufacturer: " + device.getManufacturer());
-                dev.addChild(deviceType);
+                TelemetryMenu.StaticItem connInfo = new TelemetryMenu.StaticItem("Connection Info: " + device.getConnectionInfo());
+                dev.addChildren(deviceType, connInfo);
 
                 if (device instanceof DcMotorSimple) {
                     DcMotorSimple motor = (DcMotorSimple) device;
@@ -131,29 +135,29 @@ public final class HardwareTest extends BunyipsOpMode {
                     TelemetryMenu.MenuElement motorConfig = new TelemetryMenu.MenuElement("Motor Information", false);
                     // These configuration constants are unlikely to change, so we just use static text
                     MotorConfigurationType motorType = motorEx.getMotorType();
-                    TelemetryMenu.StaticItem distributor = new TelemetryMenu.StaticItem("Distributor: " + motorType.getDistributorInfo().getDistributor() + " (" + motorType.getDistributorInfo().getModel() + ")");
+//                    TelemetryMenu.StaticItem distributor = new TelemetryMenu.StaticItem("Distributor: " + motorType.getDistributorInfo().getDistributor() + " (" + motorType.getDistributorInfo().getModel() + ")");
                     TelemetryMenu.StaticItem tpr = new TelemetryMenu.StaticItem("Ticks Per Revolution: " + motorType.getTicksPerRev());
                     TelemetryMenu.StaticItem gearing = new TelemetryMenu.StaticItem("Gearing: " + motorType.getGearing());
                     TelemetryMenu.StaticItem rpm = new TelemetryMenu.StaticItem("Max RPM: " + motorType.getMaxRPM());
                     TelemetryMenu.StaticItem tps = new TelemetryMenu.StaticItem("Max TPS: " + motorType.getAchieveableMaxTicksPerSecond());
                     TelemetryMenu.StaticItem orientation = new TelemetryMenu.StaticItem("Orientation: " + motorType.getOrientation());
-                    TelemetryMenu.StaticItem veloPid = new TelemetryMenu.StaticItem("Velocity PID: " + motorType.getHubVelocityParams());
-                    TelemetryMenu.StaticItem posPid = new TelemetryMenu.StaticItem("Position PID: " + motorType.getHubPositionParams());
+//                    TelemetryMenu.StaticItem veloPid = new TelemetryMenu.StaticItem("Velocity PID: " + motorType.getHubVelocityParams());
+//                    TelemetryMenu.StaticItem posPid = new TelemetryMenu.StaticItem("Position PID: " + motorType.getHubPositionParams());
 
-                    motorConfig.addChildren(distributor, tpr, gearing, rpm, tps, orientation, veloPid, posPid);
+                    motorConfig.addChildren(tpr, gearing, rpm, tps, orientation);
                     dev.addChild(motorConfig);
                 }
 
                 if (device instanceof Servo) {
                     // Servo controls are simpler and only require directionality and position controls
-                    ServoImplEx servo = (ServoImplEx) device;
-                    TelemetryMenu.InteractiveToggle enabledControl = new TelemetryMenu.InteractiveToggle("Enabled", false, a -> {
-                        if (a)
-                            servo.setPwmEnable();
-                        else
-                            servo.setPwmDisable();
-                        return servo.isPwmEnabled();
-                    }).withColours("green", "red").resetIf(() -> gamepad1.b);
+                    Servo servo = (Servo) device;
+//                    TelemetryMenu.InteractiveToggle enabledControl = new TelemetryMenu.InteractiveToggle("Enabled", false, a -> {
+//                        if (a)
+//                            servo.setPwmEnable();
+//                        else
+//                            servo.setPwmDisable();
+//                        return servo.isPwmEnabled();
+//                    }).withColours("green", "red").resetIf(() -> gamepad1.b);
                     TelemetryMenu.InteractiveToggle positionControl = new TelemetryMenu.InteractiveToggle("Position", false, a -> {
                         double curr = servo.getPosition();
                         servo.setPosition(a ? Mathf.scale(-gamepad1.lsy, -1, 1, 0, 1) : curr);
@@ -175,19 +179,19 @@ public final class HardwareTest extends BunyipsOpMode {
                         servo.setDirection(a ? Servo.Direction.FORWARD : Servo.Direction.REVERSE);
                         return servo.getDirection();
                     }).withColours("white", "white");
-                    dev.addChildren(enabledControl, positionControl, setToZero, setToOne, directionControl);
+                    dev.addChildren(positionControl, setToZero, setToOne, directionControl);
                 }
 
-                if (device instanceof TouchSensorMultiplexer) {
-                    // TouchSensorMultiplexers are simple and only require a list of touch sensor states
-                    TouchSensorMultiplexer mux = (TouchSensorMultiplexer) device;
-                    for (int i = 0; i < mux.getSwitches(); i++) {
-                        int finalI = i;
-                        TelemetryMenu.DynamicItem touchSensor = new TelemetryMenu.DynamicItem("Channel " + i,
-                                () -> mux.isTouchSensorPressed(finalI));
-                        dev.addChild(touchSensor);
-                    }
-                }
+//                if (device instanceof TouchSensorMultiplexer) {
+//                     TouchSensorMultiplexers are simple and only require a list of touch sensor states
+//                    TouchSensorMultiplexer mux = (TouchSensorMultiplexer) device;
+//                    for (int i = 0; i < mux.getSwitches(); i++) {
+//                        int finalI = i;
+//                        TelemetryMenu.DynamicItem touchSensor = new TelemetryMenu.DynamicItem("Channel " + i,
+//                                () -> mux.isTouchSensorPressed(finalI));
+//                        dev.addChild(touchSensor);
+//                    }
+//                }
 
                 if (device instanceof AnalogInput) {
                     // AnalogInputs can be represented by their voltage readings
@@ -232,13 +236,13 @@ public final class HardwareTest extends BunyipsOpMode {
                     dev.addChildren(state, value);
                 }
 
-                if (device instanceof PWMOutput) {
-                    // Adjusting PWM is a bit sketchy, but we can display the current PWM value here
-                    PWMOutput pwm = (PWMOutput) device;
-                    TelemetryMenu.DynamicItem pwmValue = new TelemetryMenu.DynamicItem("PWM Output Time", pwm::getPulseWidthOutputTime);
-                    TelemetryMenu.DynamicItem pwmPeriod = new TelemetryMenu.DynamicItem("PWM Period", pwm::getPulseWidthPeriod);
-                    dev.addChildren(pwmValue, pwmPeriod);
-                }
+//                if (device instanceof PWMOutput) {
+//                    // Adjusting PWM is a bit sketchy, but we can display the current PWM value here
+//                    PWMOutput pwm = (PWMOutput) device;
+//                    TelemetryMenu.DynamicItem pwmValue = new TelemetryMenu.DynamicItem("PWM Output Time", pwm::getPulseWidthOutputTime);
+//                    TelemetryMenu.DynamicItem pwmPeriod = new TelemetryMenu.DynamicItem("PWM Period", pwm::getPulseWidthPeriod);
+//                    dev.addChildren(pwmValue, pwmPeriod);
+//                }
 
                 // Raw I2C devices are partially useless to us in the HardwareTest (values don't mean much), so we can skip them.
                 // We'll also try to initialise the IMU with default parameters for testing purposes
@@ -263,26 +267,26 @@ public final class HardwareTest extends BunyipsOpMode {
                 if (device instanceof ColorSensor) {
                     // Display all the color sensor values
                     ColorSensor color = (ColorSensor) device;
-                    TelemetryMenu.InteractiveToggle ledControl = new TelemetryMenu.InteractiveToggle("LED", false, a -> {
-                        color.enableLed(a);
-                        return a;
-                    }).withColours("green", "red");
+//                    TelemetryMenu.InteractiveToggle ledControl = new TelemetryMenu.InteractiveToggle("LED", false, a -> {
+//                        color.enableLed(a);
+//                        return a;
+//                    }).withColours("green", "red");
                     TelemetryMenu.DynamicItem red = new TelemetryMenu.DynamicItem("Red", color::red);
                     TelemetryMenu.DynamicItem green = new TelemetryMenu.DynamicItem("Green", color::green);
                     TelemetryMenu.DynamicItem blue = new TelemetryMenu.DynamicItem("Blue", color::blue);
                     TelemetryMenu.DynamicItem alpha = new TelemetryMenu.DynamicItem("Alpha", color::alpha);
-                    dev.addChildren(ledControl, red, green, blue, alpha);
+                    dev.addChildren(red, green, blue, alpha);
                 }
 
-                if (device instanceof LED) {
-                    // LEDs are simple and only require a state
-                    LED led = (LED) device;
-                    TelemetryMenu.InteractiveToggle state = new TelemetryMenu.InteractiveToggle("State", false, a -> {
-                        led.enable(a);
-                        return led.isLightOn();
-                    }).withColours("green", "red");
-                    dev.addChild(state);
-                }
+//                if (device instanceof LED) {
+//                    // LEDs are simple and only require a state
+//                    LED led = (LED) device;
+//                    TelemetryMenu.InteractiveToggle state = new TelemetryMenu.InteractiveToggle("State", false, a -> {
+//                        led.enable(a);
+//                        return led.isLightOn();
+//                    }).withColours("green", "red");
+//                    dev.addChild(state);
+//                }
 
                 if (device instanceof RevBlinkinLedDriver) {
                     // We can also control Blinkin devices
@@ -308,34 +312,34 @@ public final class HardwareTest extends BunyipsOpMode {
                     };
                     dev.addChildren(off, white, pattern, applicator);
                 }
-
-                if (device instanceof AccelerationSensor) {
-                    // Other sensors we just add their data anyways since they may be useful...
-                    AccelerationSensor accel = (AccelerationSensor) device;
-                    TelemetryMenu.DynamicItem status = new TelemetryMenu.DynamicItem("Status", accel::status);
-                    TelemetryMenu.DynamicItem acceleration = new TelemetryMenu.DynamicItem("Acceleration (g)", accel::getAcceleration);
-                    dev.addChildren(acceleration);
-                }
-
-                if (device instanceof CompassSensor) {
-                    CompassSensor compass = (CompassSensor) device;
-                    TelemetryMenu.DynamicItem status = new TelemetryMenu.DynamicItem("Status", compass::status);
-                    TelemetryMenu.DynamicItem direction = new TelemetryMenu.DynamicItem("Direction (deg)", compass::getDirection);
-                    TelemetryMenu.StaticClickableOption measurement = new TelemetryMenu.StaticClickableOption("Measurement Mode") {
-                        @Override
-                        protected void onClick() {
-                            compass.setMode(CompassSensor.CompassMode.MEASUREMENT_MODE);
-                        }
-                    };
-                    TelemetryMenu.StaticClickableOption calibration = new TelemetryMenu.StaticClickableOption("Calibration Mode") {
-                        @Override
-                        protected void onClick() {
-                            compass.setMode(CompassSensor.CompassMode.CALIBRATION_MODE);
-                        }
-                    };
-                    TelemetryMenu.DynamicItem calibrationStatus = new TelemetryMenu.DynamicItem("Calibration Failed?", compass::calibrationFailed);
-                    dev.addChildren(direction);
-                }
+//
+//                if (device instanceof AccelerationSensor) {
+//                    // Other sensors we just add their data anyways since they may be useful...
+//                    AccelerationSensor accel = (AccelerationSensor) device;
+//                    TelemetryMenu.DynamicItem status = new TelemetryMenu.DynamicItem("Status", accel::status);
+//                    TelemetryMenu.DynamicItem acceleration = new TelemetryMenu.DynamicItem("Acceleration (g)", accel::getAcceleration);
+//                    dev.addChildren(acceleration);
+//                }
+//
+//                if (device instanceof CompassSensor) {
+//                    CompassSensor compass = (CompassSensor) device;
+//                    TelemetryMenu.DynamicItem status = new TelemetryMenu.DynamicItem("Status", compass::status);
+//                    TelemetryMenu.DynamicItem direction = new TelemetryMenu.DynamicItem("Direction (deg)", compass::getDirection);
+//                    TelemetryMenu.StaticClickableOption measurement = new TelemetryMenu.StaticClickableOption("Measurement Mode") {
+//                        @Override
+//                        protected void onClick() {
+//                            compass.setMode(CompassSensor.CompassMode.MEASUREMENT_MODE);
+//                        }
+//                    };
+//                    TelemetryMenu.StaticClickableOption calibration = new TelemetryMenu.StaticClickableOption("Calibration Mode") {
+//                        @Override
+//                        protected void onClick() {
+//                            compass.setMode(CompassSensor.CompassMode.CALIBRATION_MODE);
+//                        }
+//                    };
+//                    TelemetryMenu.DynamicItem calibrationStatus = new TelemetryMenu.DynamicItem("Calibration Failed?", compass::calibrationFailed);
+//                    dev.addChildren(direction);
+//                }
 
                 if (device instanceof GyroSensor) {
                     GyroSensor gyro = (GyroSensor) device;
@@ -379,39 +383,130 @@ public final class HardwareTest extends BunyipsOpMode {
                     dev.addChildren(status, calibrate, resetZIntegrator, calibrating, heading, rotationFraction, rawX, rawY, rawZ);
                 }
 
-                if (device instanceof IrSeekerSensor) {
-                    IrSeekerSensor ir = (IrSeekerSensor) device;
-                    TelemetryMenu.DynamicItem signalStrength = new TelemetryMenu.DynamicItem("Signal Strength", ir::getStrength);
-                    TelemetryMenu.DynamicItem signalAngle = new TelemetryMenu.DynamicItem("Signal Angle", ir::getAngle);
-                    TelemetryMenu.DynamicItem signalDetectedThreshold = new TelemetryMenu.DynamicItem("Signal Detected Threshold", ir::getSignalDetectedThreshold);
-                    TelemetryMenu.DynamicItem signalDetected = new TelemetryMenu.DynamicItem("Signal Detected", ir::signalDetected);
-                    TelemetryMenu.InteractiveToggle mode = new TelemetryMenu.InteractiveToggle("Mode", false, a -> {
-                        ir.setMode(a ? IrSeekerSensor.Mode.MODE_600HZ : IrSeekerSensor.Mode.MODE_1200HZ);
-                        return ir.getMode();
-                    }).withColours("white", "white");
-                    // Menu for individual sensors
-                    TelemetryMenu.MenuElement sensorMenu = new TelemetryMenu.MenuElement("Individual Sensors", false);
-                    IrSeekerSensor.IrSeekerIndividualSensor[] individualSensors = ir.getIndividualSensors();
-                    for (int i = 0; i < individualSensors.length; i++) {
-                        int finalI = i;
-                        TelemetryMenu.DynamicItem item = new TelemetryMenu.DynamicItem("#" + i, () -> individualSensors[finalI].toString());
-                        sensorMenu.addChild(item);
-                    }
-                    dev.addChildren(signalStrength, signalAngle, signalDetectedThreshold, signalDetected, mode, sensorMenu);
-                }
-
-                if (device instanceof UltrasonicSensor) {
-                    UltrasonicSensor ultra = (UltrasonicSensor) device;
-                    TelemetryMenu.DynamicItem status = new TelemetryMenu.DynamicItem("Status", ultra::status);
-                    TelemetryMenu.DynamicItem ultrasonicLevel = new TelemetryMenu.DynamicItem("Ultrasonic Level", ultra::getUltrasonicLevel);
-                    dev.addChildren(status, ultrasonicLevel);
-                }
+//                if (device instanceof IrSeekerSensor) {
+//                    IrSeekerSensor ir = (IrSeekerSensor) device;
+//                    TelemetryMenu.DynamicItem signalStrength = new TelemetryMenu.DynamicItem("Signal Strength", ir::getStrength);
+//                    TelemetryMenu.DynamicItem signalAngle = new TelemetryMenu.DynamicItem("Signal Angle", ir::getAngle);
+//                    TelemetryMenu.DynamicItem signalDetectedThreshold = new TelemetryMenu.DynamicItem("Signal Detected Threshold", ir::getSignalDetectedThreshold);
+//                    TelemetryMenu.DynamicItem signalDetected = new TelemetryMenu.DynamicItem("Signal Detected", ir::signalDetected);
+//                    TelemetryMenu.InteractiveToggle mode = new TelemetryMenu.InteractiveToggle("Mode", false, a -> {
+//                        ir.setMode(a ? IrSeekerSensor.Mode.MODE_600HZ : IrSeekerSensor.Mode.MODE_1200HZ);
+//                        return ir.getMode();
+//                    }).withColours("white", "white");
+//                    // Menu for individual sensors
+//                    TelemetryMenu.MenuElement sensorMenu = new TelemetryMenu.MenuElement("Individual Sensors", false);
+//                    IrSeekerSensor.IrSeekerIndividualSensor[] individualSensors = ir.getIndividualSensors();
+//                    for (int i = 0; i < individualSensors.length; i++) {
+//                        int finalI = i;
+//                        TelemetryMenu.DynamicItem item = new TelemetryMenu.DynamicItem("#" + i, () -> individualSensors[finalI].toString());
+//                        sensorMenu.addChild(item);
+//                    }
+//                    dev.addChildren(signalStrength, signalAngle, signalDetectedThreshold, signalDetected, mode, sensorMenu);
+//                }
+//
+//                if (device instanceof UltrasonicSensor) {
+//                    UltrasonicSensor ultra = (UltrasonicSensor) device;
+//                    TelemetryMenu.DynamicItem status = new TelemetryMenu.DynamicItem("Status", ultra::status);
+//                    TelemetryMenu.DynamicItem ultrasonicLevel = new TelemetryMenu.DynamicItem("Ultrasonic Level", ultra::getUltrasonicLevel);
+//                    dev.addChildren(status, ultrasonicLevel);
+//                }
+//
+                // We can also initialise the BNO055IMU type since it has extra data compared to simply the universal IMU
+//                if (device instanceof BNO055IMU) {
+//                    BNO055IMU imu = (BNO055IMU) device;
+//                    // We can initialise the IMU with default parameters for testing purposes
+//                    BNO055IMU.Parameters params = new BNO055IMU.Parameters();
+//                    params.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+//                    imu.initialize(params);
+//                    imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
+//
+//                    TelemetryMenu.StaticItem notice = new TelemetryMenu.StaticItem("IMU is initialised with default parameters (C, deg, ms/s/s)");
+//                    TelemetryMenu.DynamicItem systemStatus = new TelemetryMenu.DynamicItem("System Status", imu::getSystemStatus);
+//                    TelemetryMenu.DynamicItem calibStatus = new TelemetryMenu.DynamicItem("Calibration Status", imu::getCalibrationStatus);
+//                    TelemetryMenu.DynamicItem error = new TelemetryMenu.DynamicItem("System Error", imu::getSystemError);
+//                    TelemetryMenu.DynamicItem isSystemCalibrated = new TelemetryMenu.DynamicItem("System Calibrated?", imu::isSystemCalibrated);
+//                    TelemetryMenu.DynamicItem isGyroCalibrated = new TelemetryMenu.DynamicItem("Gyro Calibrated?", imu::isGyroCalibrated);
+//                    TelemetryMenu.DynamicItem isAccelerometerCalibrated = new TelemetryMenu.DynamicItem("Accelerometer Calibrated?", imu::isAccelerometerCalibrated);
+//                    TelemetryMenu.DynamicItem isMagnetometerCalibrated = new TelemetryMenu.DynamicItem("Magnetometer Calibrated?", imu::isMagnetometerCalibrated);
+//                    TelemetryMenu.DynamicItem angularOrientation = new TelemetryMenu.DynamicItem("Angular Orientation", imu::getAngularOrientation);
+//                    TelemetryMenu.DynamicItem position = new TelemetryMenu.DynamicItem("Position", imu::getPosition);
+//                    TelemetryMenu.DynamicItem velocity = new TelemetryMenu.DynamicItem("Velocity", imu::getVelocity);
+//                    TelemetryMenu.DynamicItem acceleration = new TelemetryMenu.DynamicItem("Acceleration", imu::getAcceleration);
+//                    TelemetryMenu.DynamicItem overallAcceleration = new TelemetryMenu.DynamicItem("Overall Acceleration", imu::getOverallAcceleration);
+//                    TelemetryMenu.DynamicItem linearAcceleration = new TelemetryMenu.DynamicItem("Linear Acceleration", imu::getLinearAcceleration);
+//                    TelemetryMenu.DynamicItem gravity = new TelemetryMenu.DynamicItem("Gravity", imu::getGravity);
+//                    TelemetryMenu.DynamicItem angVel = new TelemetryMenu.DynamicItem("Angular Velocity", imu::getAngularVelocity);
+//                    TelemetryMenu.DynamicItem temperature = new TelemetryMenu.DynamicItem("Temperature", () -> imu.getTemperature().temperature);
+//                    TelemetryMenu.DynamicItem magneticFlux = new TelemetryMenu.DynamicItem("Magnetic Flux", imu::getMagneticFieldStrength);
+//                    dev.addChildren(notice, systemStatus, calibStatus, error, isSystemCalibrated, isGyroCalibrated, isAccelerometerCalibrated, isMagnetometerCalibrated, angularOrientation, position, velocity, acceleration, overallAcceleration, linearAcceleration, gravity, angVel, temperature, magneticFlux);
+//                }
 
                 if (device instanceof VoltageSensor) {
                     VoltageSensor voltage = (VoltageSensor) device;
                     TelemetryMenu.DynamicItem voltageValue = new TelemetryMenu.DynamicItem("Voltage (V)", voltage::getVoltage);
                     dev.addChild(voltageValue);
                 }
+
+                // We're also able to add some info based on the SparkFun OTOS, since we can actually parse the I2C
+                // without doing some magic
+                if (device instanceof SparkFunOTOS) {
+                    SparkFunOTOS otos = (SparkFunOTOS) device;
+                    TelemetryMenu.MenuElement warnings = new TelemetryMenu.MenuElement("Warnings", false);
+                    TelemetryMenu.DynamicItem warnTilt = new TelemetryMenu.DynamicItem("Tilt Warning", () -> otos.getStatus().warnTiltAngle);
+                    TelemetryMenu.DynamicItem warnTrack = new TelemetryMenu.DynamicItem("Tracking Warning", () -> otos.getStatus().warnOpticalTracking);
+                    TelemetryMenu.DynamicItem errPaa = new TelemetryMenu.DynamicItem("PAA Error", () -> otos.getStatus().errorPaa);
+                    TelemetryMenu.DynamicItem errLsm = new TelemetryMenu.DynamicItem("LSM Error", () -> otos.getStatus().errorLsm);
+                    warnings.addChildren(warnTilt, warnTrack, errPaa, errLsm);
+                    TelemetryMenu.DynamicItem linearScalar = new TelemetryMenu.DynamicItem("Linear Scalar", otos::getLinearScalar);
+                    TelemetryMenu.DynamicItem angularScalar = new TelemetryMenu.DynamicItem("Angular Scalar", otos::getAngularScalar);
+                    TelemetryMenu.StaticClickableOption selfTest = new TelemetryMenu.StaticClickableOption("Run Self Test") {
+                        @Override
+                        protected void onClick() {
+                            telemetry.log("OTOS Self Test: %", otos.selfTest() ? "PASS" : "FAIL");
+                        }
+                    };
+                    TelemetryMenu.StaticClickableOption calibrateIMU = new TelemetryMenu.StaticClickableOption("Calibrate IMU") {
+                        @Override
+                        protected void onClick() {
+                            otos.calibrateImu(255, false);
+                        }
+                    };
+                    TelemetryMenu.DynamicItem imuCalibrationStatus = new TelemetryMenu.DynamicItem("IMU Calibration Samples Remaining", otos::getImuCalibrationProgress);
+                    TelemetryMenu.StaticClickableOption resetTracking = new TelemetryMenu.StaticClickableOption("Reset Tracking") {
+                        @Override
+                        protected void onClick() {
+                            otos.resetTracking();
+                        }
+                    };
+                    TelemetryMenu.DynamicItem posX = new TelemetryMenu.DynamicItem("Position X", () -> otos.getPosition().x);
+                    TelemetryMenu.DynamicItem posY = new TelemetryMenu.DynamicItem("Position Y", () -> otos.getPosition().y);
+                    TelemetryMenu.DynamicItem posTheta = new TelemetryMenu.DynamicItem("Position H", () -> otos.getPosition().h);
+                    TelemetryMenu.DynamicItem velX = new TelemetryMenu.DynamicItem("Velocity X", () -> otos.getVelocity().x);
+                    TelemetryMenu.DynamicItem velY = new TelemetryMenu.DynamicItem("Velocity Y", () -> otos.getVelocity().y);
+                    TelemetryMenu.DynamicItem velTheta = new TelemetryMenu.DynamicItem("Velocity H", () -> otos.getVelocity().h);
+                    TelemetryMenu.DynamicItem accX = new TelemetryMenu.DynamicItem("Acceleration X", () -> otos.getAcceleration().x);
+                    TelemetryMenu.DynamicItem accY = new TelemetryMenu.DynamicItem("Acceleration Y", () -> otos.getAcceleration().y);
+                    TelemetryMenu.DynamicItem accTheta = new TelemetryMenu.DynamicItem("Acceleration H", () -> otos.getAcceleration().h);
+                    dev.addChildren(warnings, linearScalar, angularScalar, selfTest, calibrateIMU, imuCalibrationStatus, resetTracking, posX, posY, posTheta, velX, velY, velTheta, accX, accY, accTheta);
+                }
+
+                if (device instanceof OctoQuad) {
+                    OctoQuad octo = (OctoQuad) device;
+                    TelemetryMenu.DynamicItem position = new TelemetryMenu.DynamicItem("Positions", () -> Arrays.toString(octo.readAllPositions()));
+                    TelemetryMenu.DynamicItem velocity = new TelemetryMenu.DynamicItem("Velocities", () -> Arrays.toString(octo.readAllVelocities()));
+                    dev.addChildren(position, velocity);
+                }
+
+//                if (device instanceof Gyroscope) {
+//                    Gyroscope gyro = (Gyroscope) device;
+//                    TelemetryMenu.DynamicItem angularVelocity = new TelemetryMenu.DynamicItem("Angular Velocity (deg/s)", () -> gyro.getAngularVelocity(AngleUnit.DEGREES));
+//                    dev.addChild(angularVelocity);
+//                }
+//                if (device instanceof OrientationSensor) {
+//                    OrientationSensor sensor = (OrientationSensor) device;
+//                    TelemetryMenu.DynamicItem ori = new TelemetryMenu.DynamicItem("Orientation (ext, XYZ, deg)", () -> sensor.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES));
+//                    dev.addChild(ori);
+//                }
 
                 // Finally, we add the device to the category
                 deviceMapping.addChild(dev);

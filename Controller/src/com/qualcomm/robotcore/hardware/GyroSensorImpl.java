@@ -46,18 +46,58 @@ public class GyroSensorImpl implements GyroSensor {
         heading = 0.0;
     }
 
+    @Override
+    public void calibrate() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isCalibrating() {
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * Get heading in degrees (-180 to 180)
      * @return heading in degrees (-180 to 180)
      */
-    public synchronized double getHeading(){
+    public synchronized int getHeading(){
         if (initialized){
             double result = heading - initialHeading;
             if (result < -180.0) result += 360.0;
             else if (result > 180.0) result -= 360.0;
-            return result;
+            return (int) result;
         }
-        else return 0.0;
+        else return 0;
+    }
+
+    @Override
+    public double getRotationFraction() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int rawX() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int rawY() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int rawZ() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void resetZAxisIntegrator() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String status() {
+        return "VIRTUAL ROBOT GYRO SENSOR ON";
     }
 
     /**
