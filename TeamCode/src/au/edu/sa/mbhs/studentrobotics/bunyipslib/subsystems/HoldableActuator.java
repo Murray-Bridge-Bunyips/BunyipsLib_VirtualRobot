@@ -4,6 +4,7 @@ import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Amp
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -67,6 +68,7 @@ public class HoldableActuator extends BunyipsSubsystem {
     private Encoder encoder;
     private TouchSensor topSwitch;
     private TouchSensor bottomSwitch;
+    private int homingDirection = -1;
     private boolean zeroed;
     private boolean userLatch;
     private double userPower;
@@ -236,6 +238,17 @@ public class HoldableActuator extends BunyipsSubsystem {
     }
 
     /**
+     * Get the mapped position of a limit switch.
+     *
+     * @param switchSensor the switch sensor to get the mapped position of, must be mapped
+     * @return the mapped position of the switch sensor, nullable if not mapped
+     */
+    @Nullable
+    public Integer getMappedPosition(@NonNull TouchSensor switchSensor) {
+        return switchMapping.get(switchSensor);
+    }
+
+    /**
      * Set the holding power of the actuator. Note: this power is clamped by the lower and upper power clamps.
      *
      * @param targetPower the power to set
@@ -401,7 +414,7 @@ public class HoldableActuator extends BunyipsSubsystem {
                 break;
             case HOMING:
                 motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                motorPower = -MOVING_POWER;
+                motorPower = MOVING_POWER * Math.signum(homingDirection);
                 opMode(o -> o.telemetry.add("%: <font color='yellow'><b>HOMING</b></font> [%tps]", this, Math.round(encoder.getVelocity())));
                 break;
             case USER_POWER:
@@ -588,6 +601,7 @@ public class HoldableActuator extends BunyipsSubsystem {
                     }
                     motor.setCurrentAlert(OVERCURRENT.in(Amps), CurrentUnit.AMPS);
                     zeroHits = 0;
+                    homingDirection = -1;
                     inputMode = Mode.HOMING;
                 }
 
@@ -651,6 +665,7 @@ public class HoldableActuator extends BunyipsSubsystem {
                     }
                     motor.setCurrentAlert(OVERCURRENT.in(Amps), CurrentUnit.AMPS);
                     zeroHits = 0;
+                    homingDirection = 1;
                     inputMode = Mode.HOMING;
                 }
 
@@ -685,6 +700,25 @@ public class HoldableActuator extends BunyipsSubsystem {
                     return inputMode != Mode.HOMING || (toppedOut || velocityZeroed || sustainedOvercurrent);
                 }
             }.onSubsystem(HoldableActuator.this, true).withName("Travel To Ceiling");
+        }
+
+        /**
+         * Set the position of the actuator based on a mapped limit switch.
+         * This task will run the actuator to the position mapped by the limit switch, and has a condition to
+         * stop the actuator if the limit switch is pressed.
+         *
+         * @param limitSwitch the position to set based on the limit switch, MUST be mapped by the actuator
+         * @return a task to set the position
+         */
+        @NonNull
+        public Task goTo(@NonNull TouchSensor limitSwitch) {
+            Integer position = switchMapping.get(limitSwitch);
+            if (position == null) {
+                Dbg.warn(getClass(), "%Attempted to go to a limit switch that was not mapped. This task will not run.", isDefaultName() ? "" : "(" + name + ") ");
+                return new RunTask();
+            }
+            // Since this is a static mapping we can return the task
+            return goTo(position).until(limitSwitch::isPressed).withName("Run To Limit Switch");
         }
 
         /**
@@ -731,6 +765,7 @@ public class HoldableActuator extends BunyipsSubsystem {
          */
         @NonNull
         public Task delta(int deltaPosition) {
+            // Must redefine the task since this is a deferred task
             return new Task() {
                 private int target;
 

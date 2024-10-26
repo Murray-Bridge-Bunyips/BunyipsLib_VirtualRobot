@@ -1,10 +1,13 @@
 //package au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.tuning;
 //
+//import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Milliseconds;
+//
 //import androidx.annotation.NonNull;
+//import androidx.annotation.Nullable;
 //
 //import com.acmerobotics.dashboard.FtcDashboard;
-//import com.acmerobotics.dashboard.config.Config;
 //import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
+//import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 //import com.acmerobotics.roadrunner.MotorFeedforward;
 //import com.acmerobotics.roadrunner.ftc.AngularRampLogger;
 //import com.acmerobotics.roadrunner.ftc.DeadWheelDirectionDebugger;
@@ -67,8 +70,43 @@
 // * @author Lucas Bubner, 2024
 // * @since 6.0.0
 // */
-//@Config
+//@SuppressWarnings("MissingJavadoc")
 //public abstract class RoadRunnerTuningOpMode extends LinearOpMode {
+//    // Intermediary fields for the tuning process. These are used to store the values of the tuning process, and are
+//    // initially populated with the values from the drive instance. They are used to allow for dynamic adjustment
+//    // of the values used in the tuning process.
+//    public double tuningMotionProfile_kS;
+//    public double tuningMotionProfile_kV;
+//    public double tuningMotionProfile_kA;
+//    public double tuningMotionProfile_maxWheelVel;
+//    public double tuningMotionProfile_minProfileAccel;
+//    public double tuningMotionProfile_maxProfileAccel;
+//
+//    public double tuningDriveModel_inPerTick;
+//    public double tuningDriveModel_trackWidthTicks;
+//
+//    @Nullable
+//    public Double tuningMecanumGains_axialGain;
+//    @Nullable
+//    public Double tuningMecanumGains_lateralGain;
+//    @Nullable
+//    public Double tuningMecanumGains_headingGain;
+//    @Nullable
+//    public Double tuningMecanumGains_axialVelGain;
+//    @Nullable
+//    public Double tuningMecanumGains_lateralVelGain;
+//    @Nullable
+//    public Double tuningMecanumGains_headingVelGain;
+//
+//    @Nullable
+//    public Double tuningTankGains_ramseteZeta;
+//    @Nullable
+//    public Double tuningTankGains_ramseteBBar;
+//    @Nullable
+//    public Double tuningTankGains_turnGain;
+//    @Nullable
+//    public Double tuningTankGains_turnVelGain;
+//
 //    /**
 //     * Instantiate hardware and return the fully configured RoadRunner drive instance to use for tuning.
 //     * <p>
@@ -83,14 +121,13 @@
 //    @Override
 //    @SuppressWarnings("unchecked")
 //    public final void runOpMode() throws InterruptedException {
-//        DualTelemetry out = new DualTelemetry(this, null, "RR Tuning");
 //        RoadRunnerDrive drive = Objects.requireNonNull(getDrive(), "getDrive() returned null");
 //
 //        DriveViewFactory dvf;
 //        if (drive instanceof MecanumDrive) {
 //            dvf = (h) -> {
 //                MecanumDrive md = (MecanumDrive) drive;
-//                md.pose = Geometry.zeroPose();
+//                md.setPose(Geometry.zeroPose());
 //                List<Encoder> leftEncs = new ArrayList<>(), rightEncs = new ArrayList<>();
 //                List<Encoder> parEncs = new ArrayList<>(), perpEncs = new ArrayList<>();
 //                Localizer localizer = md.getLocalizer();
@@ -115,8 +152,7 @@
 //
 //                // We don't want to expose the motors on the subsystem directly, we'll just use reflection here.
 //                // The DriveView constructor is fairly limited in what can be adjusted, including the requirement for
-//                // a strict LazyIMU when it is locked to using hardwareMap. This explains why a separate IMU config
-//                // is used.
+//                // a strict LazyIMU, which is why on the drive classes only is where LazyImu instances are used.
 //                Class<?> mdClass = md.getClass();
 //                Field leftFrontField, leftBackField, rightFrontField, rightBackField, lazyImuField;
 //                try {
@@ -142,18 +178,40 @@
 //                    rightBack = (DcMotorEx) rightBackField.get(md);
 //                    lazyImu = (LazyImu) lazyImuField.get(md);
 //                } catch (IllegalAccessException e) {
-//                    throw new RuntimeException("Unable to access objects on MecanumDrive!");
+//                    throw new RuntimeException("Unable to access objects on MecanumDrive! This shouldn't happen!");
 //                }
 //
 //                Constants c = md.getConstants();
+//                tuningMotionProfile_kS = c.getMotionProfile().kS;
+//                tuningMotionProfile_kV = c.getMotionProfile().kV;
+//                tuningMotionProfile_kA = c.getMotionProfile().kA;
+//                tuningMotionProfile_maxWheelVel = c.getMotionProfile().maxWheelVel;
+//                tuningMotionProfile_minProfileAccel = c.getMotionProfile().minProfileAccel;
+//                tuningMotionProfile_maxProfileAccel = c.getMotionProfile().maxProfileAccel;
+//                tuningDriveModel_inPerTick = c.getDriveModel().inPerTick;
+//                tuningDriveModel_trackWidthTicks = c.getDriveModel().trackWidthTicks;
+//                tuningMecanumGains_axialGain = md.gains.axialGain;
+//                tuningMecanumGains_lateralGain = md.gains.lateralGain;
+//                tuningMecanumGains_headingGain = md.gains.headingGain;
+//                tuningMecanumGains_axialVelGain = md.gains.axialVelGain;
+//                tuningMecanumGains_lateralVelGain = md.gains.lateralVelGain;
+//                tuningMecanumGains_headingVelGain = md.gains.headingVelGain;
+//                Threads.startLoop("Update Mecanum Gains", Milliseconds.of(500), () -> {
+//                    md.gains.axialGain = tuningMecanumGains_axialGain;
+//                    md.gains.lateralGain = tuningMecanumGains_lateralGain;
+//                    md.gains.headingGain = tuningMecanumGains_headingGain;
+//                    md.gains.axialVelGain = tuningMecanumGains_axialVelGain;
+//                    md.gains.lateralVelGain = tuningMecanumGains_lateralVelGain;
+//                    md.gains.headingVelGain = tuningMecanumGains_headingVelGain;
+//                });
 //                assert lazyImu != null;
 //                return new DriveView(
 //                        DriveType.MECANUM,
-//                        c.getDriveModel().inPerTick,
-//                        c.getMotionProfile().maxWheelVel,
-//                        c.getMotionProfile().minProfileAccel,
-//                        c.getMotionProfile().maxProfileAccel,
-//                        hardwareMap.getAll(LynxModule.class),
+//                        tuningDriveModel_inPerTick,
+//                        tuningMotionProfile_maxWheelVel,
+//                        tuningMotionProfile_minProfileAccel,
+//                        tuningMotionProfile_maxProfileAccel,
+//                        h.getAll(LynxModule.class),
 //                        Arrays.asList(
 //                                leftFront,
 //                                leftBack
@@ -167,16 +225,16 @@
 //                        parEncs,
 //                        perpEncs,
 //                        lazyImu,
-//                        hardwareMap.voltageSensor.iterator().next(),
-//                        () -> new MotorFeedforward(c.getMotionProfile().kS,
-//                                c.getMotionProfile().kV / c.getDriveModel().inPerTick,
-//                                c.getMotionProfile().kA / c.getDriveModel().inPerTick)
+//                        h.voltageSensor.iterator().next(),
+//                        () -> new MotorFeedforward(tuningMotionProfile_kS,
+//                                tuningMotionProfile_kV / tuningDriveModel_inPerTick,
+//                                tuningMotionProfile_kA / tuningDriveModel_inPerTick)
 //                );
 //            };
 //        } else if (drive instanceof TankDrive) {
 //            dvf = (h) -> {
 //                TankDrive td = (TankDrive) drive;
-//                td.pose = Geometry.zeroPose();
+//                td.setPose(Geometry.zeroPose());
 //                List<Encoder> leftEncs = new ArrayList<>(), rightEncs = new ArrayList<>();
 //                List<Encoder> parEncs = new ArrayList<>(), perpEncs = new ArrayList<>();
 //                Localizer localizer = td.getLocalizer();
@@ -216,18 +274,36 @@
 //                    rightMotors = (List<DcMotorEx>) rightMotorsField.get(td);
 //                    lazyImu = (LazyImu) lazyImuField.get(td);
 //                } catch (IllegalAccessException e) {
-//                    throw new RuntimeException("Unable to access the objects on TankDrive!");
+//                    throw new RuntimeException("Unable to access the objects on TankDrive! This shouldn't happen!");
 //                }
 //
 //                Constants c = drive.getConstants();
+//                tuningMotionProfile_kS = c.getMotionProfile().kS;
+//                tuningMotionProfile_kV = c.getMotionProfile().kV;
+//                tuningMotionProfile_kA = c.getMotionProfile().kA;
+//                tuningMotionProfile_maxWheelVel = c.getMotionProfile().maxWheelVel;
+//                tuningMotionProfile_minProfileAccel = c.getMotionProfile().minProfileAccel;
+//                tuningMotionProfile_maxProfileAccel = c.getMotionProfile().maxProfileAccel;
+//                tuningDriveModel_inPerTick = c.getDriveModel().inPerTick;
+//                tuningDriveModel_trackWidthTicks = c.getDriveModel().trackWidthTicks;
+//                tuningTankGains_ramseteZeta = td.gains.ramseteZeta;
+//                tuningTankGains_ramseteBBar = td.gains.ramseteBBar;
+//                tuningTankGains_turnGain = td.gains.turnGain;
+//                tuningTankGains_turnVelGain = td.gains.turnVelGain;
+//                Threads.startLoop("Update Tank Gains", Milliseconds.of(500), () -> {
+//                    td.gains.ramseteZeta = tuningTankGains_ramseteZeta;
+//                    td.gains.ramseteBBar = tuningTankGains_ramseteBBar;
+//                    td.gains.turnGain = tuningTankGains_turnGain;
+//                    td.gains.turnVelGain = tuningTankGains_turnVelGain;
+//                });
 //                assert leftMotors != null && rightMotors != null && lazyImu != null;
 //                return new DriveView(
 //                        DriveType.TANK,
-//                        c.getDriveModel().inPerTick,
-//                        c.getMotionProfile().maxWheelVel,
-//                        c.getMotionProfile().minProfileAccel,
-//                        c.getMotionProfile().maxProfileAccel,
-//                        hardwareMap.getAll(LynxModule.class),
+//                        tuningDriveModel_inPerTick,
+//                        tuningMotionProfile_maxWheelVel,
+//                        tuningMotionProfile_minProfileAccel,
+//                        tuningMotionProfile_maxProfileAccel,
+//                        h.getAll(LynxModule.class),
 //                        leftMotors,
 //                        rightMotors,
 //                        leftEncs,
@@ -235,10 +311,10 @@
 //                        parEncs,
 //                        perpEncs,
 //                        lazyImu,
-//                        hardwareMap.voltageSensor.iterator().next(),
-//                        () -> new MotorFeedforward(c.getMotionProfile().kS,
-//                                c.getMotionProfile().kV / c.getDriveModel().inPerTick,
-//                                c.getMotionProfile().kA / c.getDriveModel().inPerTick)
+//                        h.voltageSensor.iterator().next(),
+//                        () -> new MotorFeedforward(tuningMotionProfile_kS,
+//                                tuningMotionProfile_kV / tuningDriveModel_inPerTick,
+//                                tuningMotionProfile_kA / tuningDriveModel_inPerTick)
 //                );
 //            };
 //        } else {
@@ -269,7 +345,7 @@
 //                    MecanumMotorDirectionDebugger.class,
 //                    ManualFeedbackTuner.class
 //            )) {
-//                configRoot.putVariable(c.getSimpleName(), ReflectionConfig.createVariableFromClass(c));
+//                configRoot.putVariable("[RR] " + c.getSimpleName(), ReflectionConfig.createVariableFromClass(c));
 //            }
 //        });
 //
@@ -279,33 +355,56 @@
 //        for (int i = 0; i < modes.length; i++) {
 //            // Must be considered final as it is used in the inner class
 //            int finalI = i;
-//            opModes[i] = new TelemetryMenu.StaticClickableOption(modes[finalI].getClass().getSimpleName()) {
-//                @Override
-//                protected void onClick() {
-//                    selection[0] = modes[finalI];
-//                }
-//            };
+//            opModes[i] = new TelemetryMenu.StaticClickableOption(modes[finalI].getClass().getSimpleName(),
+//                    () -> selection[0] = modes[finalI]);
 //        }
 //        root.addChildren(opModes);
-//        TelemetryMenu menu = new TelemetryMenu(out, root);
+//        TelemetryMenu menu = new TelemetryMenu(telemetry, root);
 //
 //        while (selection[0] == null && opModeInInit()) {
 //            menu.loop(gamepad1);
-//            out.add("Select an option above to run tuning for using <font face='monospace'>gamepad1</font>. Restart the OpMode to pick a different mode.");
-//            out.update();
 //        }
 //
-//        out.clearAll();
-//        if (selection[0] == null) return;
+//        telemetry.clearAll();
+//        telemetry.update();
+//        if (selection[0] == null)
+//            return;
 //
-//        // Defer the OpMode to the tuning OpMode now, it is confirmed to be safe to cast
-//        out.setOpModeStatus(Text.html().bold(selection[0].getClass().getSimpleName()).toString());
-//        out.update();
 //        try {
-//            // We're delegating the OpMode, however, runBlocking calls do not know that motor powers must be updated,
-//            // so we call periodic in the background to mitigate this.
-//            Threads.startLoop(drive::periodic, "RR Tuning Drive Update Executor");
-//            ((LinearOpMode) selection[0]).runOpMode();
+//            //noinspection ExtractMethodRecommender
+//            LinearOpMode opMode = (LinearOpMode) selection[0];
+//            try {
+//                //noinspection DataFlowIssue
+//                Class<?> opModeInternal = getClass().getSuperclass().getSuperclass().getSuperclass().getSuperclass();
+//                //noinspection DataFlowIssue
+//                Field started = opModeInternal.getDeclaredField("isStarted");
+//                // We need to force start the OpMode that will execute, although we miss the init step we can wait
+//                // here instead.
+//                started.setAccessible(true);
+//                started.set(opMode, true);
+//            } catch (NoSuchFieldException | IllegalAccessException | NullPointerException e) {
+//                throw new RuntimeException("Internal error while starting OpMode. This shouldn't happen!");
+//            }
+//            opMode.gamepad1 = gamepad1;
+//            opMode.gamepad2 = gamepad2;
+//            opMode.hardwareMap = hardwareMap;
+//            if (opMode instanceof ForwardPushTest || opMode instanceof LateralPushTest) {
+//                opMode.telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+//            } else {
+//                opMode.telemetry = telemetry;
+//            }
+//
+//            telemetry.setCaptionValueSeparator(": ");
+//            telemetry.addData(Text.html().bold(selection[0].getClass().getSimpleName()).toString(), "Ready. Press play to start.");
+//            telemetry.update();
+//
+//            FtcDashboard.getInstance().withConfigRoot(configRoot ->
+//                    configRoot.putVariable("[RR] Tuning Parameters", ReflectionConfig.createVariableFromClass(getClass())));
+//
+//            waitForStart();
+//            telemetry.update();
+//
+//            opMode.runOpMode();
 //        } finally {
 //            Threads.stopAll();
 //        }

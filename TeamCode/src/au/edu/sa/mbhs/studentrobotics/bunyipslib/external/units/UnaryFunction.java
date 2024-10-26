@@ -17,7 +17,6 @@ import java.util.Objects;
  *
  * @since 1.0.0-pre
  */
-@SuppressWarnings("UnknownNullness")
 @FunctionalInterface
 public interface UnaryFunction {
     /**

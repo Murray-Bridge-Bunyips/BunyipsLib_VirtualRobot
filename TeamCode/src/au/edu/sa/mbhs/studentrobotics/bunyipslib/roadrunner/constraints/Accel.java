@@ -16,7 +16,6 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Velocity;
  * @author Lucas Bubner, 2024
  * @since 6.0.0
  */
-@SuppressWarnings("UnknownNullness")
 public final class Accel {
     /**
      * Specified minimum acceleration in inches per second squared.
@@ -42,7 +41,7 @@ public final class Accel {
      * @return The new Accel object.
      */
     @NonNull
-    public static Accel ofMinAccel(double minAccel, @NonNull Velocity<Velocity<Distance>> unit) {
+    public static Accel ofMin(double minAccel, @NonNull Velocity<Velocity<Distance>> unit) {
         return new Accel(unit.of(minAccel).in(InchesPerSecondPerSecond), null);
     }
 
@@ -54,7 +53,7 @@ public final class Accel {
      * @return The new Accel object.
      */
     @NonNull
-    public static Accel ofMaxAccel(double maxAccel, @NonNull Velocity<Velocity<Distance>> unit) {
+    public static Accel ofMax(double maxAccel, @NonNull Velocity<Velocity<Distance>> unit) {
         return new Accel(null, unit.of(maxAccel).in(InchesPerSecondPerSecond));
     }
 
@@ -66,7 +65,7 @@ public final class Accel {
      * @return The new Accel object.
      */
     @NonNull
-    public Accel andMaxAccel(double maxAccel, @NonNull Velocity<Velocity<Distance>> unit) {
+    public Accel andMax(double maxAccel, @NonNull Velocity<Velocity<Distance>> unit) {
         return new Accel(minAccelInchesPerSecSquared, unit.of(maxAccel).in(InchesPerSecondPerSecond));
     }
 
@@ -78,7 +77,7 @@ public final class Accel {
      * @return The new Accel object.
      */
     @NonNull
-    public Accel andMinAccel(double minAccel, @NonNull Velocity<Velocity<Distance>> unit) {
+    public Accel andMin(double minAccel, @NonNull Velocity<Velocity<Distance>> unit) {
         return new Accel(unit.of(minAccel).in(InchesPerSecondPerSecond), maxAccelInchesPerSecSquared);
     }
 

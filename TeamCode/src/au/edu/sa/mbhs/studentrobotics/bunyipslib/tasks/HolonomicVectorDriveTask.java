@@ -6,6 +6,7 @@ import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Nan
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Radians;
 
 import androidx.annotation.NonNull;
+
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
@@ -97,9 +98,9 @@ public class HolonomicVectorDriveTask extends ForeverTask {
      * Constructor for HolonomicVectorDriveTask on an always disabled field-centric mode.
      *
      * @param vel   The supplier for the current pose velocity of the robot
-     * @param drive     The holonomic drive to use, which you must ensure is holonomic as strafe commands will be
-     *                  called unlike the differential control task. This task will be auto-attached to this BunyipsSubsystem
-     *                  if possible. A localizer attached is required.
+     * @param drive The holonomic drive to use, which you must ensure is holonomic as strafe commands will be
+     *              called unlike the differential control task. This task will be auto-attached to this BunyipsSubsystem
+     *              if possible. A localizer attached is required.
      */
     public HolonomicVectorDriveTask(@NonNull Supplier<PoseVelocity2d> vel, @NonNull Moveable drive) {
         this(vel, drive, () -> false);
@@ -208,7 +209,7 @@ public class HolonomicVectorDriveTask extends ForeverTask {
      * @param heading the angle to rotate to, will be wrapped from [0, 2pi] radians
      */
     public void setHeadingTarget(@NonNull Measure<Angle> heading) {
-        headingLock = Mathf.normaliseAngle(heading).in(Radians);
+        headingLock = Mathf.wrap(heading).in(Radians);
     }
 
     /**
@@ -277,7 +278,7 @@ public class HolonomicVectorDriveTask extends ForeverTask {
         double twistedYError = -xLockedError * sin + yLockedError * cos;
 
         // Wrap to [-pi, pi] and hard lock at boundary to ensure no oscillations
-        double angle = Mathf.inputModulus(rLockedError, -Math.PI, Math.PI);
+        double angle = Mathf.wrap(rLockedError, -Math.PI, Math.PI);
         if (Mathf.isNear(Math.abs(angle), Math.PI, 0.1))
             angle = -Math.PI * Math.signum(rLockedError);
 

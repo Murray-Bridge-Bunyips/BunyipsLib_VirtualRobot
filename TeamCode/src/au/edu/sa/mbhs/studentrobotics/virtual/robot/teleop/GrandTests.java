@@ -18,6 +18,6 @@ public class GrandTests extends CommandBasedBunyipsOpMode {
     @Override
     protected void assignCommands() {
         robot.drive.setDefaultTask(new HolonomicDriveTask(gamepad1, robot.drive));
-        always().run(() -> t.add(Geometry.toString(robot.drive.getPose())));
+        always().run(() -> t.add(Geometry.toUserString(robot.drive.getPose())));
     }
 }

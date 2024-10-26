@@ -1,5 +1,7 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control;
 
+import android.annotation.SuppressLint;
+
 import androidx.annotation.NonNull;
 
 import java.util.Arrays;
@@ -31,7 +33,7 @@ public class PIDFFController implements PIDF {
      * @param ff      the kV/kA feedforward to use
      * @param encoder the encoder to retrieve velocity/acceleration information from
      */
-    public PIDFFController(@NonNull PIDF pid, @NonNull SystemController ff,  @NonNull Encoder encoder) {
+    public PIDFFController(@NonNull PIDF pid, @NonNull SystemController ff, @SuppressLint("LambdaLast") @NonNull Encoder encoder) {
         this.pid = pid;
         this.ff = ff;
         this.encoder = encoder;

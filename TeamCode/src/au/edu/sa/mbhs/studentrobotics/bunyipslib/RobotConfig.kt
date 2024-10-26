@@ -9,7 +9,6 @@ import com.acmerobotics.roadrunner.ftc.RawEncoder
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
-import com.qualcomm.robotcore.hardware.HardwareDevice
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.IMU
 import com.qualcomm.robotcore.hardware.ImuOrientationOnRobot
@@ -180,9 +179,8 @@ abstract class RobotConfig {
      */
     @JvmOverloads
     protected fun getLazyImu(name: String = "imu", orientationOnRobot: ImuOrientationOnRobot): LazyImu? {
-        if (getHardware(name, IMU::class.java) == null) return null
-        // TODO: virtual robot classpath and stub issues
         return null
+//        if (getHardware(name, IMU::class.java) == null) return null
 //        return LazyImu(hardwareMap, name, orientationOnRobot, 700)
     }
 }

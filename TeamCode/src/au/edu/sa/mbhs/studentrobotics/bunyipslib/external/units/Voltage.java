@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
  *
  * @since 1.0.0-pre
  */
-@SuppressWarnings("UnknownNullness")
 public class Voltage extends Unit<Voltage> {
     /**
      * @noinspection SameParameterValue

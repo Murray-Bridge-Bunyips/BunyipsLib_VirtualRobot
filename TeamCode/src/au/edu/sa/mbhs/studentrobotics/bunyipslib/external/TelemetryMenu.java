@@ -174,13 +174,8 @@ public class TelemetryMenu {
         aPrev = a;
         bPrev = b;
 
-        // Add it to telemetry
-        telemetry.addLine(buildMenu(children));
-    }
-
-    @NonNull
-    private String buildMenu(ArrayList<Element> children) {
         // Start building the text display.
+        //noinspection ExtractMethodRecommender
         StringBuilder builder = new StringBuilder();
         // First, we add the static directions for gamepad operation
         builder.append("<font color='#119af5' face=monospace>");
@@ -226,7 +221,8 @@ public class TelemetryMenu {
         builder.append("</font>");
 
         // Build the string!!!! :nerd:
-        return builder.toString();
+        // and add it to telemetry
+        telemetry.addLine(builder.toString());
     }
 
     /**
@@ -273,8 +269,8 @@ public class TelemetryMenu {
             }
         }
 
-        @NonNull
         @Override
+        @NonNull
         protected String getDisplayText() {
             return name;
         }
@@ -364,8 +360,8 @@ public class TelemetryMenu {
             onRightInput();
         }
 
-        @NonNull
         @Override
+        @NonNull
         protected String getDisplayText() {
             return String.format("%s: <font color='#e37c07' face=monospace>%s</font>", name, e[idx].name());
         }
@@ -424,8 +420,8 @@ public class TelemetryMenu {
             onRightInput();
         }
 
-        @NonNull
         @Override
+        @NonNull
         protected String getDisplayText() {
             return String.format(Locale.getDefault(), "%s: <font color='#e37c07' face=monospace>%d</font>", name, i);
         }
@@ -485,8 +481,8 @@ public class TelemetryMenu {
             val = !val;
         }
 
-        @NonNull
         @Override
+        @NonNull
         protected String getDisplayText() {
             String valStr;
 
@@ -525,8 +521,8 @@ public class TelemetryMenu {
             this.name = name;
         }
 
-        @NonNull
         @Override
+        @NonNull
         protected String getDisplayText() {
             return name.toString();
         }
@@ -535,17 +531,32 @@ public class TelemetryMenu {
     /**
      * A menu item that may be clicked by the user.
      */
-    public abstract static class StaticClickableOption extends OptionElement {
+    public static class StaticClickableOption extends OptionElement {
         private final String name;
+        private Runnable onClick;
 
         protected StaticClickableOption(@NonNull String name) {
             this.name = name;
         }
 
-        protected abstract void onClick();
+        /**
+         * Create a new StaticClickableOption.
+         *
+         * @param name    the name of this option
+         * @param onClick the action to perform when this option is clicked
+         */
+        public StaticClickableOption(@NonNull String name, @NonNull Runnable onClick) {
+            this.name = name;
+            this.onClick = onClick;
+        }
 
-        @NonNull
+        protected void onClick() {
+            if (onClick != null)
+                onClick.run();
+        }
+
         @Override
+        @NonNull
         protected String getDisplayText() {
             return name;
         }
@@ -572,8 +583,8 @@ public class TelemetryMenu {
             this.displayText = displayText;
         }
 
-        @NonNull
         @Override
+        @NonNull
         protected String getDisplayText() {
             return Text.format("%: %", title, displayText.get());
         }
@@ -652,12 +663,12 @@ public class TelemetryMenu {
             active = true;
         }
 
-        @NonNull
         @Override
+        @NonNull
         protected String getDisplayText() {
             if (reset != null && reset.getAsBoolean())
                 active = def;
-            return Text.format("<font color='%'><b>%</b>: %</font>", active ? activeColour : inactiveColour, title, executor.apply(active));
+            return Text.format("<font color='%' face='monospace'><b>%</b>: %</font>", active ? activeColour : inactiveColour, title, executor.apply(active));
         }
     }
 
@@ -667,19 +678,22 @@ public class TelemetryMenu {
     public abstract static class Element {
         private MenuElement parent;
 
-        protected void setParent(MenuElement parent) {
+        protected void setParent(@NonNull MenuElement parent) {
             this.parent = parent;
         }
 
+        @NonNull
         protected MenuElement parent() {
             return parent;
         }
 
+        @NonNull
         protected abstract String getDisplayText();
     }
 
     private static class SpecialUpElement extends Element {
         @Override
+        @NonNull
         protected String getDisplayText() {
             return "<font color='#119af5' face=monospace>.. ↰ Up One Level</font>";
         }

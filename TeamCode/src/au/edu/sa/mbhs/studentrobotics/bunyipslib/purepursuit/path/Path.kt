@@ -1,7 +1,7 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib.purepursuit.path
 
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf.approx
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry.distTo
 import com.acmerobotics.roadrunner.Pose2d
 import com.acmerobotics.roadrunner.Vector2d
 import kotlin.math.max
@@ -105,7 +105,7 @@ class Path(val segments: List<PathSegment>) {
 
             val ds = (queryPoint - pathPoint) dot deriv
 
-            if (Mathf.approximatelyEquals(ds, 0.0)) {
+            if (ds approx 0.0) {
                 return@repeat
             }
 
@@ -137,7 +137,7 @@ class Path(val segments: List<PathSegment>) {
 
         val results = guesses.map { fastProject(queryPoint, it) }
 
-        return results.minByOrNull { Geometry.distBetween(this[it].position, queryPoint) } ?: 0.0
+        return results.minByOrNull { this[it].position distTo queryPoint } ?: 0.0
     }
 
     /**

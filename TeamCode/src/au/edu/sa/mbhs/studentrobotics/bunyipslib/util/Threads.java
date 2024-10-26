@@ -3,6 +3,8 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.util;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Milliseconds;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds;
 
+import android.annotation.SuppressLint;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -265,7 +267,7 @@ public final class Threads {
      * @param task      the task to wait for, must be managed by Threads
      * @param interrupt whether to interrupt the task first then wait
      */
-    public static void waitFor(@NonNull Runnable task,  boolean interrupt) {
+    public static void waitFor(@NonNull Runnable task, @SuppressLint("LambdaLast") boolean interrupt) {
         Thread thread = threads.get(task.hashCode());
         if (thread != null) {
             if (!thread.isAlive()) return;

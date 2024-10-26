@@ -9,6 +9,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Storage
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Threads
 import au.edu.sa.mbhs.studentrobotics.deps.BuildConfig
+//import com.acmerobotics.roadrunner.ftc.throwIfModulesAreOutdated
 import com.qualcomm.hardware.lynx.LynxModule
 import com.qualcomm.robotcore.hardware.Blinker
 import com.qualcomm.robotcore.hardware.DcMotor
@@ -91,7 +92,7 @@ abstract class BunyipsOpMode : BOMInternal() {
             // Warn the user if their target loop speed cannot be achieved
             telemetry.loopSpeedSlowAlert = field
             field = value
-            Dbg.warn("BunyipsOpMode: Loop speed set to % ms", value.`in`(Milliseconds))
+            Dbg.warn("BunyipsOpMode: Loop speed set to % ms", value to Milliseconds)
         }
 
     /**
@@ -247,6 +248,7 @@ abstract class BunyipsOpMode : BOMInternal() {
         try {
             Storage.resetAllStaticFieldsForOpMode()
             Dbg.log("=============== BunyipsLib v${BuildConfig.SEMVER} BunyipsOpMode ${BuildConfig.GIT_COMMIT}-${BuildConfig.BUILD_TIME} uid:${BuildConfig.ID} ===============")
+//            throwIfModulesAreOutdated(hardwareMap)
             if (!Version.getLibraryVersion().equals(BuildConfig.SDK_VER)) {
                 Dbg.warn(
                     "BunyipsOpMode: SDK version mismatch! (SDK: %, BunyipsLib: %)",
@@ -342,7 +344,7 @@ abstract class BunyipsOpMode : BOMInternal() {
                 timer.update()
                 telemetry.update()
                 if (loopSpeed.magnitude() > 0)
-                    sleep(abs((loopSpeed.`in`(Nanoseconds).toLong() - (System.nanoTime() - curr))) / 1_000_000)
+                    sleep(abs(((loopSpeed to Nanoseconds).toLong() - (System.nanoTime() - curr))) / 1_000_000)
             }
 
             telemetry.opModeStatus = "<font color='yellow'>finish_init</font>"
@@ -390,7 +392,7 @@ abstract class BunyipsOpMode : BOMInternal() {
             // Ready to go.
             telemetry.opModeStatus = "<font color='green'>ready</font>"
             timer.update()
-            Dbg.logd("BunyipsOpMode: init cycle completed in ${timer.elapsedTime().`in`(Seconds)} secs")
+            Dbg.logd("BunyipsOpMode: init cycle completed in ${timer.elapsedTime() to Seconds} secs")
             telemetry.addDS("<b>Init <font color='green'>complete</font>. Press play to start.</b>")
             Dbg.logd("BunyipsOpMode: ready.")
 
@@ -457,7 +459,7 @@ abstract class BunyipsOpMode : BOMInternal() {
                 timer.update()
                 telemetry.update()
                 if (loopSpeed.magnitude() > 0)
-                    sleep(abs((loopSpeed.`in`(Nanoseconds).toLong() - (System.nanoTime() - curr))) / 1_000_000)
+                    sleep(abs(((loopSpeed to Nanoseconds).toLong() - (System.nanoTime() - curr))) / 1_000_000)
             }
 
             telemetry.opModeStatus = "<font color='gray'>finished</font>"
@@ -512,7 +514,7 @@ abstract class BunyipsOpMode : BOMInternal() {
             // Telemetry may be not in a nice state, so we will call our stateful functions
             // such as thread stops and cleanup in onStop() first before updating the status
             telemetry.opModeStatus = "<font color='red'>terminating</font>"
-            Dbg.logd("BunyipsOpMode: active cycle completed in ${timer.elapsedTime().`in`(Seconds)} secs")
+            Dbg.logd("BunyipsOpMode: active cycle completed in ${timer.elapsedTime() to Seconds} secs")
             telemetry.update()
             Dbg.logv("BunyipsOpMode: exiting...")
         }

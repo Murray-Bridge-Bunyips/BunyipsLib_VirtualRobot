@@ -3,6 +3,8 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Degrees;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Radians;
 
+import android.annotation.SuppressLint;
+
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.roadrunner.Pose2d;
@@ -49,7 +51,7 @@ public class TurnTask extends Task {
      * @param angle the angle to turn to, if this is a delta angle this will be counter-clockwise
      * @param delta if this angle is a delta from the current drive rotation at runtime
      */
-    public TurnTask(@NonNull Moveable drive, @NonNull Measure<Angle> angle, boolean delta) {
+    public TurnTask(@NonNull Moveable drive, @NonNull Measure<Angle> angle, @SuppressLint("LambdaLast") boolean delta) {
         this(drive::setPower, () -> Objects.requireNonNull(drive.getPose(), "Drive instance requires a localizer attached to determine heading!"), angle, delta);
         if (drive instanceof BunyipsSubsystem)
             onSubsystem((BunyipsSubsystem) drive);
@@ -63,11 +65,11 @@ public class TurnTask extends Task {
      * @param angle        the angle to turn to, if this is a delta angle this will be counter-clockwise
      * @param delta        if this angle is a delta from the current drive rotation at runtime
      */
-    public TurnTask(@NonNull Consumer<PoseVelocity2d> powerIn, @NonNull Supplier<Pose2d> poseEstimate, @NonNull Measure<Angle> angle,  boolean delta) {
+    public TurnTask(@NonNull Consumer<PoseVelocity2d> powerIn, @NonNull Supplier<Pose2d> poseEstimate, @NonNull Measure<Angle> angle, @SuppressLint("LambdaLast") boolean delta) {
         this.powerIn = powerIn;
         this.poseEstimate = poseEstimate;
         setDelta = delta;
-        unmodifiedAngRad = Mathf.angleModulus(angle).in(Radians);
+        unmodifiedAngRad = Mathf.wrapDelta(angle).in(Radians);
         // Sane defaults
         pidf = new PController(3);
         tolerance = Degrees.of(1);
@@ -80,7 +82,7 @@ public class TurnTask extends Task {
      *              if it is a {@link BunyipsSubsystem}
      * @param angle the angle to turn to in a global coordinate frame
      */
-    public TurnTask(@NonNull Moveable drive,  @NonNull Measure<Angle> angle) {
+    public TurnTask(@NonNull Moveable drive, @SuppressLint("LambdaLast") @NonNull Measure<Angle> angle) {
         this(drive, angle, false);
     }
 
@@ -91,7 +93,7 @@ public class TurnTask extends Task {
      * @param poseEstimate the supplier to get the current pose of the robot, can ignore the x and y values if not needed
      * @param angle        the angle to turn to in a global coordinate frame
      */
-    public TurnTask(@NonNull Consumer<PoseVelocity2d> powerIn, @NonNull Supplier<Pose2d> poseEstimate,  @NonNull Measure<Angle> angle) {
+    public TurnTask(@NonNull Consumer<PoseVelocity2d> powerIn, @NonNull Supplier<Pose2d> poseEstimate, @SuppressLint("LambdaLast") @NonNull Measure<Angle> angle) {
         this(powerIn, poseEstimate, angle, false);
     }
 
@@ -126,21 +128,21 @@ public class TurnTask extends Task {
     @Override
     protected void init() {
         angRad = setDelta
-                ? Mathf.inputModulus(poseEstimate.get().heading.toDouble() + unmodifiedAngRad, -Math.PI, Math.PI)
+                ? Mathf.wrap(poseEstimate.get().heading.toDouble() + unmodifiedAngRad, -Math.PI, Math.PI)
                 : unmodifiedAngRad;
     }
 
     @Override
     protected void periodic() {
         Pose2d pose = poseEstimate.get();
-        double errRad = Mathf.inputModulus(pose.heading.toDouble(), -Math.PI, Math.PI) - angRad;
-        powerIn.accept(Geometry.vel(0, 0, pidf.calculate(Mathf.inputModulus(errRad, -Math.PI, Math.PI), 0)));
+        double errRad = Mathf.wrap(pose.heading.toDouble(), -Math.PI, Math.PI) - angRad;
+        powerIn.accept(Geometry.vel(0, 0, pidf.calculate(Mathf.wrap(errRad, -Math.PI, Math.PI), 0)));
         fieldOverlay.setStroke("#4CAF50");
         Dashboard.drawRobot(fieldOverlay, new Pose2d(pose.position, angRad));
     }
 
     @Override
     protected boolean isTaskFinished() {
-        return Mathf.isNear(Mathf.inputModulus(poseEstimate.get().heading.toDouble(), -Math.PI, Math.PI), angRad, tolerance.in(Radians));
+        return Mathf.isNear(Mathf.wrap(poseEstimate.get().heading.toDouble(), -Math.PI, Math.PI), angRad, tolerance.in(Radians));
     }
 }

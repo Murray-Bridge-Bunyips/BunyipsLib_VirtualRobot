@@ -1,5 +1,7 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib;
 
+import android.annotation.SuppressLint;
+
 import androidx.annotation.NonNull;
 
 import java.util.Arrays;
@@ -44,7 +46,7 @@ public abstract class CommandBasedBunyipsOpMode extends BunyipsOpMode {
      * @return The controller button trigger creator.
      */
     @NonNull
-    
+    @SuppressLint("NoHardKeywords")
     public Scheduler.ControllerTriggerCreator when(@NonNull Controller user) {
         return scheduler.when(user);
     }
@@ -92,7 +94,7 @@ public abstract class CommandBasedBunyipsOpMode extends BunyipsOpMode {
      * @return Task scheduling builder
      */
     @NonNull
-    
+    @SuppressLint("NoHardKeywords")
     public Scheduler.ScheduledTask when(@NonNull BooleanSupplier condition) {
         return scheduler.when(condition);
     }

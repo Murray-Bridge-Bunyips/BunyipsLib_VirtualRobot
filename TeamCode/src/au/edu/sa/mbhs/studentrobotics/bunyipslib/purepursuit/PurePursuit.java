@@ -6,8 +6,9 @@ import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Rad
 
 import androidx.annotation.NonNull;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.canvas.Canvas;
-import com.acmerobotics.dashboard.config.Config;
+//import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
@@ -54,7 +55,6 @@ import kotlin.UninitializedPropertyAccessException;
  * @author Lucas Bubner, 2024
  * @since 5.1.0
  */
-@Config
 public class PurePursuit implements Runnable {
     /**
      * Inches of how far apart guesses are made along the path for projecting the current robot pose on the path.
@@ -106,6 +106,9 @@ public class PurePursuit implements Runnable {
             opMode.onActiveLoop(this);
             Dbg.logd(getClass(), "Update executor has been auto-attached to BunyipsOpMode.");
         });
+
+//        FtcDashboard.getInstance().withConfigRoot(c ->
+//                c.putVariable(getClass().getSimpleName(), ReflectionConfig.createVariableFromClass(getClass())));
     }
 
     /**
@@ -257,7 +260,7 @@ public class PurePursuit implements Runnable {
         lookahead = currentPath.get(pathProjection + laRadius.in(Inches));
 
         // Swap to P2P at the end of the path
-        boolean isCloseToEnd = Geometry.distBetween(
+        boolean isCloseToEnd = Geometry.distTo(
                 currentPath.get(pathProjection).position,
                 currentPath.end().position
         ) < P2P_AT_END_INCHES;
@@ -270,7 +273,7 @@ public class PurePursuit implements Runnable {
 
         // Wrap angle between -180 to 180 degrees, heading is calculated by projecting the current
         // pose onto the path to get the best target that the path is desiring near this point
-        double headingError = Mathf.inputModulus(lookahead.heading.toDouble() - currentPose.heading.toDouble(), -Math.PI, Math.PI);
+        double headingError = Mathf.wrap(lookahead.heading.toDouble() - currentPose.heading.toDouble(), -Math.PI, Math.PI);
         if (Mathf.isNear(Math.abs(headingError), Math.PI, 0.1))
             headingError = Math.PI;
 
@@ -320,10 +323,10 @@ public class PurePursuit implements Runnable {
         // to the end position. This is a simple check that is not perfect but is good enough for most cases, as
         // paths that go to the same point should probably be split into separate paths.
         // Note: intersecting paths don't work very nicely
-        if (Geometry.distBetween(currentPose.position, currentPath.end().position) < tolerance.in(Inches) &&
+        if (Geometry.distTo(currentPose.position, currentPath.end().position) < tolerance.in(Inches) &&
                 Mathf.isNear(
-                        Mathf.inputModulus(currentPose.heading.toDouble(), -Math.PI, Math.PI),
-                        Mathf.inputModulus(currentPath.end().heading.toDouble(), -Math.PI, Math.PI),
+                        Mathf.wrap(currentPose.heading.toDouble(), -Math.PI, Math.PI),
+                        Mathf.wrap(currentPath.end().heading.toDouble(), -Math.PI, Math.PI),
                         angleTolerance.in(Radians)
                 )) {
             // Stop motors and release path
@@ -400,7 +403,7 @@ public class PurePursuit implements Runnable {
          */
         @NonNull
         public PathMaker reversed() {
-            startTangent = () -> Mathf.normaliseAngle(Radians.of(startPose.get().heading.toDouble() + Math.PI));
+            startTangent = () -> Mathf.wrap(Radians.of(startPose.get().heading.toDouble() + Math.PI));
             return this;
         }
 
@@ -413,7 +416,7 @@ public class PurePursuit implements Runnable {
          */
         @NonNull
         public PathMaker withStartTangent(double tangent, @NonNull Angle unit) {
-            startTangent = () -> Mathf.normaliseAngle(unit.of(tangent));
+            startTangent = () -> Mathf.wrap(unit.of(tangent));
             return this;
         }
 

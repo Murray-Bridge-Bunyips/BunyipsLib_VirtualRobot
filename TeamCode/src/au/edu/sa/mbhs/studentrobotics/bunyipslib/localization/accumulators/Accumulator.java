@@ -2,8 +2,9 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.accumulators;
 
 import androidx.annotation.NonNull;
 
+//import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.canvas.Canvas;
-import com.acmerobotics.dashboard.config.Config;
+//import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Time;
@@ -15,7 +16,7 @@ import java.util.LinkedList;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.Localizable;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.Localizer;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.PoseMessage;
+//import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.PoseMessage;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dashboard;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Storage;
@@ -26,7 +27,6 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Storage;
  * @author Lucas Bubner, 2024
  * @since 6.0.0
  */
-@Config
 public class Accumulator implements Localizable {
     /**
      * The maximum pose history length that should be stored in an accumulator.
@@ -34,7 +34,9 @@ public class Accumulator implements Localizable {
     public static int MAX_POSE_HISTORY = 100;
 
 //    private final DownsampledWriter estimatedPoseWriter = new DownsampledWriter("ESTIMATED_POSE", 50_000_000);
+    @NonNull
     protected Pose2d pose;
+    @NonNull
     protected PoseVelocity2d velocity = Geometry.zeroVel();
     private LinkedList<Pose2d> poseHistory = new LinkedList<>();
 
@@ -43,9 +45,11 @@ public class Accumulator implements Localizable {
      *
      * @param initialPose the initial pose to accumulate from
      */
-    public Accumulator(Pose2d initialPose) {
+    public Accumulator(@NonNull Pose2d initialPose) {
         pose = initialPose;
         Storage.memory().lastKnownPosition = initialPose;
+//        FtcDashboard.getInstance().withConfigRoot(c ->
+//                c.putVariable(getClass().getSimpleName(), ReflectionConfig.createVariableFromClass(getClass())));
     }
 
     /**
@@ -53,7 +57,7 @@ public class Accumulator implements Localizable {
      * Useful for constructing an accumulator that will be overridden by replacing an Accumulator.
      */
     public Accumulator() {
-        pose = Storage.memory().lastKnownPosition;
+        this(Storage.memory().lastKnownPosition);
     }
 
     /**
@@ -62,7 +66,7 @@ public class Accumulator implements Localizable {
      *
      * @param twist the change in position and velocity with respect to time
      */
-    public void accumulate(Twist2dDual<Time> twist) {
+    public void accumulate(@NonNull Twist2dDual<Time> twist) {
         pose = pose.plus(twist.value());
         velocity = twist.velocity().value();
         Storage.memory().lastKnownPosition = pose;
@@ -105,7 +109,7 @@ public class Accumulator implements Localizable {
      *
      * @param other the other accumulator to copy to
      */
-    public final void copyTo(Accumulator other) {
+    public final void copyTo(@NonNull Accumulator other) {
         other.pose = pose;
         other.velocity = velocity;
         other.poseHistory = poseHistory;
@@ -114,6 +118,7 @@ public class Accumulator implements Localizable {
     /**
      * @return a clone of the pose history as accumulated by this accumulator
      */
+    @NonNull
     @SuppressWarnings("unchecked")
     public final LinkedList<Pose2d> getPoseHistory() {
         return (LinkedList<Pose2d>) poseHistory.clone();

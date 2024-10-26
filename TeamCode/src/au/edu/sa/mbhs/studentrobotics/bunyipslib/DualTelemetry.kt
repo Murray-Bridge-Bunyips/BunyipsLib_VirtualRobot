@@ -1,6 +1,6 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib
 
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf.round
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Measure
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Time
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Milliseconds
@@ -10,7 +10,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Text
 import com.acmerobotics.dashboard.FtcDashboard
 import com.acmerobotics.dashboard.canvas.Canvas
-import com.acmerobotics.dashboard.config.Config
+//import com.acmerobotics.dashboard.config.reflection.ReflectionConfig
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
@@ -30,7 +30,6 @@ import kotlin.math.roundToInt
  * @author Lucas Bubner, 2024
  * @since 1.0.0-pre
  */
-@Config
 class DualTelemetry @JvmOverloads constructor(
     private val opMode: OpMode,
     private val movingAverageTimer: MovingAverageTimer? = null,
@@ -125,6 +124,12 @@ class DualTelemetry @JvmOverloads constructor(
             }
             opMode.telemetry.log().add(infoString)
         }
+//        FtcDashboard.getInstance().withConfigRoot { c ->
+//            c.putVariable(
+//                javaClass.simpleName,
+//                ReflectionConfig.createVariableFromClass(javaClass)
+//            )
+//        }
     }
 
     /**
@@ -273,7 +278,7 @@ class DualTelemetry @JvmOverloads constructor(
         var prepend = ""
         if (movingAverageTimer != null)
             prepend = "<small><font color='$logBracketColor'>[</font>T+${
-                Math.round(movingAverageTimer.elapsedTime().`in`(Seconds))
+                Math.round(movingAverageTimer.elapsedTime() to Seconds)
             }s<font color='$logBracketColor'>]</font></small> "
         opMode.telemetry.log().add(prepend + msg)
         synchronized(dashboardItems) {
@@ -330,13 +335,13 @@ class DualTelemetry @JvmOverloads constructor(
 
         // Requeue new overhead status message
         val loopTime = movingAverageTimer?.let {
-            Mathf.round(it.movingAverageLoopTime().`in`(Milliseconds), 2)
+            it.movingAverageLoopTime() to Milliseconds round 2
         } ?: 0.0
         val loopsSec = movingAverageTimer?.let {
             val loopsPerSec = it.loopsPer(Second)
-            if (!loopsPerSec.isNaN()) Mathf.round(loopsPerSec, 1) else 0.0
+            if (!loopsPerSec.isNaN()) loopsPerSec round 1 else 0.0
         } ?: 0.0
-        val elapsedTime = movingAverageTimer?.elapsedTime()?.`in`(Seconds)?.roundToInt()?.toString() ?: "?"
+        val elapsedTime = movingAverageTimer?.elapsedTime()?.to(Seconds)?.roundToInt()?.toString() ?: "?"
         val status = if (overrideStatus != null) overrideStatus.toString() else opModeStatus
         val overheadStatus = StringBuilder()
         overheadStatus.append(status).append("\n")
@@ -352,7 +357,7 @@ class DualTelemetry @JvmOverloads constructor(
         } else {
             // For LinearOpModes we can suppress any alerts during init as this is the heavy phase of the OpMode
             val noSuppression = opMode !is LinearOpMode || !opMode.opModeInInit()
-            if (noSuppression && loopTime >= loopSpeedSlowAlert.`in`(Milliseconds)) {
+            if (noSuppression && loopTime >= loopSpeedSlowAlert to Milliseconds) {
                 overheadStatus.append("<font color='yellow'>").append(loopTime).append("ms</font>")
             } else {
                 overheadStatus.append(loopTime).append("ms")

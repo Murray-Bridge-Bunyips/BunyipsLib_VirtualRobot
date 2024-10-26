@@ -1,5 +1,7 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks;
 
+import android.annotation.SuppressLint;
+
 import androidx.annotation.NonNull;
 
 import java.util.HashMap;
@@ -39,7 +41,7 @@ public class SelectTask<T> extends Task {
      * @return this task
      */
     @NonNull
-    
+    @SuppressLint("NoHardKeywords")
     public SelectTask<T> when(T state, @NonNull Task task) {
         tasks.put(state, task);
         return this;

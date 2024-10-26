@@ -3,9 +3,12 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Inches;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Meters;
 
+import android.annotation.SuppressLint;
+
 import androidx.annotation.NonNull;
 
-import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.FtcDashboard;
+//import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -35,7 +38,6 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.vision.processors.AprilTag;
  * @author Lucas Bubner, 2024
  * @since 1.0.0-pre
  */
-@Config
 public class MoveToAprilTagTask extends Task {
     /**
      * The desired distance from the tag.
@@ -91,7 +93,7 @@ public class MoveToAprilTagTask extends Task {
      * @param aprilTag  the AprilTag processor to use
      * @param targetTag the tag to target. -1 for any tag
      */
-    public MoveToAprilTagTask(@NonNull Measure<Time> timeout, @NonNull Moveable drive, @NonNull AprilTag aprilTag, int targetTag) {
+    public MoveToAprilTagTask(@NonNull Measure<Time> timeout, @NonNull Moveable drive, @NonNull AprilTag aprilTag, @SuppressLint("LambdaLast") int targetTag) {
         super(timeout);
         if (drive instanceof BunyipsSubsystem)
             onSubsystem((BunyipsSubsystem) drive, false);
@@ -99,17 +101,19 @@ public class MoveToAprilTagTask extends Task {
         this.aprilTag = aprilTag;
         TARGET_TAG = targetTag;
         withName("Move to AprilTag");
+//        FtcDashboard.getInstance().withConfigRoot(c ->
+//                c.putVariable(getClass().getSimpleName(), ReflectionConfig.createVariableFromClass(getClass())));
     }
 
     /**
      * TeleOp constructor with default values.
      *
      * @param passthrough the pose velocity passthrough for the drivetrain
-     * @param drive     the drivetrain to use, which may be a BunyipsSubsystem that will auto-attach
-     * @param aprilTag  the AprilTag processor to use
-     * @param targetTag the tag to target. -1 for any tag
+     * @param drive       the drivetrain to use, which may be a BunyipsSubsystem that will auto-attach
+     * @param aprilTag    the AprilTag processor to use
+     * @param targetTag   the tag to target. -1 for any tag
      */
-    public MoveToAprilTagTask(@NonNull Supplier<PoseVelocity2d> passthrough, @NonNull Moveable drive, @NonNull AprilTag aprilTag, int targetTag) {
+    public MoveToAprilTagTask(@NonNull Supplier<PoseVelocity2d> passthrough, @NonNull Moveable drive, @NonNull AprilTag aprilTag, @SuppressLint("LambdaLast") int targetTag) {
         if (drive instanceof BunyipsSubsystem)
             onSubsystem((BunyipsSubsystem) drive, false);
         this.drive = drive;
@@ -117,6 +121,8 @@ public class MoveToAprilTagTask extends Task {
         this.passthrough = passthrough;
         TARGET_TAG = targetTag;
         withName("Move to AprilTag");
+//        FtcDashboard.getInstance().withConfigRoot(c ->
+//                c.putVariable(getClass().getSimpleName(), ReflectionConfig.createVariableFromClass(getClass())));
     }
 
     /**
@@ -127,7 +133,7 @@ public class MoveToAprilTagTask extends Task {
      * @param aprilTag  the AprilTag processor to use
      * @param targetTag the tag to target. -1 for any tag
      */
-    public MoveToAprilTagTask(@NonNull Gamepad gamepad, @NonNull Moveable drive, @NonNull AprilTag aprilTag, int targetTag) {
+    public MoveToAprilTagTask(@NonNull Gamepad gamepad, @NonNull Moveable drive, @NonNull AprilTag aprilTag, @SuppressLint("LambdaLast") int targetTag) {
         this(() -> Controls.vel(gamepad.left_stick_x, gamepad.left_stick_y, gamepad.right_stick_x), drive, aprilTag, targetTag);
     }
 

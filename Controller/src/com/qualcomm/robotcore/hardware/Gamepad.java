@@ -53,8 +53,6 @@ import virtual_robot.controller.VirtualGamePadController;
  */
 public class Gamepad {
 
-    public GamepadUser getUser() { return GamepadUser.ONE; }
-
     //for ps4
     public volatile boolean circle = false;
     public volatile boolean cross = false;
@@ -570,6 +568,9 @@ public class Gamepad {
 
     public int id = 0;
     public int user;
+    public GamepadUser getUser() {
+        return GamepadUser.ONE;
+    }
     public Type type;
 
     public ByteBuffer getReadBuffer(Object a) {

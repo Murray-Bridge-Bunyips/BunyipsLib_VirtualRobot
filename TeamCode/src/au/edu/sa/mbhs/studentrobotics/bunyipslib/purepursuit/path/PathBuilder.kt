@@ -1,11 +1,14 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib.purepursuit.path
 
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf.wrapDeltaRadians
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf.wrapRadians
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.purepursuit.path.interpolator.ConstantInterpolator
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.purepursuit.path.interpolator.LinearInterpolator
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.purepursuit.path.interpolator.SplineInterpolator
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.purepursuit.path.interpolator.TangentInterpolator
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry.approx
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry.approxNormHeading
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry.distTo
 import com.acmerobotics.roadrunner.Pose2d
 import com.acmerobotics.roadrunner.Vector2d
 import kotlin.math.PI
@@ -34,7 +37,7 @@ class PathBuilder private constructor(
             this(startPose, startTangent, null, null)
 
     constructor(startPose: Pose2d, reversed: Boolean) :
-            this(startPose, Mathf.normaliseRadians(startPose.heading.toDouble() + if (reversed) PI else 0.0))
+            this(startPose, (startPose.heading.toDouble() + if (reversed) PI else 0.0).wrapRadians())
 
     constructor(path: Path, s: Double) : this(null, null, path, s)
 
@@ -50,7 +53,7 @@ class PathBuilder private constructor(
             currentPose!!
         }
 
-        if (Geometry.epsilonEquals(start.position, end)) {
+        if (start.position approx end) {
             throw RuntimeException("Empty path!")
         }
 
@@ -64,11 +67,11 @@ class PathBuilder private constructor(
             currentPose!!
         }
 
-        if (Geometry.epsilonEquals(startPose.position, endPosition)) {
+        if (startPose.position approx endPosition) {
             throw RuntimeException("Empty path!")
         }
 
-        val derivMag = Geometry.distBetween(startPose.position, endPosition)
+        val derivMag = startPose.position distTo endPosition
         val (startWaypoint, endWaypoint) = if (currentPose == null) {
             val startDeriv = path!!.internalDeriv(s!!).position
             val startSecondDeriv = path.internalSecondDeriv(s).position
@@ -107,7 +110,7 @@ class PathBuilder private constructor(
     private fun makeLinearInterpolator(endHeading: Double): LinearInterpolator {
         val startHeading = currentPose?.heading ?: throw RuntimeException("Continuity violation!")
 
-        return LinearInterpolator(startHeading.toDouble(), Mathf.radianModulus(endHeading - startHeading.toDouble()))
+        return LinearInterpolator(startHeading.toDouble(), (endHeading - startHeading.toDouble()).wrapDeltaRadians())
     }
 
     private fun makeSplineInterpolator(endHeading: Double): SplineInterpolator {
@@ -128,19 +131,16 @@ class PathBuilder private constructor(
     private fun addSegment(segment: PathSegment): PathBuilder {
         if (segments.isNotEmpty()) {
             val lastSegment = segments.last()
-            if (!(Geometry.epsilonEqualsHeading(lastSegment.end(), segment.start()) &&
-                        Geometry.epsilonEquals(lastSegment.endDeriv(), segment.startDeriv()) &&
-                        Geometry.epsilonEquals(
-                            lastSegment.endSecondDeriv().position,
-                            segment.startSecondDeriv().position
-                        ))
+            if (!(lastSegment.end() approxNormHeading segment.start() &&
+                        lastSegment.endDeriv() approx segment.startDeriv() &&
+                        lastSegment.endSecondDeriv().position approx segment.startSecondDeriv().position)
             ) {
                 throw RuntimeException("Continuity violation!")
             }
         } else if (currentPose == null) {
-            if (!(Geometry.epsilonEqualsHeading(path!![s!!], segment.start()) &&
-                        Geometry.epsilonEquals(path.deriv(s), segment.startDeriv()) &&
-                        Geometry.epsilonEquals(path.secondDeriv(s).position, segment.startSecondDeriv().position))
+            if (!(path!![s!!] approxNormHeading segment.start() &&
+                        path.deriv(s) approx segment.startDeriv() &&
+                        path.secondDeriv(s).position approx segment.startSecondDeriv().position)
             ) {
                 throw RuntimeException("Continuity violation!")
             }

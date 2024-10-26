@@ -2,7 +2,8 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks;
 
 import androidx.annotation.NonNull;
 
-import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.FtcDashboard;
+//import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -31,7 +32,6 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.vision.processors.AprilTag;
  * @author Lucas Bubner, 2024
  * @since 1.0.0-pre
  */
-@Config
 public class AlignToAprilTagTask extends Task {
     /**
      * PIDF coefficients for the alignment controller.
@@ -42,11 +42,10 @@ public class AlignToAprilTagTask extends Task {
      * The target tag to align to. -1 for any tag.
      */
     public static int TARGET_TAG = -1;
-
-    private Supplier<PoseVelocity2d> passthrough;
     private final Moveable drive;
     private final AprilTag at;
     private final PIDF controller;
+    private Supplier<PoseVelocity2d> passthrough;
     private boolean hasCalculated;
 
     /**
@@ -68,6 +67,8 @@ public class AlignToAprilTagTask extends Task {
         this.controller = controller;
         controller.getPIDFController().setPIDF(coeffs);
         withName("Align To AprilTag");
+//        FtcDashboard.getInstance().withConfigRoot(c ->
+//                c.putVariable(getClass().getSimpleName(), ReflectionConfig.createVariableFromClass(getClass())));
     }
 
     /**
@@ -90,6 +91,8 @@ public class AlignToAprilTagTask extends Task {
         this.controller = controller;
         controller.getPIDFController().updatePIDF(coeffs);
         withName("Align To AprilTag");
+//        FtcDashboard.getInstance().withConfigRoot(c ->
+//                c.putVariable(getClass().getSimpleName(), ReflectionConfig.createVariableFromClass(getClass())));
     }
 
     /**

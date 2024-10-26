@@ -5,6 +5,8 @@ import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Deg
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Inches;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Radians;
 
+import android.annotation.SuppressLint;
+
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.roadrunner.Pose2d;
@@ -60,7 +62,7 @@ public class DriveToPoseTask extends Task {
      * @param headingController The system/PID controller for heading.
      */
     public DriveToPoseTask(@NonNull Measure<Time> timeout, @NonNull Moveable driveInstance,
-                           @NonNull Pose2d targetPose, @NonNull SystemController forwardController, @NonNull SystemController strafeController,  @NonNull SystemController headingController) {
+                           @NonNull Pose2d targetPose, @NonNull SystemController forwardController, @NonNull SystemController strafeController, @SuppressLint("LambdaLast") @NonNull SystemController headingController) {
         super(timeout);
         if (driveInstance instanceof BunyipsSubsystem)
             onSubsystem((BunyipsSubsystem) driveInstance, true);
@@ -129,7 +131,7 @@ public class DriveToPoseTask extends Task {
     }
 
     public boolean isVectorNear() {
-        return Mathf.isNear(0, Geometry.distBetween(localizer.get().position, targetPose.position), vectorTolerance.in(Inches));
+        return Mathf.isNear(0, Geometry.distTo(localizer.get().position, targetPose.position), vectorTolerance.in(Inches));
     }
 
     public boolean isHeadingNear() {
@@ -151,7 +153,7 @@ public class DriveToPoseTask extends Task {
         double twistedYError = -error.line.x * sin + error.line.y * cos;
 
         // Wrap target angle between -pi and pi for optimal turns
-        double angleError = Mathf.inputModulus(error.angle, -Math.PI, Math.PI);
+        double angleError = Mathf.wrap(error.angle, -Math.PI, Math.PI);
         // When the angle is near the modulus boundary, lock towards a definitive full rotation to avoid oscillations
         if (Mathf.isNear(Math.abs(angleError), Math.PI, 0.1))
             angleError = -Math.PI * Math.signum(error.angle);
@@ -162,9 +164,9 @@ public class DriveToPoseTask extends Task {
         double headingPower = -headingController.calculate(angleError, 0);
 
         drive.setPower(Geometry.vel(
-                        Mathf.clamp(forwardPower, -MAX_FORWARD_SPEED, MAX_FORWARD_SPEED),
-                        Mathf.clamp(strafePower, -MAX_STRAFE_SPEED, MAX_STRAFE_SPEED),
-                        Mathf.clamp(headingPower, -MAX_ROTATION_SPEED, MAX_ROTATION_SPEED)
+                Mathf.clamp(forwardPower, -MAX_FORWARD_SPEED, MAX_FORWARD_SPEED),
+                Mathf.clamp(strafePower, -MAX_STRAFE_SPEED, MAX_STRAFE_SPEED),
+                Mathf.clamp(headingPower, -MAX_ROTATION_SPEED, MAX_ROTATION_SPEED)
         ));
 
         fieldOverlay.setStroke("#c91c00")
