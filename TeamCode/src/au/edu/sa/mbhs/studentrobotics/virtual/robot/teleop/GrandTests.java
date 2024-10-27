@@ -29,20 +29,20 @@ public class GrandTests extends CommandBasedBunyipsOpMode {
         PDController headingController = new PDController(1, 0.001);
         driver().whenPressed(Controls.A).run(
                 new SequentialTaskGroup(
-                        new DriveToPoseTask(Task.INFINITE_TIMEOUT, robot.drive, new Pose2d(20, 20, Math.PI / 2), forwardController, strafeController, headingController),
-                        new DriveToPoseTask(Task.INFINITE_TIMEOUT, robot.drive, new Pose2d(0, 0, 3 * Math.PI / 2), forwardController, strafeController, headingController),
-                        new DriveToPoseTask(Task.INFINITE_TIMEOUT, robot.drive, new Pose2d(20, -20, 0), forwardController, strafeController, headingController),
-                        new DriveToPoseTask(Task.INFINITE_TIMEOUT, robot.drive, new Pose2d(0, 0, 0), forwardController, strafeController, headingController),
-                        new DriveToPoseTask(Task.INFINITE_TIMEOUT, robot.drive, new Pose2d(-10, -10, 0), forwardController, strafeController, headingController),
-                        new DriveToPoseTask(Task.INFINITE_TIMEOUT, robot.drive, new Pose2d(0, 0, 0), forwardController, strafeController, headingController),
-                        new DriveToPoseTask(Task.INFINITE_TIMEOUT, robot.drive, new Pose2d(-10, 10, 0), forwardController, strafeController, headingController),
-                        new DriveToPoseTask(Task.INFINITE_TIMEOUT, robot.drive, new Pose2d(0, 0, 0), forwardController, strafeController, headingController),
-                        new DriveToPoseTask(Task.INFINITE_TIMEOUT, robot.drive, new Pose2d(-10, 0, 0), forwardController, strafeController, headingController),
-                        new DriveToPoseTask(Task.INFINITE_TIMEOUT, robot.drive, new Pose2d(0, 10, 0), forwardController, strafeController, headingController),
-                        new DriveToPoseTask(Task.INFINITE_TIMEOUT, robot.drive, new Pose2d(0, 0, 0), forwardController, strafeController, headingController),
-                        new DriveToPoseTask(Task.INFINITE_TIMEOUT, robot.drive, new Pose2d(0, 0, 3 * Math.PI / 2), forwardController, strafeController, headingController),
-                        new DriveToPoseTask(Task.INFINITE_TIMEOUT, robot.drive, new Pose2d(20, 20, Math.PI / 2), forwardController, strafeController, headingController),
-                        new DriveToPoseTask(Task.INFINITE_TIMEOUT, robot.drive, new Pose2d(0, 0, 0), forwardController, strafeController, headingController)
+                        new DriveToPoseTask(new Pose2d(20, 20, Math.PI / 2), robot.drive, forwardController, strafeController, headingController),
+                        new DriveToPoseTask(new Pose2d(0, 0, 3 * Math.PI / 2), robot.drive, forwardController, strafeController, headingController),
+                        new DriveToPoseTask(new Pose2d(20, -20, 0), robot.drive, forwardController, strafeController, headingController),
+                        new DriveToPoseTask(new Pose2d(0, 0, 0), robot.drive, forwardController, strafeController, headingController),
+                        new DriveToPoseTask(new Pose2d(-10, -10, 0), robot.drive, forwardController, strafeController, headingController),
+                        new DriveToPoseTask(new Pose2d(0, 0, 0), robot.drive, forwardController, strafeController, headingController),
+                        new DriveToPoseTask(new Pose2d(-10, 10, 0), robot.drive, forwardController, strafeController, headingController),
+                        new DriveToPoseTask(new Pose2d(0, 0, 0), robot.drive, forwardController, strafeController, headingController),
+                        new DriveToPoseTask(new Pose2d(-10, 0, 0), robot.drive, forwardController, strafeController, headingController),
+                        new DriveToPoseTask(new Pose2d(0, 10, 0), robot.drive, forwardController, strafeController, headingController),
+                        new DriveToPoseTask(new Pose2d(0, 0, 0), robot.drive, forwardController, strafeController, headingController),
+                        new DriveToPoseTask(new Pose2d(0, 0, 3 * Math.PI / 2), robot.drive, forwardController, strafeController, headingController),
+                        new DriveToPoseTask(new Pose2d(20, 20, Math.PI / 2), robot.drive, forwardController, strafeController, headingController),
+                        new DriveToPoseTask(new Pose2d(0, 0, 0), robot.drive, forwardController, strafeController, headingController)
                 ).repeatedly());
     }
 }
