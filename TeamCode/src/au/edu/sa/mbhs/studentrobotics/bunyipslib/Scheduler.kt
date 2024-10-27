@@ -497,7 +497,7 @@ class Scheduler : BunyipsComponent() {
                 throw EmergencyStop("A run(Task) method has been called more than once on a scheduler task. If you wish to run multiple tasks see about using a task group as your task.")
             }
             taskToRun = task
-            if (isTaskMuted) taskToRun.withMutedReports()
+            if (isTaskMuted) taskToRun.muteReports()
             return this
         }
 
@@ -560,7 +560,7 @@ class Scheduler : BunyipsComponent() {
          * @return Current builder for additional task parameters
          */
         fun muted(): ScheduledTask {
-            taskToRun.withMutedReports()
+            taskToRun.muteReports()
             isTaskMuted = true
             return this
         }

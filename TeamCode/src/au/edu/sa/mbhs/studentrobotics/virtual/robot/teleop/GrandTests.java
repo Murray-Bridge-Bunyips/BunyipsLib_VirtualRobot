@@ -1,45 +1,31 @@
 package au.edu.sa.mbhs.studentrobotics.virtual.robot.teleop;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.CommandBasedBunyipsOpMode;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PController;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PDController;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.DriveToPoseTask;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.TrapezoidProfile;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.ProfiledServo;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.*;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.groups.SequentialTaskGroup;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls;
 import au.edu.sa.mbhs.studentrobotics.virtual.robot.Robot;
-import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp
 public class GrandTests extends CommandBasedBunyipsOpMode {
     private final Robot robot = new Robot();
+    private ProfiledServo servo;
 
     @Override
     protected void onInitialise() {
         robot.init();
+        servo = new ProfiledServo(robot.hw.back_servo);
+        servo.setConstraints(new TrapezoidProfile.Constraints(1, 0.5));
     }
 
     @Override
     protected void assignCommands() {
-//        robot.drive.setDefaultTask(new HolonomicDriveTask(gamepad1, robot.drive));
-//        always().run(() -> t.add(Geometry.toUserString(robot.drive.getPose())));
-        driver().whenPressed(Controls.A).run(
-                new SequentialTaskGroup(
-                        new DriveToPoseTask(new Pose2d(20, 20, Math.PI / 2), robot.drive),
-                        new DriveToPoseTask(new Pose2d(0, 0, 3 * Math.PI / 2), robot.drive),
-                        new DriveToPoseTask(new Pose2d(20, -20, 0), robot.drive),
-                        new DriveToPoseTask(new Pose2d(0, 0, 0), robot.drive),
-                        new DriveToPoseTask(new Pose2d(-10, -10, 0), robot.drive),
-                        new DriveToPoseTask(new Pose2d(0, 0, 0), robot.drive),
-                        new DriveToPoseTask(new Pose2d(-10, 10, 0), robot.drive),
-                        new DriveToPoseTask(new Pose2d(0, 0, 0), robot.drive),
-                        new DriveToPoseTask(new Pose2d(-10, 0, 0), robot.drive),
-                        new DriveToPoseTask(new Pose2d(0, 10, 0), robot.drive),
-                        new DriveToPoseTask(new Pose2d(0, 0, 0), robot.drive),
-                        new DriveToPoseTask(new Pose2d(0, 0, 3 * Math.PI / 2), robot.drive),
-                        new DriveToPoseTask(new Pose2d(20, 20, Math.PI / 2), robot.drive),
-                        new DriveToPoseTask(new Pose2d(0, 0, 0), robot.drive)
-                ).repeatedly());
+        robot.drive.setDefaultTask(new HolonomicDriveTask(gamepad1, robot.drive));
+        always().run(new SequentialTaskGroup(
+                new ContinuousTask(() -> servo.setPosition(1)).until(() -> servo.getPosition() == 1),
+                new ContinuousTask(() -> servo.setPosition(0)).until(() -> servo.getPosition() == 0)
+        ).repeatedly().withName("Servo Oscillation"));
     }
 }

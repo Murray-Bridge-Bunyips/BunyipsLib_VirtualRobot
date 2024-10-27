@@ -87,7 +87,6 @@ public abstract class TaskGroup extends Task {
         });
         // Otherwise we can just run the task outright
         if (!task.hasDependency()) {
-            Scheduler.addTaskReport(toString(), false, task.toString(), Mathf.round(task.getDeltaTime().in(Seconds), 1), task.getTimeout().in(Seconds));
             task.run();
         }
     }
