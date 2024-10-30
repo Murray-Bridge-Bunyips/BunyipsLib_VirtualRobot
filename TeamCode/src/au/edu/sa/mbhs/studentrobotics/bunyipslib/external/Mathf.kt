@@ -97,8 +97,8 @@ object Mathf {
         }
         // Solutions at (-b \pm \sqrt{b^2-4ac}) / 2a
         return listOf(
-            (-bD + FastMath.sqrt(disc)) / 2 * aD,
-            (-bD - FastMath.sqrt(disc)) / 2 * aD
+            (-bD + FastMath.sqrt(disc)) / (2 * aD),
+            (-bD - FastMath.sqrt(disc)) / (2 * aD)
         )
     }
 
@@ -110,7 +110,7 @@ object Mathf {
     @JvmStatic
     fun Measure<Angle>.wrap(): Measure<Angle> {
         val ang = (this to Radians) % MathUtils.TWO_PI
-        return Radians.of((ang + MathUtils.TWO_PI) % MathUtils.TWO_PI)
+        return Degrees.of(((ang + MathUtils.TWO_PI) % MathUtils.TWO_PI).radToDeg())
     }
 
     /**
@@ -298,7 +298,7 @@ object Mathf {
      */
     @JvmStatic
     fun Measure<Angle>.wrapDelta(): Measure<Angle> {
-        return Radians.of(this to Radians wrap (-FastMath.PI..FastMath.PI))
+        return Degrees.of(this to Degrees wrap (-180.0..180.0))
     }
 
     /**
@@ -383,7 +383,7 @@ object Mathf {
      * @return The interpolated value.
      */
     @JvmStatic
-    fun Pair<Measure<Angle>, Measure<Angle>>.lerp(t: Number): Measure<Angle> {
+    infix fun Pair<Measure<Angle>, Measure<Angle>>.lerp(t: Number): Measure<Angle> {
         return lerp(first, second, t)
     }
 
@@ -391,7 +391,7 @@ object Mathf {
      * Moves a current value towards `target`.
      *
      * @param target   The value to move towards.
-     * @param maxDelta The maximum change that should be applied to the value.
+     * @param maxDelta The maximum change that should be applied to the value. Negative values will push the current value away from the target for potential convergence of wrapped numbers.
      * @return The new value.
      */
     @JvmStatic
@@ -399,7 +399,7 @@ object Mathf {
         val currentD = this.toDouble()
         val targetD = target.toDouble()
         val maxDeltaD = maxDelta.toDouble()
-        if (FastMath.abs(targetD - currentD) <= maxDeltaD) return targetD
+        if (FastMath.abs(targetD - currentD) <= FastMath.abs(maxDeltaD)) return targetD
         return currentD + FastMath.signum(targetD - currentD) * maxDeltaD
     }
 
@@ -408,7 +408,7 @@ object Mathf {
      * wrap around 1 revolution (360 degrees).
      *
      * @param target   The angle to move towards.
-     * @param maxDelta The maximum change that should be applied to the value.
+     * @param maxDelta The maximum change that should be applied to the value. Negative values will push the current value away from the target for potential convergence of wrapped numbers.
      * @return The new value.
      */
     @JvmStatic
@@ -858,5 +858,5 @@ object Mathf {
     /**
      * Exception thrown if no intercept is found when using the intersection methods of this class.
      */
-    class NoInterceptException : RuntimeException("No intercept found")
+    class NoInterceptException : RuntimeException("Intercept calculation failed due to no intercepts or an edge case.")
 }
