@@ -7,7 +7,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp
-@Disabled
 public class Drive extends CommandBasedBunyipsOpMode {
     private final Robot robot = new Robot();
 

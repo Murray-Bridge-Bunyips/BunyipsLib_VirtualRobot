@@ -14,7 +14,6 @@ import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Inc
 
 
 @Autonomous
-@Disabled
 public class RoadRunnerTest extends AutonomousBunyipsOpMode {
     private final Robot robot = new Robot();
 

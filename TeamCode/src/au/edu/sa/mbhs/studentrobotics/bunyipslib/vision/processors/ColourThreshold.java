@@ -6,12 +6,12 @@ import android.util.Size;
 
 import androidx.annotation.NonNull;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-//import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
-
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dashboard;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.vision.Processor;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.vision.data.ContourData;
 
@@ -65,8 +66,7 @@ public abstract class ColourThreshold extends Processor<ContourData> {
     @SuppressWarnings("ConstructorNotProtectedInAbstractClass")
     public ColourThreshold(@NonNull ColourSpace colourSpace) {
         this.colourSpace = colourSpace;
-//        FtcDashboard.getInstance().withConfigRoot(c ->
-//                c.putVariable(getClass().getSimpleName(), ReflectionConfig.createVariableFromClass(getClass())));
+        Dashboard.enableConfig(getClass());
     }
 
     public abstract double getContourAreaMinPercent();
@@ -153,7 +153,8 @@ public abstract class ColourThreshold extends Processor<ContourData> {
         Size cameraDimensions = getCameraDimensions();
         if (cameraDimensions == null) return;
         for (MatOfPoint contour : contours) {
-            ContourData newData = new ContourData(cameraDimensions, Imgproc.boundingRect(contour));
+            Point[] points = contour.toArray();
+            ContourData newData = new ContourData(cameraDimensions, Imgproc.minAreaRect(new MatOfPoint2f(points)));
             // Min-max bounding
             if (newData.getAreaPercent() < getContourAreaMinPercent() || newData.getAreaPercent() > getContourAreaMaxPercent())
                 continue;
@@ -233,11 +234,12 @@ public abstract class ColourThreshold extends Processor<ContourData> {
         // Draw borders around the contours, with a thicker border for the largest contour
         ContourData biggest = ContourData.getLargest(data);
         for (ContourData contour : data) {
+            Rect boundingRect = contour.getRect().boundingRect();
             canvas.drawRect(
-                    contour.getBoundingRect().x,
-                    contour.getBoundingRect().y,
-                    contour.getBoundingRect().x + contour.getBoundingRect().width,
-                    contour.getBoundingRect().y + contour.getBoundingRect().height,
+                    boundingRect.x,
+                    boundingRect.y,
+                    boundingRect.x + boundingRect.width,
+                    boundingRect.y + boundingRect.height,
                     new Paint() {{
                         setColor(getBoxColour());
                         setStyle(Style.STROKE);

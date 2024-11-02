@@ -1,6 +1,7 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -37,13 +38,14 @@ public class Switch extends BunyipsSubsystem {
      * @param openPosition  the position to set the servo to when open
      * @param closePosition the position to set the servo to when closed
      */
-    public Switch(@NonNull Servo servo, double openPosition, double closePosition) {
+    public Switch(@Nullable Servo servo, double openPosition, double closePosition) {
         this.servo = servo;
         // Auto-close servo
         // Note: Updating must be done manually
         target = closePosition;
         withName("Switch");
         setBounds(openPosition, closePosition);
+        assertParamsNotNull(servo);
     }
 
     /**
@@ -51,8 +53,8 @@ public class Switch extends BunyipsSubsystem {
      *
      * @param servo the servo to use
      */
-    public Switch(@NonNull Servo servo) {
-        this(servo, 1, 0);
+    public Switch(@Nullable Servo servo) {
+        this(servo, 0, 1);
     }
 
     /**
@@ -201,9 +203,9 @@ public class Switch extends BunyipsSubsystem {
     @Override
     protected void periodic() {
         opMode(o -> o.telemetry.add("%: %", this, target == openPosition
-                ? "<font color='orange'><b>OPEN</b></font> (" + Mathf.round(openPosition, 1) + ")"
-                : target == closePosition ? "<font color='green'>CLOSE</font> (" + Mathf.round(closePosition, 1) + ")"
-                : "<font color='white'>" + Mathf.round(target, 2) + "/1.00</font>"));
+                ? "<font color='green'>OPEN</font> (" + Mathf.round(openPosition, 1) + ")"
+                : target == closePosition ? "<font color='yellow'>CLOSE</font> (" + Mathf.round(closePosition, 1) + ")"
+                : "<b>" + Mathf.round(target, 2) + "/1.00</b>"));
         servo.setPosition(target);
     }
 
@@ -232,7 +234,7 @@ public class Switch extends BunyipsSubsystem {
          */
         @NonNull
         public Task controlDelta(@NonNull DoubleSupplier powerSupplier) {
-            return new ContinuousTask(() -> setPosition(servo.getPosition() + powerSupplier.getAsDouble()))
+            return new ContinuousTask(() -> setPosition((servo != null ? servo.getPosition() : 0) + powerSupplier.getAsDouble()))
                     .onSubsystem(Switch.this, false)
                     .withName("Supplier Delta Control");
         }
@@ -307,7 +309,7 @@ public class Switch extends BunyipsSubsystem {
          */
         @NonNull
         public Task deltaClipped(double delta) {
-            return new RunTask(() -> setPositionClipped(servo.getPosition() + delta))
+            return new RunTask(() -> setPositionClipped((servo != null ? servo.getPosition() : 0) + delta))
                     .onSubsystem(Switch.this, true)
                     .withName("Delta By " + delta);
         }
@@ -320,7 +322,7 @@ public class Switch extends BunyipsSubsystem {
          */
         @NonNull
         public Task delta(double delta) {
-            return new RunTask(() -> setPosition(servo.getPosition() + delta))
+            return new RunTask(() -> setPosition((servo != null ? servo.getPosition() : 0) + delta))
                     .onSubsystem(Switch.this, true)
                     .withName("Delta By " + delta);
         }

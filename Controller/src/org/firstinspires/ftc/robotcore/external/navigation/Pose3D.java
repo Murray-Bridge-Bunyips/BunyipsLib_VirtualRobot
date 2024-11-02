@@ -83,7 +83,7 @@ public class Pose3D
     /**
      * A 3D position.
      */
-    public Object getPosition()
+    public Position getPosition()
     {
         return null;
 //        return position;

@@ -8,9 +8,12 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.Localizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.ThreeWheelLocalizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.TwoWheelLocalizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.RoadRunnerDrive;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.ConditionalTask;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.ContinuousTask;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.groups.DeadlineTaskGroup;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dashboard;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry;
 
 /**
  * Internal RoadRunner ManualFeedbackTuner tuning OpMode.
@@ -50,10 +53,17 @@ public final class ManualFeedbackTuner extends LinearOpMode {
         while (opModeIsActive()) {
             Actions.runBlocking(
                     new DeadlineTaskGroup(
-                            drive.makeTrajectory(new Pose2d(0, 0, 0))
-                                    .lineToX(DISTANCE)
-                                    .lineToX(0)
-                                    .build(),
+                            new ConditionalTask(
+                                    new ContinuousTask(() -> drive.setPower(Controls.vel(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x)))
+                                            .until(() -> !gamepad1.right_bumper)
+                                            .then(() -> drive.setPose(Geometry.zeroPose())),
+                                    drive.makeTrajectory(new Pose2d(0, 0, 0))
+                                            .lineToX(DISTANCE)
+                                            .lineToX(0)
+                                            .build()
+                                            .until(() -> gamepad1.right_bumper),
+                                    () -> gamepad1.right_bumper
+                            ),
                             new ContinuousTask(drive::periodic),
                             new ContinuousTask(Dashboard::sendAndClearSyncedPackets)
                     )

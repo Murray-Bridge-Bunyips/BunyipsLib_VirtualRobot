@@ -7,12 +7,12 @@ import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Rad
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.roadrunner.AccelConstraint;
 import com.acmerobotics.roadrunner.Actions;
 import com.acmerobotics.roadrunner.AngularVelConstraint;
-import com.acmerobotics.roadrunner.Arclength;
 import com.acmerobotics.roadrunner.DisplacementTrajectory;
 import com.acmerobotics.roadrunner.DualNum;
 import com.acmerobotics.roadrunner.HolonomicController;
@@ -70,6 +70,16 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Storage;
  * @since 6.0.0
  */
 public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
+    /**
+     * The lookahead distance used for the current implementation of the path following mode of this MecanumDrive.
+     */
+    public static double PATH_FOLLOWER_PROJECTION_LOOKAHEAD_INCHES = 6.0;
+    /**
+     * The minimum distance from endpoint of the trajectory to the projected pose to begin stabilisation for the
+     * path following mode of this MecanumDrive.
+     */
+    public static double PATH_FOLLOWER_ENDPOINT_PROJECTION_TOLERANCE_INCHES = 1.0;
+
     private final MecanumKinematics kinematics;
     private final TurnConstraints defaultTurnConstraints;
     private final VelConstraint defaultVelConstraint;
@@ -115,7 +125,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
      * @param voltageSensorMapping the voltage sensor mapping for the robot as returned by {@code hardwareMap.voltageSensor}
      * @param startPose            the starting pose of the robot
      */
-    public MecanumDrive(@NonNull DriveModel driveModel, @NonNull MotionProfile motionProfile, @NonNull MecanumGains mecanumGains, @NonNull DcMotor leftFront, @NonNull DcMotor leftBack, @NonNull DcMotor rightBack, @NonNull DcMotor rightFront, @NonNull LazyImu lazyImu, @NonNull HardwareMap.DeviceMapping<VoltageSensor> voltageSensorMapping, @NonNull Pose2d startPose) {
+    public MecanumDrive(@NonNull DriveModel driveModel, @NonNull MotionProfile motionProfile, @NonNull MecanumGains mecanumGains, @Nullable DcMotor leftFront, @Nullable DcMotor leftBack, @Nullable DcMotor rightBack, @Nullable DcMotor rightFront, @Nullable LazyImu lazyImu, @NonNull HardwareMap.DeviceMapping<VoltageSensor> voltageSensorMapping, @NonNull Pose2d startPose) {
         accumulator = new Accumulator(startPose);
 
         gains = mecanumGains;
@@ -137,6 +147,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 //        FlightRecorder.write("MECANUM_PROFILE", motionProfile);
 
         if (assertParamsNotNull(driveModel, motionProfile, mecanumGains, leftFront, leftBack, rightBack, rightFront, lazyImu, voltageSensorMapping, startPose)) {
+            assert leftFront != null && leftBack != null && rightBack != null && rightFront != null;
             leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -148,6 +159,8 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
         this.rightBack = (DcMotorEx) rightBack;
         this.rightFront = (DcMotorEx) rightFront;
         this.lazyImu = lazyImu;
+
+        Dashboard.enableConfig(getClass());
     }
 
     /**
@@ -163,7 +176,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
      * @param lazyImu              the LazyImu instance to use, see the {@code getLazyImu} method of {@link RobotConfig} to construct this
      * @param voltageSensorMapping the voltage sensor mapping for the robot as returned by {@code hardwareMap.voltageSensor}
      */
-    public MecanumDrive(@NonNull DriveModel driveModel, @NonNull MotionProfile motionProfile, @NonNull MecanumGains mecanumGains, @NonNull DcMotor leftFront, @NonNull DcMotor leftBack, @NonNull DcMotor rightBack, @NonNull DcMotor rightFront, @NonNull LazyImu lazyImu, @NonNull HardwareMap.DeviceMapping<VoltageSensor> voltageSensorMapping) {
+    public MecanumDrive(@NonNull DriveModel driveModel, @NonNull MotionProfile motionProfile, @NonNull MecanumGains mecanumGains, @Nullable DcMotor leftFront, @Nullable DcMotor leftBack, @Nullable DcMotor rightBack, @Nullable DcMotor rightFront, @Nullable LazyImu lazyImu, @NonNull HardwareMap.DeviceMapping<VoltageSensor> voltageSensorMapping) {
         this(driveModel, motionProfile, mecanumGains, leftFront, leftBack, rightBack, rightFront, lazyImu, voltageSensorMapping, Storage.memory().lastKnownPosition);
     }
 
@@ -311,7 +324,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 
         Pose2d pose = accumulator.getPose();
         PoseVelocity2d poseVel = accumulator.getVelocity();
-        opMode(o -> o.telemetry.add("Localizer: X:%in(%/s) Y:%in(%/s) %deg(%/s)",
+        opMode(o -> o.telemetry.add("Localizer: X:%in(%/s) Y:%in(%/s) %°(%/s)",
                 Mathf.round(pose.position.x, 1),
                 Mathf.round(poseVel.linearVel.x, 1),
                 Mathf.round(pose.position.y, 1),
@@ -402,7 +415,8 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 
             s = displacementTrajectory.project(actualPose.position, s);
             // Internally reparameterises from respect to displacement to respect to time
-            Pose2dDual<Time> txWorldTarget = displacementTrajectory.get(s); // TODO: check projection
+            // Future: currently using a static lookahead, should be improved in the future to something more dynamic
+            Pose2dDual<Time> txWorldTarget = displacementTrajectory.get(s + PATH_FOLLOWER_PROJECTION_LOOKAHEAD_INCHES);
 //            targetPoseWriter.write(new PoseMessage(txWorldTarget.value()));
 
             PoseVelocity2dDual<Time> feedbackCommand = new HolonomicController(
@@ -414,8 +428,8 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 
             double voltage = voltageSensor.getVoltage();
 
-            // TODO: calculate max feedforward power
-            Pose2dDual<Arclength> displacement = displacementTrajectory.path.get(s, 3);
+            // Future: calculate max feedforward power
+//            Pose2dDual<Arclength> displacement = displacementTrajectory.path.get(s, 3);
 
             MecanumKinematics.WheelVelocities<Time> wheelVels = kinematics.inverse(feedbackCommand);
             MotorFeedforward feedforward = new MotorFeedforward(profile.kS,
@@ -446,7 +460,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 
         @Override
         protected boolean isTaskFinished() {
-            boolean displacement = s >= displacementTrajectory.length();
+            boolean displacement = s + PATH_FOLLOWER_ENDPOINT_PROJECTION_TOLERANCE_INCHES >= displacementTrajectory.length();
             if (displacement && stab == null) {
                 stab = new ElapsedTime();
             } else if (!displacement) {
@@ -454,10 +468,10 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
             }
             boolean stablilised = stab != null &&
                     ((error.position.norm() < errorThresholds.getMaxTranslationalError().in(Inches)
-                    && robotVelRobot.linearVel.norm() < errorThresholds.getMinVelStab().in(InchesPerSecond)
-                    && error.heading.toDouble() < errorThresholds.getMaxAngularError().in(Radians)
-                    && robotVelRobot.angVel < errorThresholds.getMinAngVelStab().in(RadiansPerSecond))
-                    || stab.seconds() > errorThresholds.getStabilizationTimeout().in(Seconds));
+                            && robotVelRobot.linearVel.norm() < errorThresholds.getMinVelStab().in(InchesPerSecond)
+                            && error.heading.toDouble() < errorThresholds.getMaxAngularError().in(Radians)
+                            && robotVelRobot.angVel < errorThresholds.getMinAngVelStab().in(RadiansPerSecond))
+                            || stab.seconds() > errorThresholds.getStabilizationTimeout().in(Seconds));
             return displacement && stablilised;
         }
 

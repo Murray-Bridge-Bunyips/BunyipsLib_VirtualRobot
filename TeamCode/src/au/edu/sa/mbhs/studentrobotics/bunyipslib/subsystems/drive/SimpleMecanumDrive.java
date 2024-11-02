@@ -55,8 +55,9 @@ public class SimpleMecanumDrive extends BunyipsSubsystem implements Moveable {
      * @param rightBack  the back right motor
      * @param rightFront the front right motor
      */
-    public SimpleMecanumDrive(@NonNull DcMotor leftFront, @NonNull DcMotor leftBack, @NonNull DcMotor rightBack, @NonNull DcMotor rightFront) {
+    public SimpleMecanumDrive(@Nullable DcMotor leftFront, @Nullable DcMotor leftBack, @Nullable DcMotor rightBack, @Nullable DcMotor rightFront) {
         if (assertParamsNotNull(leftFront, leftBack, rightBack, rightFront)) {
+            assert leftFront != null && leftBack != null && rightBack != null && rightFront != null;
             leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -90,7 +91,7 @@ public class SimpleMecanumDrive extends BunyipsSubsystem implements Moveable {
             }
             accumulator.accumulate(twist);
 
-            opMode(o -> o.telemetry.add("Localizer: X:%in(%/s) Y:%in(%/s) %deg(%/s)",
+            opMode(o -> o.telemetry.add("Localizer: X:%in(%/s) Y:%in(%/s) %°(%/s)",
                     Mathf.round(accumulator.getPose().position.x, 1),
                     Mathf.round(accumulator.getVelocity().linearVel.x, 1),
                     Mathf.round(accumulator.getPose().position.y, 1),

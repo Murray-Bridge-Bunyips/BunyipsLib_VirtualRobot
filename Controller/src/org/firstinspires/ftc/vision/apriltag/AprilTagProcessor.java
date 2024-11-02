@@ -33,8 +33,7 @@
 
 package org.firstinspires.ftc.vision.apriltag;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.*;
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.calib3d.Calib3d;
 import org.openftc.apriltag.AprilTagDetectorJNI;
@@ -94,6 +93,10 @@ public abstract class AprilTagProcessor implements VisionProcessor
             this.fy = fy;
             this.cx = cx;
             this.cy = cy;
+            return this;
+        }
+
+        public Builder setCameraPose(Position pos, YawPitchRollAngles rot) {
             return this;
         }
 

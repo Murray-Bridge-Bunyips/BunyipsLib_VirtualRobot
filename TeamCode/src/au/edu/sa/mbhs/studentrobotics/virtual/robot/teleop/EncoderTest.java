@@ -7,7 +7,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp
-@Disabled
 public class EncoderTest extends BunyipsOpMode {
     private final Robot robot = new Robot();
     private Encoder encoder;

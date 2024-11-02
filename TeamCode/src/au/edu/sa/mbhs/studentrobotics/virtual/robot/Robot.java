@@ -1,9 +1,7 @@
 package au.edu.sa.mbhs.studentrobotics.virtual.robot;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.RobotConfig;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.PIDFFController;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.SystemController;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.ff.SimpleMotorFeedforward;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PController;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PIDController;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.Motor;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.MecanumLocalizer;
@@ -24,14 +22,6 @@ public class Robot extends RobotConfig {
     public final Hardware hw = new Hardware();
     public MecanumDrive drive;
 
-    private SystemController getController(Motor motor) {
-        return new PIDFFController(
-                new PIDController(1, 0, 0),
-                new SimpleMotorFeedforward(0, 0, 0),
-                motor.getEncoder()
-        );
-    }
-
     @Override
     protected void onRuntime() {
         hw.back_right_motor = getHardware("back_right_motor", Motor.class);
@@ -44,10 +34,10 @@ public class Robot extends RobotConfig {
         hw.front_left_motor.setRunToPositionController(new PIDController(0.01, 0, 0));
         hw.front_right_motor.setRunToPositionController(new PIDController(0.01, 0, 0));
 
-        hw.back_right_motor.setRunUsingEncoderController(getController(hw.back_right_motor));
-        hw.back_left_motor.setRunUsingEncoderController(getController(hw.back_left_motor));
-        hw.front_right_motor.setRunUsingEncoderController(getController(hw.front_right_motor));
-        hw.front_left_motor.setRunUsingEncoderController(getController(hw.front_left_motor));
+        hw.back_right_motor.setRunUsingEncoderController(new PController(1));
+        hw.back_left_motor.setRunUsingEncoderController(new PController(1));
+        hw.front_right_motor.setRunUsingEncoderController(new PController(1));
+        hw.front_left_motor.setRunUsingEncoderController(new PController(1));
 
         hw.back_servo = getHardware("back_servo", Servo.class);
 
