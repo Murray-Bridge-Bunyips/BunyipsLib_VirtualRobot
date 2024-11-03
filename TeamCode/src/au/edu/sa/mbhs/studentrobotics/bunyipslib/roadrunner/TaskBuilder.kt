@@ -730,14 +730,15 @@ class TaskBuilder(private val constants: Constants, startPose: Pose2d, poseMap: 
     }
 
     /**
-     * Build the current trajectory and add it to the current [AutonomousBunyipsOpMode] task queue.
+     * Build the current trajectory and add it to the current [AutonomousBunyipsOpMode] task queue with
+     * the settings defined in this builder.
      *
      * This method will throw an [UninitializedPropertyAccessException] if the current [BunyipsOpMode] is not an
      * [AutonomousBunyipsOpMode] or if the [AutonomousBunyipsOpMode] is not running.
      */
-    fun addTask() = build().also {
+    fun addTask() {
         if (!BunyipsOpMode.isRunning || BunyipsOpMode.instance !is AutonomousBunyipsOpMode)
             throw UninitializedPropertyAccessException("Cannot call addTask() when an active AutonomousBunyipsOpMode instance is not running!")
-        (BunyipsOpMode.instance as AutonomousBunyipsOpMode).addTask(priority, it)
+        (BunyipsOpMode.instance as AutonomousBunyipsOpMode).add(priority, build())
     }
 }
