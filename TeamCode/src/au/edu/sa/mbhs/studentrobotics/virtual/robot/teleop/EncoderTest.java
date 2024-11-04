@@ -14,7 +14,7 @@ public class EncoderTest extends BunyipsOpMode {
     @Override
     protected void onInit() {
         robot.init();
-        encoder = robot.hw.back_left_motor.getEncoder();
+        encoder = robot.hw.back_left_motor.encoder;
     }
 
     @Override
