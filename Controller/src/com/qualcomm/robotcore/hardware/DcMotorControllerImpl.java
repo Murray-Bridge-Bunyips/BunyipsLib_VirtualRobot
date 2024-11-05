@@ -87,9 +87,7 @@ public class DcMotorControllerImpl implements DcMotorControllerEx{
 
     @Override
     public int getMotorCurrentPosition(int motor) {
-        // bunyipslib change: motor controllers dont reverse outputs at the controller level. we invert it to avoid this problem.
-        //    this also makes sure the motors reflect what actually happens on a robot
-        return motors[motor].getCurrentPosition() * (motors[motor].getDirection() == DcMotorSimple.Direction.FORWARD ? 1 : -1);
+        return motors[motor].getCurrentPosition();
     }
 
     @Override
@@ -124,7 +122,7 @@ public class DcMotorControllerImpl implements DcMotorControllerEx{
 
     @Override
     public double getMotorVelocity(int motor) {
-        return motors[motor].getVelocity() * (motors[motor].getDirection() == DcMotorSimple.Direction.FORWARD ? 1 : -1);
+        return motors[motor].getVelocity();
     }
 
     @Override
