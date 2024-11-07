@@ -9,6 +9,7 @@ import androidx.annotation.Nullable;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.hardware.configuration.LynxConstants;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
@@ -43,16 +44,18 @@ public class HoldableActuator extends BunyipsSubsystem {
 
     private final HashMap<TouchSensor, Integer> switchMapping = new HashMap<>();
     private final ElapsedTime sustainedOvercurrent = new ElapsedTime();
+    private final ElapsedTime sustainedTolerated = new ElapsedTime();
     private double rtpPower = 1.0;
     private double homePower = 0.7;
     private int zeroHitThreshold = 30;
     private Measure<Time> overcurrentTime;
     private Measure<Time> homingTimeout = Seconds.of(5);
+    private Measure<Time> maxSteadyState;
     private long minLimit = -Long.MAX_VALUE;
     private long maxLimit = Long.MAX_VALUE;
     private double lowerPower = -1.0;
     private double upperPower = 1.0;
-    private int tolerance = 2;
+    private int tolerance = LynxConstants.DEFAULT_TARGET_POSITION_TOLERANCE;
     private DcMotorEx motor;
     private Encoder encoder;
     private TouchSensor topSwitch;
@@ -64,9 +67,8 @@ public class HoldableActuator extends BunyipsSubsystem {
     private double motorPower;
     // 5.1.0, user controls can now opt to adjust the setpoint instead of the power
     // but this functionality is disabled by default for consistency
-    private boolean userControlsSetpoint;
     private Mode inputMode = Mode.USER_POWER;
-    private UnaryFunction setpointDeltaMul = (dt) -> 1;
+    private UnaryFunction userSetpointControl;
     private double lastTime = -1;
 
     /**
@@ -152,6 +154,31 @@ public class HoldableActuator extends BunyipsSubsystem {
     }
 
     /**
+     * Defines a max amount of time that the system can be responding for. If this time is elapsed, the target
+     * position will be reset to the current position. This option is to avoid stall and endpoint conditions when
+     * the target position cannot be achieved by the actuator.
+     *
+     * @param maxSteadyState the maximum amount of time a system response can last before any steady state error is zeroed
+     * @return this
+     */
+    @NonNull
+    public HoldableActuator withMaxSteadyStateTime(@Nullable Measure<Time> maxSteadyState) {
+        this.maxSteadyState = maxSteadyState;
+        return this;
+    }
+
+    /**
+     * Disable the max steady state timer. Disabled by default.
+     *
+     * @return this
+     */
+    @NonNull
+    public HoldableActuator disableMaxSteadyStateTime() {
+        maxSteadyState = null;
+        return this;
+    }
+
+    /**
      * Disable the overcurrent threshold for stall detection.
      *
      * @return this
@@ -192,7 +219,8 @@ public class HoldableActuator extends BunyipsSubsystem {
      * @return this
      */
     @NonNull
-    public HoldableActuator withTopSwitch(@NonNull TouchSensor topLimitSwitch) {
+    public HoldableActuator withTopSwitch(@Nullable TouchSensor topLimitSwitch) {
+        if (topLimitSwitch == null) return this;
         topSwitch = topLimitSwitch;
         return this;
     }
@@ -206,7 +234,8 @@ public class HoldableActuator extends BunyipsSubsystem {
      * @see #disableOvercurrent()
      */
     @NonNull
-    public HoldableActuator withBottomSwitch(@NonNull TouchSensor bottomLimitSwitch) {
+    public HoldableActuator withBottomSwitch(@Nullable TouchSensor bottomLimitSwitch) {
+        if (bottomLimitSwitch == null) return this;
         bottomSwitch = bottomLimitSwitch;
         return this;
     }
@@ -226,7 +255,8 @@ public class HoldableActuator extends BunyipsSubsystem {
      * @return this
      */
     @NonNull
-    public HoldableActuator map(@NonNull TouchSensor switchSensor, int position) {
+    public HoldableActuator map(@Nullable TouchSensor switchSensor, int position) {
+        if (switchSensor == null) return this;
         switchMapping.put(switchSensor, position);
         return this;
     }
@@ -238,7 +268,7 @@ public class HoldableActuator extends BunyipsSubsystem {
      * @return the mapped position of the switch sensor, nullable if not mapped
      */
     @Nullable
-    public Integer getMappedPosition(@NonNull TouchSensor switchSensor) {
+    public Integer getMappedPosition(@Nullable TouchSensor switchSensor) {
         return switchMapping.get(switchSensor);
     }
 
@@ -362,10 +392,9 @@ public class HoldableActuator extends BunyipsSubsystem {
      * @see #disableOvercurrent()
      */
     @NonNull
-    public HoldableActuator enableUserSetpointControl(@NonNull UnaryFunction setpointDeltaMul) {
-        this.setpointDeltaMul = setpointDeltaMul;
-        userControlsSetpoint = true;
-        if (inputMode == Mode.USER_POWER)
+    public HoldableActuator enableUserSetpointControl(@Nullable UnaryFunction setpointDeltaMul) {
+        userSetpointControl = setpointDeltaMul;
+        if (userSetpointControl != null && inputMode == Mode.USER_POWER)
             inputMode = Mode.USER_SETPOINT;
         return this;
     }
@@ -378,7 +407,7 @@ public class HoldableActuator extends BunyipsSubsystem {
      */
     @NonNull
     public HoldableActuator disableUserSetpointControl() {
-        userControlsSetpoint = false;
+        userSetpointControl = null;
         return this;
     }
 
@@ -447,7 +476,7 @@ public class HoldableActuator extends BunyipsSubsystem {
                     dt = now - lastTime;
                     lastTime = now;
                 }
-                newTarget = target + userPower * setpointDeltaMul.apply(dt);
+                newTarget = target + userPower * userSetpointControl.apply(dt);
                 motorPower = rtpPower * Math.signum(target - current);
                 opMode(o -> o.telemetry.add("%: % at % ticks, % error [%tps]", this, !motor.isBusy() ? "<font color='green'>SUSTAINING</font>" : "<font color='#FF5F1F'><b>RESPONDING</b></font>", current, target - current, Math.round(encoder.getVelocity())));
                 break;
@@ -475,6 +504,7 @@ public class HoldableActuator extends BunyipsSubsystem {
                 DcMotor.RunMode prev = motor.getMode();
                 motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 // Must propagate now as we're switching the mode
+                sustainedTolerated.reset();
                 motor.setTargetPosition(0);
                 motor.setMode(prev);
                 // Ensure we only run the reset once every time the switch is pressed
@@ -505,14 +535,25 @@ public class HoldableActuator extends BunyipsSubsystem {
         if (motor.getMode() == DcMotor.RunMode.RUN_TO_POSITION) {
             boolean overCurrent = motor.isOverCurrent();
             if (sustainedOvercurrent.seconds() >= overcurrentTime.in(Seconds) && overCurrent) {
-                Dbg.warn(getClass(), "%Warning: Stall detection (continued % A for % sec) has been activated. To prevent motor damage, the target position has been auto set to the current position (% -> %).", isDefaultName() ? "" : "(" + name + ") ", Mathf.round(motor.getCurrentAlert(CurrentUnit.AMPS), 1), Mathf.round(overcurrentTime.in(Seconds), 1), target, current);
+                Dbg.warn(getClass(), "%Warning: Stall detection (continued %A for %s) has been activated. To prevent motor damage, the target position has been auto set to the current position (% -> %).", isDefaultName() ? "" : "(" + name + ") ", Mathf.round(motor.getCurrentAlert(CurrentUnit.AMPS), 1), Mathf.round(overcurrentTime.in(Seconds), 1), target, current);
                 newTarget = motor.getCurrentPosition();
             } else if (!overCurrent) {
                 sustainedOvercurrent.reset();
             }
+
+            if (maxSteadyState != null) {
+                if (Mathf.isNear(current, target, tolerance) || !Mathf.isNear(encoder.getVelocity(), 0, tolerance)) {
+                    sustainedTolerated.reset();
+                }
+                if (sustainedTolerated.seconds() >= maxSteadyState.in(Seconds)) {
+                    Dbg.warn(getClass(), "%Warning: Steady state error has been detected for more than %s. To prevent motor damage, the target position has been auto set to the current position (% -> %).", isDefaultName() ? "" : "(" + name + ") ", Mathf.round(maxSteadyState.in(Seconds), 1), target, current);
+                    newTarget = motor.getCurrentPosition();
+                }
+            }
         }
 
         if (newTarget != -1) {
+            sustainedTolerated.reset();
             motor.setTargetPosition((int) Math.round(Mathf.clamp(newTarget, minLimit, maxLimit)));
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
@@ -526,7 +567,7 @@ public class HoldableActuator extends BunyipsSubsystem {
 
     private void setInputModeToUser() {
         userLatch = false;
-        inputMode = userControlsSetpoint ? Mode.USER_SETPOINT : Mode.USER_POWER;
+        inputMode = userSetpointControl != null ? Mode.USER_SETPOINT : Mode.USER_POWER;
     }
 
     private enum Mode {
@@ -751,6 +792,7 @@ public class HoldableActuator extends BunyipsSubsystem {
             return new Task() {
                 @Override
                 public void init() {
+                    sustainedTolerated.reset();
                     motor.setTargetPosition(targetPosition);
                     // Motor power is controlled in the periodic method
                     motor.setPower(0);
@@ -789,6 +831,7 @@ public class HoldableActuator extends BunyipsSubsystem {
                 @Override
                 public void init() {
                     target = encoder.getPosition() + deltaPosition;
+                    sustainedTolerated.reset();
                     motor.setTargetPosition(target);
                     // Motor power is controlled in the periodic method
                     motor.setPower(0);

@@ -1,32 +1,26 @@
-package au.edu.sa.mbhs.studentrobotics.bunyipslib.vision.processors.centerstage;
+package au.edu.sa.mbhs.studentrobotics.bunyipslib.vision.processors.intothedeep;
 
 import androidx.annotation.NonNull;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-//import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
-
 import org.opencv.core.Scalar;
 
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dashboard;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.vision.processors.ColourThreshold;
 
 /**
- * Green pixel processor.
- * These values may not be tuned for your specific camera, lighting, or field conditions, and are tuned
- * based on our own testing. You may need to adjust these values to get the best results for your own robot.
- *
- * @since 1.0.0-pre
+ * Yellow Sample
  */
-public class GreenPixel extends ColourThreshold {
+public class YellowSample extends ColourThreshold {
     /**
-     * Lower bounds for YCrCb
+     * Lower clamp for YCrCb
      */
     @NonNull
-    public static Scalar LOWER_YCRCB = new Scalar(0.0, 150.0, 0.0);
+    public static Scalar LOWER_YCRCB = new Scalar(0, 130, 0);
     /**
-     * Upper bounds for YCrCb
+     * Upper clamp for YCrCb
      */
     @NonNull
-    public static Scalar UPPER_YCRCB = new Scalar(255.0, 255.0, 82.2);
+    public static Scalar UPPER_YCRCB = new Scalar(255, 255, 255);
     /**
      * Default minimum area for the contour
      */
@@ -34,7 +28,7 @@ public class GreenPixel extends ColourThreshold {
     /**
      * Default maximum area for the contour
      */
-    public static double MAX_AREA = DEFAULT_MAX_AREA;
+    public static double MAX_AREA = 20;
     /**
      * Whether to show the masked input
      */
@@ -43,16 +37,10 @@ public class GreenPixel extends ColourThreshold {
     /**
      * Using YCrCb colour space
      */
-    public GreenPixel() {
+    public YellowSample() {
+        // TODO: refactor colourthreshold and integrate pnp
         super(ColourSpace.YCrCb);
-//        FtcDashboard.getInstance().withConfigRoot(c ->
-//                c.putVariable(getClass().getSimpleName(), ReflectionConfig.createVariableFromClass(getClass())));
-    }
-
-    @NonNull
-    @Override
-    public String toString() {
-        return "greenpixel";
+        Dashboard.enableConfig(getClass());
     }
 
     @Override
@@ -79,11 +67,17 @@ public class GreenPixel extends ColourThreshold {
 
     @Override
     public int getBoxColour() {
-        return 0xFF00FF00;
+        return 0xFFFFFF00;
     }
 
     @Override
     public boolean showMaskedInput() {
         return SHOW_MASKED_INPUT;
+    }
+
+    @Override
+    @NonNull
+    public String toString() {
+        return "yellowsample";
     }
 }

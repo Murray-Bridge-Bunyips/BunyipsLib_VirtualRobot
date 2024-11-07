@@ -30,7 +30,7 @@ public class Robot extends RobotConfig {
         hw.front_left_motor = getHardware("front_left_motor", Motor.class);
 
         hw.back_right_motor.setRunToPositionController(new PIDController(0.01, 0, 0));
-        hw.back_left_motor.setRunToPositionController(new PIDController(0.01, 0, 0));
+        hw.back_left_motor.setRunToPositionController(new PIDController(0, 0, 0));
         hw.front_left_motor.setRunToPositionController(new PIDController(0.01, 0, 0));
         hw.front_right_motor.setRunToPositionController(new PIDController(0.01, 0, 0));
 
