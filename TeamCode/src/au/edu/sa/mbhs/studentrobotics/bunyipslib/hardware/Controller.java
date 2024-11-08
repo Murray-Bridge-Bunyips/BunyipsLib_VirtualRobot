@@ -295,14 +295,15 @@ public class Controller extends Gamepad {
 
     /**
      * Check if a button is currently pressed on a gamepad, with debounce to ignore a press that was already detected
-     * upon the first call of this function and button. This is also known as "rising edge detection".
+     * upon the first call of this function and button. This is also known as "rising edge detection", but also
+     * applies a check for the initial state of the button.
      *
      * @param button The button to check
      * @return True if the button is pressed and not debounced
      */
     public boolean getDebounced(@NonNull Controls button) {
         boolean buttonPressed = get(button);
-        boolean pressedPreviously = Boolean.TRUE.equals(debounces.getOrDefault(button, false));
+        boolean pressedPreviously = Boolean.TRUE.equals(debounces.getOrDefault(button, buttonPressed));
         if (buttonPressed && !pressedPreviously) {
             debounces.put(button, true);
             return true;
