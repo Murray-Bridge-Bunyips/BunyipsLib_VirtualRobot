@@ -26,7 +26,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.vision.data.ColourBlob;
  * in the image. You can restrict the search area to a specified Region
  * of Interest (ROI).
  * <p>
- * This processor is the SDK-provided successor to the {@link ColourThreshold} processor.
+ * This processor is the SDK-provided alternative to the {@link ColourThreshold} processor.
  *
  * @author Lucas Bubner, 2024
  * @see ColourSensor
@@ -121,7 +121,7 @@ public class ColourLocator extends Processor<ColourBlob> {
 
     @NonNull
     @Override
-    public String toString() {
+    public String getId() {
         // 0-indexed
         return "colourlocator" + instanceCount;
     }

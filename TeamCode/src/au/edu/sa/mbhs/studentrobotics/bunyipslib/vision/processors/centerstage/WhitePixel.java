@@ -2,9 +2,6 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.vision.processors.centerstage;
 
 import androidx.annotation.NonNull;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-//import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
-
 import org.opencv.core.Scalar;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.vision.processors.ColourThreshold;
@@ -16,74 +13,32 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.vision.processors.ColourThresho
  *
  * @since 1.0.0-pre
  */
+@SuppressWarnings("MissingJavadoc")
 public class WhitePixel extends ColourThreshold {
-    /**
-     * Lower bounds for YCrCb
-     */
     @NonNull
     public static Scalar LOWER_YCRCB = new Scalar(250, 120.0, 106.3);
-    /**
-     * Upper bounds for YCrCb
-     */
     @NonNull
     public static Scalar UPPER_YCRCB = new Scalar(255.0, 129.0, 255.0);
-    /**
-     * Default min area for detections.
-     */
     public static double MIN_AREA = DEFAULT_MIN_AREA;
-    /**
-     * Default max area for detections.
-     */
     public static double MAX_AREA = DEFAULT_MAX_AREA;
-    /**
-     * Whether to show the masked input on the screen.
-     */
     public static boolean SHOW_MASKED_INPUT = true;
 
     /**
-     * Using YCrCb colour space.
+     * Create a new White Pixel detector.
      */
     public WhitePixel() {
-        super(ColourSpace.YCrCb);
-//        FtcDashboard.getInstance().withConfigRoot(c ->
-//                c.putVariable(getClass().getSimpleName(), ReflectionConfig.createVariableFromClass(getClass())));
+        setColourSpace(ColourSpace.YCrCb);
+        setContourAreaMinPercent(() -> MIN_AREA);
+        setContourAreaMaxPercent(() -> MAX_AREA);
+        setLowerThreshold(() -> LOWER_YCRCB);
+        setUpperThreshold(() -> UPPER_YCRCB);
+        setBoxColour(0xFFFFFFFF);
+        setShowMaskedInput(() -> SHOW_MASKED_INPUT);
     }
 
     @NonNull
     @Override
-    public String toString() {
+    public String getId() {
         return "whitepixel";
-    }
-
-    @Override
-    public double getContourAreaMinPercent() {
-        return MIN_AREA;
-    }
-
-    @Override
-    public double getContourAreaMaxPercent() {
-        return MAX_AREA;
-    }
-
-    @NonNull
-    @Override
-    protected Scalar getLowerThreshold() {
-        return LOWER_YCRCB;
-    }
-
-    @NonNull
-    @Override
-    protected Scalar getUpperThreshold() {
-        return UPPER_YCRCB;
-    }
-
-    @Override
-    public int getBoxColour() {
-        return 0xFFFFFFFF;
-    }
-
-    @Override
-    public boolean showMaskedInput() {
-        return SHOW_MASKED_INPUT;
     }
 }

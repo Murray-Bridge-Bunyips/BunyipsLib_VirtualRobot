@@ -5,9 +5,6 @@ import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Mil
 
 import androidx.annotation.NonNull;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-//import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
-
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.opencv.core.Scalar;
 
@@ -17,6 +14,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.EmergencyStop;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.UnaryFunction;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dashboard;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Text;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.vision.processors.ColourThreshold;
 
@@ -73,8 +71,7 @@ public abstract class ColourTunerOpMode extends BunyipsOpMode {
         vision.init(processors);
         vision.startPreview();
         changeToProcessor(0);
-//        FtcDashboard.getInstance().withConfigRoot(c ->
-//                c.putVariable(getClass().getSimpleName(), ReflectionConfig.createVariableFromClass(getClass())));
+        Dashboard.enableConfig(getClass());
     }
 
     private void changeToProcessor(int index) {
@@ -82,15 +79,15 @@ public abstract class ColourTunerOpMode extends BunyipsOpMode {
         vision.stop(processors[processorIdx]);
         // Repopulate scalars with new processor's scalars
         for (int i = 0; i < 3; i++) {
-            scalars[i] = processors[index].getLower().val[i];
-            scalars[i + 3] = processors[index].getUpper().val[i];
+            scalars[i] = processors[index].lowerThreshold.get().val[i];
+            scalars[i + 3] = processors[index].upperThreshold.get().val[i];
         }
         // Start new processor
         vision.start(processors[index]);
         vision.setPreview(processors[index]);
         // Cache the namespaces of the channel (e.g. "Red", "Green", "Blue")
         for (int i = 0; i < 3; i++) {
-            channelNames[i] = processors[index].colourSpace.getChannelName(i);
+            channelNames[i] = processors[index].colourSpace.get().getChannelName(i);
         }
     }
 
@@ -143,8 +140,8 @@ public abstract class ColourTunerOpMode extends BunyipsOpMode {
         }
 
         // Update the processor's scalars
-        processors[processorIdx].setLower(new Scalar(scalars[0], scalars[1], scalars[2]));
-        processors[processorIdx].setUpper(new Scalar(scalars[3], scalars[4], scalars[5]));
+        processors[processorIdx].setLowerThreshold(new Scalar(scalars[0], scalars[1], scalars[2]));
+        processors[processorIdx].setUpperThreshold(new Scalar(scalars[3], scalars[4], scalars[5]));
 
         // Save functionality
         if (gamepad1.getDebounced(Controls.A)) {

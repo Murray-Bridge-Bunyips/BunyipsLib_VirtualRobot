@@ -13,5 +13,9 @@ public class Canvas {
 
     }
 
+    public void drawLine(float a, float b, float c, float d, Paint paint) {
+
+    }
+
     public Canvas(Bitmap b){}
 }
