@@ -35,5 +35,21 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.firstinspires.ftc.robotcore.internal.camera.calibration;
 
+import android.util.Size;
+
 public class CameraCalibration {
+    public double focalLengthX;
+    public double focalLengthY;
+    public double principalPointX;
+    public double principalPointY;
+    public Size resolutionScaledFrom;
+    public boolean isDegenerate() {
+        return true;
+    }
+    public Size getSize() {
+        return new Size(0, 0);
+    }
+    public Object getIdentity() {
+        return null;
+    }
 }

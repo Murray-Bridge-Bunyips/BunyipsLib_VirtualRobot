@@ -49,6 +49,7 @@ public class AprilTagRelocalizingAccumulator extends Accumulator {
     private Filter.Kalman yf;
     private Filter.Kalman rf;
 
+    private double lastHeading;
     private boolean active = true;
     private boolean updateHeading = true;
 
@@ -160,10 +161,11 @@ public class AprilTagRelocalizingAccumulator extends Accumulator {
             double y = -pose.getPosition().x;
             double r = pose.getOrientation().getYaw(AngleUnit.RADIANS);
 
-            estimates.add(new Pose2d(x, y, r));
+            // We also need to rotate the entire pose by 90 degrees to match the coordinate systems up
+            estimates.add(new Pose2d(Rotation2d.exp(Math.PI / 2).times(new Vector2d(x, y)), r + Math.PI / 2));
         }
 
-        // Take averages based on all the estimates we collected
+        // Take averages based on all the estimates we collected, then apply it to the current pose
         Vector2d positionAvg = estimates.stream()
                 .map(p -> p.position)
                 .reduce(Geometry.zeroVec(), Vector2d::plus)
@@ -172,14 +174,21 @@ public class AprilTagRelocalizingAccumulator extends Accumulator {
                 .map(p -> p.heading.toDouble())
                 .reduce(0.0, Double::sum) / estimates.size();
 
-        // TODO: Apply Kalman filters
-        Vector2d kfVec = positionAvg;
-        Rotation2d kfHeading = Rotation2d.exp(headingAvgRad);
-//        Vector2d kfVec = new Vector2d(
-//                xf.calculateFromDelta(pose, positionAvg.x),
-//                yf.calculateFromDelta(pose.position.y, positionAvg.y)
-//        );
-//        Rotation2d kfHeading = Rotation2d.exp(rf.calculate(pose.heading.toDouble(), headingAvgRad));
+        Vector2d twistedTwist = pose.heading.times(twist.value().line);
+        Vector2d kfVec = new Vector2d(
+                // Use deltas supplied directly from the pose twist to avoid integrating twice and causing oscillations
+                xf.calculateFromDelta(twistedTwist.x, positionAvg.x),
+                yf.calculateFromDelta(twistedTwist.y, positionAvg.y)
+        );
+
+        double headingTwist = twist.value().angle;
+        if (Math.abs(headingAvgRad - lastHeading) > Math.PI) {
+            // If we're at the heading modulus boundary, the filter should be reset and updated with the new heading
+            headingTwist = pose.heading.inverse().log();
+            rf.reset();
+        }
+        Rotation2d kfHeading = Rotation2d.exp(rf.calculateFromDelta(headingTwist, headingAvgRad));
+        lastHeading = headingAvgRad;
 
         pose = new Pose2d(kfVec, updateHeading ? kfHeading : pose.heading);
     }

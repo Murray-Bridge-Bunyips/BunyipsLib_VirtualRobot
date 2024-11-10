@@ -13,6 +13,7 @@ public class Color {
     public static int RED = argb(0, 255, 0, 0);
     public static int CYAN = argb(0, 255, 0, 0);
     public static int BLACK = argb(0, 255, 0, 0);
+    public static int WHITE = argb(0, 255, 255, 255);
 
     /**
      * Given inputs of red, green, and blue channels, writes the hue, sat, and value to the hsv output array
