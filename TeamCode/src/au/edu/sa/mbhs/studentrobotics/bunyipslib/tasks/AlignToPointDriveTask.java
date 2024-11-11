@@ -1,5 +1,7 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks;
 
+import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Radians;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsSubsystem;
@@ -21,8 +23,6 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 
 import java.util.function.Supplier;
 
-import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Radians;
-
 /**
  * TeleOp drive task to align to a global field coordinate using a localizer and PID.
  * Internally uses a feedforward based the direction of the point.
@@ -38,8 +38,7 @@ public class AlignToPointDriveTask extends ForeverTask {
     /**
      * Default controller to use for aligning to a point.
      */
-    // Using a high gain controller due to the integrated feedforward in the heading
-    public static PIDFController DEFAULT_CONTROLLER = new PController(8);
+    public static PIDFController DEFAULT_CONTROLLER = new PController(1);
 
     static {
         DEFAULT_CONTROLLER.setTolerance(Math.toRadians(1));

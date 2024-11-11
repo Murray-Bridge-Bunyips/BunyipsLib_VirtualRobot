@@ -1,5 +1,7 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.accumulators;
 
+import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Radians;
+
 import androidx.annotation.NonNull;
 
 //import com.acmerobotics.dashboard.FtcDashboard;
@@ -133,6 +135,19 @@ public class Accumulator implements Localizable {
     @Override
     public final void setPose(@NonNull Pose2d newPose) {
         pose = newPose;
+        Storage.memory().lastKnownPosition = newPose;
+        if (this instanceof PeriodicIMUAccumulator) {
+            // Should treat this pose as the new absolute pose so we set a new IMU offset
+            ((PeriodicIMUAccumulator) this).setOrigin(Radians.of(newPose.heading.log()));
+        }
+        if (this instanceof CompositeAccumulator) {
+            // Also scan internal accumulators in composition
+            ((CompositeAccumulator) this).accumulators.forEach(a -> {
+                if (a instanceof PeriodicIMUAccumulator) {
+                    ((PeriodicIMUAccumulator) a).setOrigin(Radians.of(newPose.heading.log()));
+                }
+            });
+        }
     }
 
     @NonNull
