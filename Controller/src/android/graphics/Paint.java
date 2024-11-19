@@ -23,6 +23,14 @@ public class Paint {
 
     }
 
+    public void setStrokeCap(Object object) {
+
+    }
+
+    public enum Cap {
+        BUTT
+    }
+
     public enum Style {
         /**
          * Geometry and text drawn with this style will be filled, ignoring all

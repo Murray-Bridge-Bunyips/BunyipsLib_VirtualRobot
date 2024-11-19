@@ -6,6 +6,7 @@ import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Deg
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.util.Log;
 import android.util.Size;
 
@@ -18,6 +19,7 @@ import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibrationHelper;
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.PlaceholderCalibratedAspectRatioMismatch;
+import org.firstinspires.ftc.vision.opencv.ImageRegion;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -28,9 +30,12 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.MatOfPoint3f;
 import org.opencv.core.Point;
 import org.opencv.core.Point3;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -52,8 +57,9 @@ import kotlin.Pair;
  * Colour thresholding processor for a colour space, used to find colour contours in an image and to use PnP
  * operations.
  * <p>
- * This processor was used initially pre-SDK 10.1 to detect contours, and now serves as an alternative option which offers
- * features like PnP and FtcDashboard tuning compared to the {@link ColourLocator}.
+ * This processor serves as an advanced and more feature-rich alternative to the built-in {@link ColourLocator} processor,
+ * providing more control over the thresholding process and the ability to use PnP (Perspective-N-Point) to determine the
+ * real-world position of detected objects.
  *
  * @author Lucas Bubner, 2024
  * @see ColourLocator
@@ -61,6 +67,13 @@ import kotlin.Pair;
  * @since 6.0.0
  */
 public abstract class ColourThreshold extends Processor<ContourData> {
+    private static final Paint borderPaint = new Paint() {{
+        setColor(Color.WHITE);
+        setAntiAlias(true);
+        setStrokeCap(Paint.Cap.BUTT);
+        setStrokeWidth(1);
+    }};
+
     /**
      * The used global length of the axes used to display PnP projections (if enabled).
      */
@@ -90,7 +103,6 @@ public abstract class ColourThreshold extends Processor<ContourData> {
      */
     @ColorInt
     public static int DEFAULT_BOX_COLOUR = Color.WHITE;
-
     private final Mat processingMat = new Mat();
     private final Mat binaryMat = new Mat();
     private final Mat maskedInputMat = new Mat();
@@ -113,6 +125,7 @@ public abstract class ColourThreshold extends Processor<ContourData> {
 
     // Optional preferences
     private IntSupplier boxColour = () -> DEFAULT_BOX_COLOUR;
+    private BooleanSupplier highlightContourPoints = () -> false;
     private BooleanSupplier externalContoursOnly = () -> false;
     private DoubleSupplier minAreaPercent = () -> DEFAULT_MIN_AREA;
     private DoubleSupplier maxAreaPercent = () -> DEFAULT_MAX_AREA;
@@ -124,8 +137,10 @@ public abstract class ColourThreshold extends Processor<ContourData> {
     private DoubleSupplier erodeSize = () -> 0;
     private DoubleSupplier dilateSize = () -> 0;
     private IntSupplier blurSizeUnnormalised = () -> 0;
+    private Supplier<ImageRegion> regionOfInterest = ImageRegion::entireFrame;
     private double lastErodeSize, lastDilateSize;
     private int lastBlurSizeUnnormalised;
+    private Rect roi;
     private Mat erodeElement;
     private Mat dilateElement;
     private org.opencv.core.Size blurElement;
@@ -162,6 +177,26 @@ public abstract class ColourThreshold extends Processor<ContourData> {
      */
     public void setColourSpace(@NonNull ColourSpace staticColourSpace) {
         colourSpace = () -> staticColourSpace;
+    }
+
+    /**
+     * Sets the region of interest for this colour threshold, which will only focus detections on this area.
+     * This is an optional method, and will only be updated on processor initialisation.
+     *
+     * @param regionOfInterest the region of interest to use, by default the entire frame
+     */
+    public void setRegionOfInterest(@NonNull Supplier<ImageRegion> regionOfInterest) {
+        this.regionOfInterest = regionOfInterest;
+    }
+
+    /**
+     * Sets the region of interest for this colour threshold, which will only focus detections on this area.
+     * This is an optional method.
+     *
+     * @param staticRegionOfInterest the static region of interest to use, by default the entire frame
+     */
+    public void setRegionOfInterest(@NonNull ImageRegion staticRegionOfInterest) {
+        regionOfInterest = () -> staticRegionOfInterest;
     }
 
     /**
@@ -202,6 +237,28 @@ public abstract class ColourThreshold extends Processor<ContourData> {
      */
     public void setLowerThreshold(@NonNull Scalar staticLower) {
         lowerThreshold = () -> staticLower;
+    }
+
+    /**
+     * Sets whether to highlight the points of the contour on the canvas.
+     * Highlights will be the same drawing as the region of interest display.
+     * This is an optional method.
+     *
+     * @param highlight whether to highlight the points of the contour, default false
+     */
+    public void setHighlightContourPoints(@NonNull BooleanSupplier highlight) {
+        highlightContourPoints = highlight;
+    }
+
+    /**
+     * Sets whether to highlight the points of the contour on the canvas.
+     * Highlights will be the same drawing as the region of interest display.
+     * This is an optional method.
+     *
+     * @param staticHighlight whether to highlight the points of the contour, default false
+     */
+    public void setHighlightContourPoints(boolean staticHighlight) {
+        highlightContourPoints = () -> staticHighlight;
     }
 
     /**
@@ -446,6 +503,11 @@ public abstract class ColourThreshold extends Processor<ContourData> {
         distCoeffs = new MatOfDouble(k1, k2, p1, p2, k3);
     }
 
+    @NonNull
+    public MatOfDouble getDistCoeffs() {
+        return distCoeffs;
+    }
+
     /**
      * Set the lens intrinsics for the camera.
      * By default, this method is not required to be called if your camera supplies this information internally.
@@ -460,6 +522,11 @@ public abstract class ColourThreshold extends Processor<ContourData> {
         this.fy = fy;
         this.cx = cx;
         this.cy = cy;
+    }
+
+    @Nullable
+    public Mat getCameraMatrix() {
+        return cameraMatrix;
     }
 
     private void reinitialiseMats() {
@@ -483,8 +550,25 @@ public abstract class ColourThreshold extends Processor<ContourData> {
     }
 
     @Override
-    public void init(int width, int height, @Nullable CameraCalibration calibration) {
+    public void init(@Nullable CameraCalibration calibration) {
         reinitialiseMats();
+
+        Size cameraDimensions = getCameraDimensions();
+        assert cameraDimensions != null;
+        int width = cameraDimensions.getWidth();
+        int height = cameraDimensions.getHeight();
+
+        try {
+            Method asOpenCvRectMethod = ImageRegion.class.getDeclaredMethod("asOpenCvRect", int.class, int.class);
+            asOpenCvRectMethod.setAccessible(true);
+            roi = (Rect) asOpenCvRectMethod.invoke(regionOfInterest.get(), cameraDimensions.getWidth(), cameraDimensions.getHeight());
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException("Failed to access an internal method, this shouldn't happen!", e);
+        }
+
+        // No point in initialising camera intrinsics if we aren't going to use PnP
+        if (objectPoints == null)
+            return;
 
         // ATTEMPT 1 - If the user provided their own calibration, use that
         if (fx != 0 && fy != 0 && cx != 0 && cy != 0) {
@@ -522,7 +606,7 @@ public abstract class ColourThreshold extends Processor<ContourData> {
                 for (CameraCalibration cal : CameraCalibrationHelper.getInstance().getCalibrations(calibration.getIdentity())) {
                     supportedResBuilder.append(String.format(Locale.getDefault(), "[%dx%d],", cal.getSize().getWidth(), cal.getSize().getHeight()));
                 }
-                String msg = String.format(Locale.getDefault(), "Camera has not been calibrated for [%dx%d]. Pose estimates will likely be inaccurate. However, there are built in calibrations for resolutions: %s",
+                String msg = String.format(Locale.getDefault(), "Camera has not been calibrated for [%dx%d]. PnP will likely be inaccurate. However, there are built in calibrations for resolutions: %s",
                         width, height, supportedResBuilder);
                 Log.d("ContourPnP", msg);
                 RobotLog.addGlobalWarningMessage(msg);
@@ -530,7 +614,7 @@ public abstract class ColourThreshold extends Processor<ContourData> {
 
             // Nah, we got absolutely nothing
             else {
-                String warning = "User did not provide a camera calibration, nor was a built-in calibration found for this camera. Pose estimates will likely be inaccurate.";
+                String warning = "User did not provide a camera calibration, nor was a built-in calibration found for this camera. PnP will likely be inaccurate.";
                 Log.d("ContourPnP", warning);
                 RobotLog.addGlobalWarningMessage(warning);
             }
@@ -554,8 +638,9 @@ public abstract class ColourThreshold extends Processor<ContourData> {
         Size cameraDimensions = getCameraDimensions();
         if (cameraDimensions == null) return;
         for (MatOfPoint contour : contours) {
+            Core.add(contour, new Scalar(roi.x, roi.y), contour);
             Point[] points = contour.toArray();
-            ContourData newData = new ContourData(cameraDimensions, Imgproc.minAreaRect(new MatOfPoint2f(points)));
+            ContourData newData = new ContourData(cameraDimensions, points, Imgproc.minAreaRect(new MatOfPoint2f(points)));
             // Min-max bounding
             double min = Mathf.clamp(minAreaPercent.getAsDouble(), 0, 100);
             double max = Mathf.clamp(maxAreaPercent.getAsDouble(), 0, 100);
@@ -597,6 +682,10 @@ public abstract class ColourThreshold extends Processor<ContourData> {
                 || blurSizeUnnormalised.getAsInt() != lastBlurSizeUnnormalised) {
             reinitialiseMats();
         }
+
+        if (roi == null)
+            return;
+        frame = frame.submat(roi);
 
         /*
          * Converts our input mat from RGB to
@@ -678,6 +767,12 @@ public abstract class ColourThreshold extends Processor<ContourData> {
 
     @Override
     protected final void onFrameDraw(@NonNull Canvas canvas) {
+        // Region of interest
+        canvas.drawLine(roi.x, roi.y, roi.x + roi.width, roi.y, borderPaint);
+        canvas.drawLine(roi.x + roi.width, roi.y, roi.x + roi.width, roi.y + roi.height, borderPaint);
+        canvas.drawLine(roi.x + roi.width, roi.y + roi.height, roi.x, roi.y + roi.height, borderPaint);
+        canvas.drawLine(roi.x, roi.y + roi.height, roi.x, roi.y, borderPaint);
+
         // Draw borders around the contours, with a thicker border for the largest contour
         ContourData biggest = ContourData.getLargest(data);
         for (ContourData contour : data) {
@@ -690,9 +785,22 @@ public abstract class ColourThreshold extends Processor<ContourData> {
                         new Paint() {{
                             setColor(boxColour.getAsInt());
                             setStyle(Style.STROKE);
-                            setStrokeWidth(contour == biggest ? DEFAULT_BIGGEST_CONTOUR_BORDER_THICKNESS : DEFAULT_CONTOUR_BORDER_THICKNESS);
+                            setStrokeWidth(contour == biggest ? biggestContourBorderThickness.getAsInt() : contourBorderThickness.getAsInt());
+                            setAntiAlias(true);
                         }}
                 );
+            }
+
+            if (highlightContourPoints.getAsBoolean()) {
+                // Trace out all contours with a thin line
+                Path path = new Path();
+                List<Point> contourPts = contour.getPoints();
+                path.moveTo((float) contourPts.get(0).x, (float) contourPts.get(0).y);
+                for (int i = 1; i < contourPts.size(); i++) {
+                    path.lineTo((float) contourPts.get(i).x, (float) contourPts.get(i).y);
+                }
+                path.close();
+                canvas.drawPath(path, borderPaint);
             }
 
             // Draw angle on the top left corner of the contour
@@ -734,6 +842,7 @@ public abstract class ColourThreshold extends Processor<ContourData> {
                                 setColor(finalI == 1 ? Color.RED : finalI == 2 ? Color.GREEN : Color.BLUE);
                                 setStyle(Style.STROKE);
                                 setStrokeWidth((float) PNP_AXIS_THICKNESS);
+                                setAntiAlias(true);
                             }}
                     );
                 }

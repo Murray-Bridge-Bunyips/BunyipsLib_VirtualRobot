@@ -17,5 +17,9 @@ public class Canvas {
 
     }
 
+    public void drawPath(Object one, Object two) {
+
+    }
+
     public Canvas(Bitmap b){}
 }
