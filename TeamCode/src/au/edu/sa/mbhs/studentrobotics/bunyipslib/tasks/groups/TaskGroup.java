@@ -1,7 +1,5 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.groups;
 
-import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds;
-
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
@@ -9,17 +7,14 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.AutonomousBunyipsOpMode;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsSubsystem;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.EmergencyStop;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.Exceptions;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.Scheduler;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.*;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Measure;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Time;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Text;
+
+import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds;
 
 /**
  * A group of tasks.
@@ -41,10 +36,11 @@ public abstract class TaskGroup extends Task {
             throw new EmergencyStop(getClass().getSimpleName() + " created with no tasks.");
         }
         StringBuilder taskNames = new StringBuilder();
+        taskNames.append("[");
         taskNames.append(getClass().getSimpleName().replace("TaskGroup", ""));
-        taskNames.append(": ");
+        taskNames.append("] ");
         for (int i = 0; i < tasks.length - 1; i++) {
-            taskNames.append(tasks[i]).append(", ");
+            taskNames.append(tasks[i]).append(",");
         }
         taskNames.append(tasks[tasks.length - 1]);
         withName(taskNames.toString());
@@ -56,25 +52,6 @@ public abstract class TaskGroup extends Task {
     @NonNull
     public List<Task> getGroupedTasks() {
         return new ArrayList<>(tasks);
-    }
-
-    /**
-     * Log the creation of this task group in the OpMode telemetry.
-     * Called internally by {@link AutonomousBunyipsOpMode}.
-     */
-    public void logCreation() {
-        String groupName = toString();
-        String taskGroup = getClass().getSimpleName();
-        // Avoid printing the group name if it is the same as the task group name
-        if (!groupName.equals(taskGroup)) {
-            opMode(o -> o.telemetry.log("<font color='gray'>%:</font> % created with % tasks.", groupName, taskGroup, tasks.size()));
-        } else {
-            opMode(o -> o.telemetry.log("<font color='gray'>%:</font> Created with % tasks.", taskGroup, tasks.size()));
-        }
-        // List subtasks
-        for (Task task : tasks) {
-            opMode(o -> o.telemetry.log("&nbsp;&nbsp;-> <font color='gray'>%<i>(t=%)</i></font>", task.toString(), task.getTimeout().magnitude() != 0.0 ? Mathf.round(task.getTimeout().in(Seconds), 1) + "s" : "∞"));
-        }
     }
 
     protected final void executeTask(@NonNull Task task) {
