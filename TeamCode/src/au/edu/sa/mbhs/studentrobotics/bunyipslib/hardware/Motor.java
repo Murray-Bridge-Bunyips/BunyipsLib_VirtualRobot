@@ -9,13 +9,7 @@ import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorController;
-import com.qualcomm.robotcore.hardware.DcMotorControllerEx;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.PIDCoefficients;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.qualcomm.robotcore.hardware.*;
 import com.qualcomm.robotcore.hardware.configuration.LynxConstants;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import com.qualcomm.robotcore.util.RobotLog;
@@ -125,22 +119,22 @@ public class Motor extends SimpleRotator implements DcMotorEx {
      * Sets a voltage sensor to use for nominal power calculation.
      * See {@link #setNominalVoltage(Measure)} to set a nominal voltage directly, defaults to 12V.
      *
-     * @param nominalVoltageSensor the sensor to use for nominal voltage calculation
+     * @param nominalVoltageSensorMapping the sensor mapping to use for nominal voltage calculation, usually {@code hardwareMap.voltageSensor}
      */
-    public void setNominalVoltageSensor(VoltageSensor nominalVoltageSensor) {
-        this.nominalVoltageSensor = nominalVoltageSensor;
+    public void setNominalVoltageSensor(@NonNull HardwareMap.DeviceMapping<VoltageSensor> nominalVoltageSensorMapping) {
+        nominalVoltageSensor = nominalVoltageSensorMapping.iterator().next();
     }
 
     /**
      * Sets the nominal voltage to use for power calculations.
      * The equation used is {@code applied = power * (nominalVoltage / sensorVoltage)}.
      * <p>
-     * A voltage sensor <b>must</b> be set for this to work via {@link #setNominalVoltageSensor(VoltageSensor)}.
+     * A voltage sensor <b>must</b> be set for this to work via {@link #setNominalVoltageSensor(HardwareMap.DeviceMapping)}
      * This value will be ignored if no sensor is set.
      *
      * @param nominalVoltage the nominal voltage parameter to use, defaults to 12V
      */
-    public void setNominalVoltage(Measure<Voltage> nominalVoltage) {
+    public void setNominalVoltage(@NonNull Measure<Voltage> nominalVoltage) {
         this.nominalVoltage = Math.abs(nominalVoltage.in(Volts));
     }
 
