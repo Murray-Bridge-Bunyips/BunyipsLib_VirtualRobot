@@ -14,7 +14,6 @@ import com.acmerobotics.roadrunner.Pose2d;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 
 /**
  * Global filesystem and volatile storage utilities for robot operation.
@@ -77,12 +76,6 @@ public final class Storage {
          * @see RobotConfig
          */
         public final ArrayList<String> hardwareErrors = new ArrayList<>();
-        /**
-         * Components that are unusable and should not have their errors logged.
-         *
-         * @see NullSafety
-         */
-        public final HashSet<String> unusableComponents = new HashSet<>();
         private final HashMap<String, Object> store = new HashMap<>();
         /**
          * The last known player Alliance.
@@ -108,7 +101,6 @@ public final class Storage {
         public void clear() {
             store.clear();
             hardwareErrors.clear();
-            unusableComponents.clear();
             lastKnownAlliance = null;
             lastKnownPosition = Geometry.zeroPose();
         }

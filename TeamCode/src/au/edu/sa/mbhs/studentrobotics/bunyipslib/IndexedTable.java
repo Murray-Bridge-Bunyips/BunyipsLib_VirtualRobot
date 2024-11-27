@@ -1,26 +1,17 @@
-package au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems;
-
+package au.edu.sa.mbhs.studentrobotics.bunyipslib;
 
 import androidx.annotation.NonNull;
 
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsSubsystem;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.EmergencyStop;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.RunTask;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
-
 /**
  * Multi-purpose index-based table with increment and decrement functionality.
+ * Exposed as a runnable component for telemetry updates.
  *
  * @author Lucas Bubner, 2024
  * @since 1.0.0-pre
  */
-public class IndexedTable extends BunyipsSubsystem {
-    /**
-     * Tasks for IndexedTable.
-     */
-    public final Tasks tasks = new Tasks();
-
+public class IndexedTable extends BunyipsComponent implements Runnable {
     private final double[] tableValues;
+    private String name = "IndexedTable";
     private int index = 0;
 
     /**
@@ -47,6 +38,18 @@ public class IndexedTable extends BunyipsSubsystem {
     }
 
     /**
+     * Set the name of the indexed table.
+     *
+     * @param name the name to set
+     * @return this
+     */
+    @NonNull
+    public IndexedTable withName(@NonNull String name) {
+        this.name = name;
+        return this;
+    }
+
+    /**
      * Increment the table index.
      */
     public void increment() {
@@ -68,8 +71,13 @@ public class IndexedTable extends BunyipsSubsystem {
      * @param index the index to set
      */
     public void set(int index) {
-        if (index < 0 || index >= tableValues.length) {
-            throw new IllegalArgumentException("Index out of bounds");
+        if (index < 0) {
+            this.index = 0;
+            return;
+        }
+        if (index >= tableValues.length) {
+            this.index = tableValues.length - 1;
+            return;
         }
         this.index = index;
     }
@@ -84,10 +92,10 @@ public class IndexedTable extends BunyipsSubsystem {
     }
 
     /**
-     * Optionally update telemetry with the current value and index.
+     * Optionally updates telemetry with the current value and index.
      */
     @Override
-    protected void periodic() {
+    public void run() {
         opMode(o -> o.telemetry.add(
                 "%: % <font color='gray'>(%/%)</font>",
                 name,
@@ -95,34 +103,5 @@ public class IndexedTable extends BunyipsSubsystem {
                 index + 1,
                 tableValues.length
         ));
-    }
-
-    /**
-     * Tasks for IndexedTable, access with {@link #tasks}.
-     */
-    public class Tasks {
-        /**
-         * Create a task to decrement the table index.
-         *
-         * @return the task
-         */
-        @NonNull
-        public Task decrement() {
-            return new RunTask(IndexedTable.this::decrement)
-                    .onSubsystem(IndexedTable.this, false)
-                    .withName("Decrement Index");
-        }
-
-        /**
-         * Create a task to increment the table index.
-         *
-         * @return the task
-         */
-        @NonNull
-        public Task increment() {
-            return new RunTask(IndexedTable.this::increment)
-                    .onSubsystem(IndexedTable.this, false)
-                    .withName("Increment Index");
-        }
     }
 }
