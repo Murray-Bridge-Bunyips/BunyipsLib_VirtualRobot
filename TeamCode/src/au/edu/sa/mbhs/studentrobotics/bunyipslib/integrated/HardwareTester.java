@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 //import com.qualcomm.robotcore.hardware.AccelerationSensor;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
+//import com.qualcomm.robotcore.hardware.Blinker;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 //import com.qualcomm.robotcore.hardware.CompassSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -50,6 +51,7 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -90,7 +92,10 @@ public final class HardwareTester extends OpMode {
         }
         if (hardware == null || hardware.isEmpty())
             throw new EmergencyStop("No hardware devices found!");
-
+//        hardwareMap.getAll(LynxModule.class).forEach(h -> h.setPattern(Arrays.asList(
+//                new Blinker.Step(Color.GREEN.color, 400, TimeUnit.MILLISECONDS),
+//                new Blinker.Step(Color.LTGRAY.color, 400, TimeUnit.MILLISECONDS)
+//        )));
         TelemetryMenu.MenuElement root = new TelemetryMenu.MenuElement("Hardware Tester", true);
         for (Map.Entry<String, List<HardwareDevice>> entry : hardware.entrySet()) {
             // Map each hardwareMap name to a category and add it to the root menu
