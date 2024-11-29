@@ -31,7 +31,7 @@ public class ProfiledServo implements Servo {
     private double lastDtSec = -1;
 
     private double positionDeltaTolerance;
-    private double lastPosition;
+    private double lastPosition = -1;
     private long refreshRateNanos;
     private long lastUpdate;
 

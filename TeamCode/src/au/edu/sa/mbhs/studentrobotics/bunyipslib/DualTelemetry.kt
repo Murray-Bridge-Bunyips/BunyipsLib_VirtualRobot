@@ -18,6 +18,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.external.Telemetry.DisplayFormat
 import org.firstinspires.ftc.robotcore.external.Telemetry.Item
 import java.util.Collections
+import java.util.SortedMap
 import java.util.function.BooleanSupplier
 import kotlin.math.roundToInt
 
@@ -52,7 +53,7 @@ class DualTelemetry @JvmOverloads constructor(
     }
 
     private lateinit var overheadTelemetry: Item
-    private val dashboardItems = Collections.synchronizedSet(mutableSetOf<Pair<ItemType, Reference<String>>>())
+    private var dashboardItems = Collections.synchronizedSet(mutableSetOf<Pair<ItemType, Reference<String>>>())
     private var userPacket: TelemetryPacket = TelemetryPacket()
 
     @Volatile
@@ -322,6 +323,7 @@ class DualTelemetry @JvmOverloads constructor(
     /**
      * Update and push queued telemetry to the Driver Station and FtcDashboard.
      */
+    @Suppress("UNCHECKED_CAST")
     override fun update(): Boolean {
         // Update main DS telemetry
         val retVal = opMode.telemetry.update()
@@ -412,19 +414,28 @@ class DualTelemetry @JvmOverloads constructor(
                     }
                 }
             }
-            dashboardItems.removeIf { it.first == ItemType.TELEMETRY }
-            // Trim down the FtcDashboard logs to the same amount of logs as the DS
-            val logs = dashboardItems.count { it.first == ItemType.LOG }
-            if (logs > TELEMETRY_LOG_LINE_LIMIT) {
-                val toRemove = dashboardItems.filter { it.first == ItemType.LOG }
-                    .take(logs - TELEMETRY_LOG_LINE_LIMIT)
-                dashboardItems.removeAll(toRemove.toSet())
-            }
+            clearDashboardItems()
         }
 
-        FtcDashboard.getInstance().sendTelemetryPacket(packet)
         synchronized(userPacket) {
-            FtcDashboard.getInstance().sendTelemetryPacket(userPacket)
+            // Access all data fields from each packet, not including the field itself
+            packet.fieldOverlay().operations.addAll(userPacket.fieldOverlay().operations)
+            val dataField = packet.javaClass.getDeclaredField("data")
+            val logField = packet.javaClass.getDeclaredField("log")
+            dataField.isAccessible = true
+            logField.isAccessible = true
+            val dataPacket = dataField.get(packet) as SortedMap<String, String>
+            val logPacket = logField.get(packet) as MutableList<String>
+            val dataUser = dataField.get(userPacket) as SortedMap<String, String>
+            val logUser = logField.get(userPacket) as MutableList<String>
+            // Merge them all together
+            dataPacket.putAll(dataUser)
+            logPacket.addAll(logUser)
+            dataField.set(packet, dataPacket)
+            logField.set(packet, logPacket)
+
+            FtcDashboard.getInstance().sendTelemetryPacket(packet)
+
             userPacket = TelemetryPacket()
         }
 
@@ -457,13 +468,25 @@ class DualTelemetry @JvmOverloads constructor(
         this.dashboardCaptionValueAutoSeparator = dashboardCaptionValueAutoSeparator
     }
 
+    private fun clearDashboardItems() {
+        var i = 0
+        dashboardItems = Collections.synchronizedSet(dashboardItems.filter { item ->
+            if (item.first == ItemType.LOG) {
+                i++
+                i <= TELEMETRY_LOG_LINE_LIMIT
+            } else {
+                item.first != ItemType.TELEMETRY
+            }
+        }.toMutableSet())
+    }
+
     /**
      * Clear telemetry on the Driver Station, not including retention
      */
     override fun clear() {
         telemetryQueue = 0
         synchronized(dashboardItems) {
-            dashboardItems.removeIf { it.first == ItemType.TELEMETRY }
+            clearDashboardItems()
         }
         opMode.telemetry.clear()
     }
@@ -474,7 +497,7 @@ class DualTelemetry @JvmOverloads constructor(
     override fun clearAll() {
         opMode.telemetry.clearAll()
         synchronized(dashboardItems) {
-            dashboardItems.removeIf { it.first == ItemType.TELEMETRY }
+            dashboardItems.clear()
         }
 //        FtcDashboard.getInstance().clearTelemetry()
         telemetryQueue = 0
