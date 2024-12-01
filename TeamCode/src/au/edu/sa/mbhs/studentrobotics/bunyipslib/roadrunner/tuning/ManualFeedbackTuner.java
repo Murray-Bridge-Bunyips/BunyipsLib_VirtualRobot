@@ -9,8 +9,8 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.Localizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.ThreeWheelLocalizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.TwoWheelLocalizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.RoadRunnerDrive;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.ConditionalTask;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.ContinuousTask;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.ConditionalTask;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.groups.DeadlineTaskGroup;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dashboard;
@@ -55,7 +55,7 @@ public final class ManualFeedbackTuner extends LinearOpMode {
             Actions.runBlocking(
                     new DeadlineTaskGroup(
                             new ConditionalTask(
-                                    new ContinuousTask(() -> drive.setPower(Controls.vel(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x)))
+                                    Task.task().periodic(() -> drive.setPower(Controls.vel(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x)))
                                             .until(() -> !gamepad1.right_bumper)
                                             .then(() -> drive.setPose(Geometry.zeroPose())),
                                     drive.makeTrajectory(new Pose2d(0, 0, 0))
@@ -65,13 +65,13 @@ public final class ManualFeedbackTuner extends LinearOpMode {
                                             .until(() -> gamepad1.right_bumper),
                                     () -> gamepad1.right_bumper
                             ),
-                            new ContinuousTask(() -> {
+                            Task.task().periodic(() -> {
                                 if (drive instanceof BunyipsSubsystem)
                                     ((BunyipsSubsystem) drive).update();
                                 else
                                     drive.periodic();
                             }),
-                            new ContinuousTask(Dashboard::sendAndClearSyncedPackets)
+                            Task.task().periodic(Dashboard::sendAndClearSyncedPackets)
                     )
             );
         }

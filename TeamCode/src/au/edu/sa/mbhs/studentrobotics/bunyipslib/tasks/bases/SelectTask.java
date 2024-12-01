@@ -1,4 +1,4 @@
-package au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks;
+package au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases;
 
 import android.annotation.SuppressLint;
 
@@ -7,12 +7,11 @@ import androidx.annotation.NonNull;
 import java.util.HashMap;
 import java.util.function.Supplier;
 
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
-
 /**
  * Select a task to run based on a hashmap of states and a supplier of states.
  *
  * @param <T> the type of the state
+ * @author Lucas Bubner, 2024
  * @since 1.0.0-pre
  */
 public class SelectTask<T> extends Task {

@@ -6,7 +6,7 @@ import androidx.annotation.Nullable;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsSubsystem;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.RunTask;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Lambda;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
 
 /**
@@ -192,7 +192,7 @@ public class DualServos extends BunyipsSubsystem {
          */
         @NonNull
         public Task openLeft() {
-            return new RunTask(() -> open(ServoSide.LEFT))
+            return new Lambda(() -> open(ServoSide.LEFT))
                     .onSubsystem(DualServos.this, true)
                     .withName(name + ":Open Left");
         }
@@ -204,7 +204,7 @@ public class DualServos extends BunyipsSubsystem {
          */
         @NonNull
         public Task openRight() {
-            return new RunTask(() -> open(ServoSide.RIGHT))
+            return new Lambda(() -> open(ServoSide.RIGHT))
                     .onSubsystem(DualServos.this, true)
                     .withName(name + ":Open Right");
         }
@@ -216,7 +216,7 @@ public class DualServos extends BunyipsSubsystem {
          */
         @NonNull
         public Task openBoth() {
-            return new RunTask(() -> {
+            return new Lambda(() -> {
                 open(ServoSide.LEFT);
                 open(ServoSide.RIGHT);
             })
@@ -231,7 +231,7 @@ public class DualServos extends BunyipsSubsystem {
          */
         @NonNull
         public Task closeLeft() {
-            return new RunTask(() -> close(ServoSide.LEFT))
+            return new Lambda(() -> close(ServoSide.LEFT))
                     .onSubsystem(DualServos.this, true)
                     .withName(name + ":Close Left");
         }
@@ -243,7 +243,7 @@ public class DualServos extends BunyipsSubsystem {
          */
         @NonNull
         public Task closeRight() {
-            return new RunTask(() -> close(ServoSide.RIGHT))
+            return new Lambda(() -> close(ServoSide.RIGHT))
                     .onSubsystem(DualServos.this, true)
                     .withName(name + ":Close Right");
         }
@@ -255,7 +255,7 @@ public class DualServos extends BunyipsSubsystem {
          */
         @NonNull
         public Task closeBoth() {
-            return new RunTask(() -> {
+            return new Lambda(() -> {
                 close(ServoSide.LEFT);
                 close(ServoSide.RIGHT);
             })
@@ -270,7 +270,7 @@ public class DualServos extends BunyipsSubsystem {
          */
         @NonNull
         public Task toggleLeft() {
-            return new RunTask(() -> toggle(ServoSide.LEFT))
+            return new Lambda(() -> toggle(ServoSide.LEFT))
                     .onSubsystem(DualServos.this, true)
                     .withName(name + ":Toggle Left");
         }
@@ -282,7 +282,7 @@ public class DualServos extends BunyipsSubsystem {
          */
         @NonNull
         public Task toggleRight() {
-            return new RunTask(() -> toggle(ServoSide.RIGHT))
+            return new Lambda(() -> toggle(ServoSide.RIGHT))
                     .onSubsystem(DualServos.this, true)
                     .withName(name + ":Toggle Right");
         }
@@ -294,7 +294,7 @@ public class DualServos extends BunyipsSubsystem {
          */
         @NonNull
         public Task toggleBoth() {
-            return new RunTask(() -> {
+            return new Lambda(() -> {
                 toggle(ServoSide.LEFT);
                 toggle(ServoSide.RIGHT);
             })

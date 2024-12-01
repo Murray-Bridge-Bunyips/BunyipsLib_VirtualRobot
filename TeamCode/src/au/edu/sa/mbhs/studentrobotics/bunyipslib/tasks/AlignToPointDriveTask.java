@@ -12,7 +12,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PIDFContro
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Angle;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Measure;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive.Moveable;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.ForeverTask;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry;
 import com.acmerobotics.roadrunner.Pose2d;
@@ -30,7 +30,7 @@ import java.util.function.Supplier;
  * @author Lucas Bubner, 2024
  * @since 4.1.0
  */
-public class AlignToPointDriveTask extends ForeverTask {
+public class AlignToPointDriveTask extends Task {
     /**
      * The tolerance at which the robot will stop trying to align to a point if it is within this radius to the point.
      */

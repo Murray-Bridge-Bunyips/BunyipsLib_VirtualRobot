@@ -2,7 +2,6 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.AutonomousBunyipsOpMode
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsOpMode
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsSubsystem
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.Reference
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Angle
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Distance
@@ -15,7 +14,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.constraints.Accel
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.constraints.Turn
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.constraints.Vel
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.Constants
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.ActionTask
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.ActionTask
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task
 import com.acmerobotics.roadrunner.AccelConstraint
 import com.acmerobotics.roadrunner.Action
@@ -39,12 +38,7 @@ import com.acmerobotics.roadrunner.VelConstraint
  * @author Lucas Bubner, 2024
  * @since 6.0.0
  */
-class TaskBuilder @JvmOverloads constructor(
-    private val constants: Constants,
-    startPose: Pose2d,
-    poseMap: PoseMap,
-    private val caller: RoadRunnerDrive? = null
-) {
+class TaskBuilder(private val constants: Constants, startPose: Pose2d, poseMap: PoseMap) {
     private var turnConstraints = constants.baseTurnConstraints
     private var velConstraints = constants.baseVelConstraint
     private var accelConstraints = constants.baseAccelConstraint
@@ -647,7 +641,7 @@ class TaskBuilder @JvmOverloads constructor(
         val lastPoseUnmapped = lastPoseUnmappedField.get(builder) as Pose2d
         val lastTangent = lastTangentField.get(builder) as Rotation2d
 
-        return TaskBuilder(constants, lastPoseUnmapped, builder.poseMap, caller).setTangent(lastTangent)
+        return TaskBuilder(constants, lastPoseUnmapped, builder.poseMap).setTangent(lastTangent)
     }
 
     /**
@@ -736,8 +730,6 @@ class TaskBuilder @JvmOverloads constructor(
             it.withName(name)
         if (timeout != null)
             it.withTimeout(timeout!!)
-        if (caller != null && caller is BunyipsSubsystem)
-            it.onSubsystem(caller)
     }
 
     /**

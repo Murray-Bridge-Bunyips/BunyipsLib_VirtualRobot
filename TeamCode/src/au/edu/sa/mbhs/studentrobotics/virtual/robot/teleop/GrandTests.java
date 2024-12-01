@@ -6,6 +6,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.TrapezoidProfi
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.ProfiledServo;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.HoldableActuator;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.*;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.groups.SequentialTaskGroup;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls;
 import au.edu.sa.mbhs.studentrobotics.virtual.robot.Robot;
@@ -31,7 +32,7 @@ public class GrandTests extends CommandBasedBunyipsOpMode {
 
     @Override
     protected void assignCommands() {
-        driver().whenPressed(Controls.A).run(new StartEndTask(Dbg::stamp, () -> Dbg.log("STOP"))).finishIf(() -> gamepad1.getDebounced(Controls.A));
+        driver().whenPressed(Controls.A).run(Task.task().init(Dbg::stamp).onFinish(() -> Dbg.log("STOP"))).finishIf(() -> gamepad1.getDebounced(Controls.A));
 //        ha.setDefaultTask(ha.tasks.control(() -> -gamepad1.lsy));
 //        driver().whenPressed(Controls.A).run(ha.tasks.goTo(1000));
 //        driver().whenPressed(Controls.B).run(ha.tasks.goTo(0));

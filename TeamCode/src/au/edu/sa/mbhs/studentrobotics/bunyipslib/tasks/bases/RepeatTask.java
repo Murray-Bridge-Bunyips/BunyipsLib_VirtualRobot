@@ -1,9 +1,6 @@
-package au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks;
+package au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases;
 
 import androidx.annotation.NonNull;
-
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.ForeverTask;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
 
 /**
  * A task that will auto-reset and repeat itself after it is completed.
@@ -11,7 +8,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
  * @author Lucas Bubner, 2024
  * @since 1.0.0-pre
  */
-public class RepeatTask extends ForeverTask {
+public class RepeatTask extends Task {
     private final Task task;
 
     /**
@@ -21,7 +18,7 @@ public class RepeatTask extends ForeverTask {
      */
     public RepeatTask(@NonNull Task task) {
         this.task = task;
-        withName(task + " (Repeat)");
+        withName(task + " (repeat)");
     }
 
     @Override
