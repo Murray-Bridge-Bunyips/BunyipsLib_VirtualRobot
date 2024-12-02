@@ -216,10 +216,7 @@ public class DualServos extends BunyipsSubsystem {
          */
         @NonNull
         public Task openBoth() {
-            return new Lambda(() -> {
-                open(ServoSide.LEFT);
-                open(ServoSide.RIGHT);
-            })
+            return new Lambda(() -> open(ServoSide.BOTH))
                     .onSubsystem(DualServos.this, true)
                     .withName(name + ":Open Both");
         }
@@ -255,10 +252,7 @@ public class DualServos extends BunyipsSubsystem {
          */
         @NonNull
         public Task closeBoth() {
-            return new Lambda(() -> {
-                close(ServoSide.LEFT);
-                close(ServoSide.RIGHT);
-            })
+            return new Lambda(() -> close(ServoSide.BOTH))
                     .onSubsystem(DualServos.this, true)
                     .withName(name + ":Close Both");
         }

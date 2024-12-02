@@ -232,7 +232,7 @@ public class HoldableActuator extends BunyipsSubsystem {
     @NonNull
     public HoldableActuator withTopSwitch(@Nullable TouchSensor topLimitSwitch) {
         if (topLimitSwitch == null)
-            Dbg.error(getClass(), "%Supplied top limit switch is null! Ignoring.", isDefaultName() ? "" : "(" + name + ") ");
+            sout(Dbg::error, "Supplied top limit switch is null! Ignoring.");
         topSwitch = topLimitSwitch;
         return this;
     }
@@ -248,7 +248,7 @@ public class HoldableActuator extends BunyipsSubsystem {
     @NonNull
     public HoldableActuator withBottomSwitch(@Nullable TouchSensor bottomLimitSwitch) {
         if (bottomLimitSwitch == null)
-            Dbg.error(getClass(), "%Supplied bottom limit switch is null! Ignoring.", isDefaultName() ? "" : "(" + name + ") ");
+            sout(Dbg::error, "Supplied bottom limit switch is null! Ignoring.");
         bottomSwitch = bottomLimitSwitch;
         return this;
     }
@@ -539,7 +539,7 @@ public class HoldableActuator extends BunyipsSubsystem {
         }
 
         if (topSwitch != null && bottomSwitch != null && topSwitch.isPressed() && bottomSwitch.isPressed()) {
-            Dbg.warn(getClass(), "%Warning: Both limit switches were pressed at the same time. This indicates an impossible system state.", isDefaultName() ? "" : "(" + name + ") ");
+            sout(Dbg::warn, "Warning: Both limit switches were pressed at the same time. This indicates an impossible system state.");
         }
 
         if (inputMode != Mode.HOMING && ((current < minLimit && motorPower < 0.0) || (current > maxLimit && motorPower > 0.0))) {
@@ -551,18 +551,19 @@ public class HoldableActuator extends BunyipsSubsystem {
         if (motor.getMode() == DcMotor.RunMode.RUN_TO_POSITION) {
             boolean overCurrent = motor.isOverCurrent();
             if (sustainedOvercurrent.seconds() >= overcurrentTime.in(Seconds) && overCurrent) {
-                Dbg.warn(getClass(), "%Warning: Stall detection (continued %A for %s) has been activated. To prevent motor damage, the target position has been auto set to the current position (% -> %).", isDefaultName() ? "" : "(" + name + ") ", Mathf.round(motor.getCurrentAlert(CurrentUnit.AMPS), 1), Mathf.round(overcurrentTime.in(Seconds), 1), target, current);
+                sout(Dbg::warn, "Warning: Stall detection (continued % A for % sec) has been activated. To prevent motor damage, the target position has been auto set to the current position (% -> %).", Mathf.round(motor.getCurrentAlert(CurrentUnit.AMPS), 1), Mathf.round(overcurrentTime.in(Seconds), 1), target, current);
                 newTarget = motor.getCurrentPosition();
             } else if (!overCurrent) {
                 sustainedOvercurrent.reset();
             }
 
             if (maxSteadyState != null) {
+                // Steady state error will be if we're not near the target and not moving in any meaningful quantity
                 if (Mathf.isNear(current, target, tolerance) || !Mathf.isNear(encoder.getVelocity(), 0, tolerance)) {
                     sustainedTolerated.reset();
                 }
                 if (sustainedTolerated.seconds() >= maxSteadyState.in(Seconds)) {
-                    Dbg.warn(getClass(), "%Warning: Steady state error has been detected for more than %s. To prevent motor damage, the target position has been auto set to the current position (% -> %).", isDefaultName() ? "" : "(" + name + ") ", Mathf.round(maxSteadyState.in(Seconds), 1), target, current);
+                    sout(Dbg::warn, "Warning: Steady state error has been detected for % sec. To prevent motor damage, the target position has been auto set to the current position (% -> %).", Mathf.round(maxSteadyState.in(Seconds), 1), target, current);
                     newTarget = motor.getCurrentPosition();
                 }
             }
@@ -640,36 +641,36 @@ public class HoldableActuator extends BunyipsSubsystem {
                     .named(name + ":Run For Time");
         }
 
-        /**
-         * Home the actuator based on encoders against a hard stop or limit switch. This task ignores
-         * the lower and upper limits as defined by this class.
-         *
-         * @return a task to home the actuator
-         */
-        @NonNull
-        public Task home() {
+        private Task homingOperation(int direction) {
             return new Task(homingTimeout) {
+                private final TouchSensor targetSwitch;
                 private ElapsedTime overcurrentTimer;
                 private double previousAmpAlert;
                 private double zeroHits;
+
+                {
+                    onSubsystem(HoldableActuator.this, true);
+                    homingDirection = direction;
+                    withName(name + (homingDirection == -1 ? ":Return To Home" : ":Travel To Ceiling"));
+                    targetSwitch = homingDirection == -1 ? bottomSwitch : topSwitch;
+                }
 
                 @Override
                 protected void init() {
                     previousAmpAlert = motor.getCurrentAlert(CurrentUnit.AMPS);
                     // Stop now if the switch is already pressed
-                    if (bottomSwitch != null && bottomSwitch.isPressed()) {
+                    if (targetSwitch != null && targetSwitch.isPressed()) {
                         finishNow();
                         return;
                     }
                     zeroHits = 0;
-                    homingDirection = -1;
                     inputMode = Mode.HOMING;
                 }
 
                 @Override
                 protected void periodic() {
                     if (zeroHitThreshold <= 0) return;
-                    if (encoder.getVelocity() >= 0) {
+                    if (homingDirection == -1 ? encoder.getVelocity() >= 0 : encoder.getVelocity() <= 0) {
                         zeroHits++;
                     } else {
                         zeroHits = 0;
@@ -679,12 +680,13 @@ public class HoldableActuator extends BunyipsSubsystem {
                 @Override
                 protected void onFinish() {
                     motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    encoder.reset();
                     setInputModeToUser();
                 }
 
                 @Override
                 protected boolean isTaskFinished() {
-                    boolean bottomedOut = bottomSwitch != null && bottomSwitch.isPressed();
+                    boolean hardStop = targetSwitch != null && targetSwitch.isPressed();
                     boolean velocityZeroed = zeroHitThreshold > 0 && zeroHits >= zeroHitThreshold;
                     boolean overCurrent = overcurrentTime.magnitude() > 0 && motor.isOverCurrent();
                     if (overcurrentTime.magnitude() > 0 && overCurrent && overcurrentTimer == null) {
@@ -693,9 +695,20 @@ public class HoldableActuator extends BunyipsSubsystem {
                         overcurrentTimer = null;
                     }
                     boolean sustainedOvercurrent = overcurrentTimer != null && overcurrentTimer.seconds() >= overcurrentTime.in(Seconds);
-                    return inputMode != Mode.HOMING || (bottomedOut || velocityZeroed || sustainedOvercurrent);
+                    return inputMode != Mode.HOMING || (hardStop || velocityZeroed || sustainedOvercurrent);
                 }
-            }.onSubsystem(HoldableActuator.this, true).withName(name + ":Return To Home");
+            };
+        }
+
+        /**
+         * Home the actuator based on encoders against a hard stop or limit switch. This task ignores
+         * the lower and upper limits as defined by this class.
+         *
+         * @return a task to home the actuator
+         */
+        @NonNull
+        public Task home() {
+            return homingOperation(-1);
         }
 
         /**
@@ -710,54 +723,7 @@ public class HoldableActuator extends BunyipsSubsystem {
          */
         @NonNull
         public Task ceil() {
-            return new Task(homingTimeout) {
-                private ElapsedTime overcurrentTimer;
-                private double previousAmpAlert;
-                private double zeroHits;
-
-                @Override
-                protected void init() {
-                    previousAmpAlert = motor.getCurrentAlert(CurrentUnit.AMPS);
-                    // Stop now if the switch is already pressed
-                    if (topSwitch != null && topSwitch.isPressed()) {
-                        finishNow();
-                        return;
-                    }
-                    zeroHits = 0;
-                    homingDirection = 1;
-                    inputMode = Mode.HOMING;
-                }
-
-                @Override
-                protected void periodic() {
-                    if (zeroHitThreshold <= 0) return;
-                    if (encoder.getVelocity() <= 0) {
-                        zeroHits++;
-                    } else {
-                        zeroHits = 0;
-                    }
-                }
-
-                @Override
-                protected void onFinish() {
-                    motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    setInputModeToUser();
-                }
-
-                @Override
-                protected boolean isTaskFinished() {
-                    boolean toppedOut = topSwitch != null && topSwitch.isPressed();
-                    boolean velocityZeroed = zeroHitThreshold > 0 && zeroHits >= zeroHitThreshold;
-                    boolean overCurrent = overcurrentTime.magnitude() > 0 && motor.isOverCurrent();
-                    if (overcurrentTime.magnitude() > 0 && overCurrent && overcurrentTimer == null) {
-                        overcurrentTimer = new ElapsedTime();
-                    } else if (!overCurrent) {
-                        overcurrentTimer = null;
-                    }
-                    boolean sustainedOvercurrent = overcurrentTimer != null && overcurrentTimer.seconds() >= overcurrentTime.in(Seconds);
-                    return inputMode != Mode.HOMING || (toppedOut || velocityZeroed || sustainedOvercurrent);
-                }
-            }.onSubsystem(HoldableActuator.this, true).withName(name + ":Travel To Ceiling");
+            return homingOperation(1);
         }
 
         /**
@@ -772,7 +738,7 @@ public class HoldableActuator extends BunyipsSubsystem {
         public Task goTo(@NonNull TouchSensor limitSwitch) {
             Integer position = switchMapping.get(limitSwitch);
             if (position == null) {
-                Dbg.warn(getClass(), "%Attempted to go to a limit switch that was not mapped. This task will not run.", isDefaultName() ? "" : "(" + name + ") ");
+                sout(Dbg::error, "Attempted to go to a limit switch that was not mapped. This task will not run.");
                 return new Lambda();
             }
             // Since this is a static mapping we can return the task
