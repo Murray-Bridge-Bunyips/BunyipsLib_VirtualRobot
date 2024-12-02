@@ -185,16 +185,16 @@ public abstract class CommandBasedBunyipsOpMode extends BunyipsOpMode {
                 Arrays.stream(tasks).filter(task -> !task.getTaskToRun().hasDependency()).count()
         );
         for (BunyipsSubsystem subsystem : subsystems) {
-            out.append("  | %\n", subsystem.toVerboseString());
+            out.append(" | %\n", subsystem.toVerboseString());
             for (Scheduler.ScheduledTask task : tasks) {
                 Optional<BunyipsSubsystem> dep = task.getTaskToRun().getDependency();
-                if (!dep.isPresent() || !dep.get().equals(subsystem)) continue;
+                if (dep.isEmpty() || !dep.get().equals(subsystem)) continue;
                 out.append("    -> %\n", task);
             }
         }
         for (Scheduler.ScheduledTask task : tasks) {
             if (task.getTaskToRun().getDependency().isPresent()) continue;
-            out.append("  | %\n", task);
+            out.append("  : %\n", task);
         }
         Dbg.logd(out.toString());
         // Ensure to always run assignCommands() even if no subsystems are made, since it may be used for other purposes
