@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Measure;
@@ -107,6 +108,16 @@ public abstract class BunyipsSubsystem extends BunyipsComponent {
     }
 
     /**
+     * Log to Logcat using smart formatting with the current subsystem name.
+     *
+     * @param message the message to log
+     * @param logger the underlying function to log the message, such as {@link Dbg} methods.
+     */
+    protected void log(String message, Consumer<String> logger) {
+        logger.accept(Text.format("[%] %%", getClass().getSimpleName(), "(" + toString().replace(getClass().getSimpleName(), "") + ") ", message));
+    }
+
+    /**
      * @return a status string of this subsystem
      */
     @NonNull
@@ -138,10 +149,10 @@ public abstract class BunyipsSubsystem extends BunyipsComponent {
     }
 
     /**
-     * @return whether the name of the subsystem has not been modified (customisable name is the same as the class name)
+     * @return whether the name of the subsystem has not been modified (customisable name is the same as the class name plus some index)
      */
     public final boolean isDefaultName() {
-        return name.equals(getClass().getSimpleName());
+        return name.matches("^" + getClass().getSimpleName() + "\\d*$");
     }
 
     /**
@@ -178,7 +189,6 @@ public abstract class BunyipsSubsystem extends BunyipsComponent {
         }
         return shouldRun;
     }
-
 
     /**
      * Call to delegate the update of this subsystem, usually a component of another subsystem, to this subsystem.
