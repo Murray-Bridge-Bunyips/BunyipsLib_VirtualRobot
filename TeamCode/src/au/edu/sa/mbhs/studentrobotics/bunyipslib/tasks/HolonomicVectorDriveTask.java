@@ -94,7 +94,7 @@ public class HolonomicVectorDriveTask extends Task {
      */
     public HolonomicVectorDriveTask(@NonNull Supplier<PoseVelocity2d> vel, @NonNull Moveable drive, @NonNull BooleanSupplier fieldCentricEnabled) {
         if (drive instanceof BunyipsSubsystem)
-            onSubsystem((BunyipsSubsystem) drive, false);
+            on((BunyipsSubsystem) drive, false);
         this.drive = drive;
         this.vel = vel;
         this.fieldCentricEnabled = fieldCentricEnabled;
@@ -103,7 +103,7 @@ public class HolonomicVectorDriveTask extends Task {
         yController = DEFAULT_Y_CONTROLLER;
         rController = DEFAULT_R_CONTROLLER;
 
-        withName("Holonomic Vector Control");
+        named("Holonomic Vector Control");
     }
 
     /**

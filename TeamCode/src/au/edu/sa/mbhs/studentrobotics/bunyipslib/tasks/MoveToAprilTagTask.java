@@ -106,14 +106,14 @@ public class MoveToAprilTagTask extends Task {
      */
     public MoveToAprilTagTask(@NonNull Moveable drive, @NonNull AprilTag aprilTag, @SuppressLint("LambdaLast") int targetTag) {
         if (drive instanceof BunyipsSubsystem)
-            onSubsystem((BunyipsSubsystem) drive, false);
+            on((BunyipsSubsystem) drive, false);
         this.drive = drive;
         this.aprilTag = aprilTag;
         TARGET_TAG = targetTag;
         xController = DEFAULT_X_CONTROLLER;
         yController = DEFAULT_Y_CONTROLLER;
         rController = DEFAULT_R_CONTROLLER;
-        withName("Move to AprilTag");
+        named("Move to AprilTag");
 //        FtcDashboard.getInstance().withConfigRoot(c ->
 //                c.putVariable(getClass().getSimpleName(), ReflectionConfig.createVariableFromClass(getClass())));
     }
@@ -128,7 +128,7 @@ public class MoveToAprilTagTask extends Task {
      */
     public MoveToAprilTagTask(@NonNull Supplier<PoseVelocity2d> passthrough, @NonNull Moveable drive, @NonNull AprilTag aprilTag, @SuppressLint("LambdaLast") int targetTag) {
         if (drive instanceof BunyipsSubsystem)
-            onSubsystem((BunyipsSubsystem) drive, false);
+            on((BunyipsSubsystem) drive, false);
         this.drive = drive;
         this.aprilTag = aprilTag;
         this.passthrough = passthrough;
@@ -136,7 +136,7 @@ public class MoveToAprilTagTask extends Task {
         xController = DEFAULT_X_CONTROLLER;
         yController = DEFAULT_Y_CONTROLLER;
         rController = DEFAULT_R_CONTROLLER;
-        withName("Move to AprilTag");
+        named("Move to AprilTag");
 //        FtcDashboard.getInstance().withConfigRoot(c ->
 //                c.putVariable(getClass().getSimpleName(), ReflectionConfig.createVariableFromClass(getClass())));
     }

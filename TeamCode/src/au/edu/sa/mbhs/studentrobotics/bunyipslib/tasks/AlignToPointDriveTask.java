@@ -65,12 +65,12 @@ public class AlignToPointDriveTask extends Task {
     public AlignToPointDriveTask(@NonNull Supplier<Vector2d> point, @Nullable Supplier<Vector2d> passthrough, @NonNull Moveable drive) {
         this.drive = drive;
         if (drive instanceof BunyipsSubsystem)
-            onSubsystem((BunyipsSubsystem) drive, false);
+            on((BunyipsSubsystem) drive, false);
         pointSupplier = point;
         controller = DEFAULT_CONTROLLER;
         this.passthrough = passthrough;
         Vector2d currentTarget = point.get();
-        withName("Align To Point: " + currentTarget);
+        named("Align To Point: " + currentTarget);
         lastPoint = currentTarget;
 //        FtcDashboard.getInstance().withConfigRoot(c ->
 //                c.putVariable(getClass().getSimpleName(), ReflectionConfig.createVariableFromClass(getClass())));
@@ -167,7 +167,7 @@ public class AlignToPointDriveTask extends Task {
         Vector2d point = pointSupplier.get();
         if (!point.equals(lastPoint)) {
             // Dynamically update the name of the task to match
-            withName("Align To Point: " + point);
+            named("Align To Point: " + point);
         }
         lastPoint = point;
 
