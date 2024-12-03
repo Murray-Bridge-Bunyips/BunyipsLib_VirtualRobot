@@ -14,7 +14,7 @@ import androidx.annotation.NonNull;
  */
 public class Lambda extends Task {
     // This value may need adjustment in combination with a SequentialTaskGroup where the timeouts are summed,
-    // however we can't tell how long a single method will execute for so we need to assume OnceTasks will only
+    // however we can't tell how long a single method will execute for so we need to assume Lambdas will only
     // do one small task.
     /**
      * The epsilon value for the Lambda timeout.
@@ -31,7 +31,7 @@ public class Lambda extends Task {
         // For Lambdas, we can't have an infinite timeout but we can use a very very short one instead
         // This is so the schedulers do not mistake this task as for one that will end up running forever,
         // as all Lambdas will run only once. This also helps telemetry decide how long a task will execute for.
-        super(Milliseconds.of(EPSILON_MS));
+        timeout = Milliseconds.of(EPSILON_MS);
         this.callback = callback;
         named("Run");
     }
@@ -53,6 +53,6 @@ public class Lambda extends Task {
     @Override
     protected final boolean isTaskFinished() {
         // OnceTasks may sometimes have their timeouts adjusted at runtime
-        return getTimeout().lte(Milliseconds.of(EPSILON_MS));
+        return timeout.lte(Milliseconds.of(EPSILON_MS));
     }
 }

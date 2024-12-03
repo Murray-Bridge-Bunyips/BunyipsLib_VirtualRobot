@@ -20,7 +20,8 @@ import java.util.function.Consumer
  * Keep in mind this thread runs in the background so it is not guaranteed to be ready during any
  * specific phase of your init-cycle. It is recommended to check if this thread is running using
  * `Threads.isRunning(selector)` in your `onInitLoop()` to ensure BOM knows it has to wait for the
- * user to make a selection. Alternatively, you can set an init-task that is a `WaitForTask`.
+ * user to make a selection. Alternatively, you can set an init-task that simply waits for the thread to
+ * die or similar (e.g. `Task.task().isFinished(() -> !Threads.isRunning(...))`).
  * If you do not do this, the OpMode will assume it is ready to run regardless.
  *
  * The result of this thread will be stored in the `result` property, which you can access yourself
@@ -30,34 +31,34 @@ import java.util.function.Consumer
  * null.
  *
  * ```
- *    // In Kotlin using a lambda function, String can be replaced with any type
- *    private val selector: UserSelection<String> = UserSelection({ if (it == "POV") initPOVDrive() else initFCDrive() }, "POV", "FIELD-CENTRIC")
+ * // In Kotlin using a lambda function, String can be replaced with any type
+ * private val selector: UserSelection<String> = UserSelection({ if (it == "POV") initPOVDrive() else initFCDrive() }, "POV", "FIELD-CENTRIC")
  *
- *    override fun onInit() {
- *      Threads.start(selector)
- *    }
+ * override fun onInit() {
+ *   Threads.start(selector)
+ * }
  * ```
  *
  * ```
- *    // In Java using a callback, String can be replaced with any type
- *    private UserSelection<String> selector = new UserSelection<>(this::callback, "POV", "FIELD-CENTRIC");
+ * // In Java using a callback, String can be replaced with any type
+ * private UserSelection<String> selector = new UserSelection<>(this::callback, "POV", "FIELD-CENTRIC");
  *
- *    @Override
- *    protected void onInit() {
- *      Threads.start(selector);
- *    }
+ * @Override
+ * protected void onInit() {
+ *   Threads.start(selector);
+ * }
  *
- *    private void callback(@Nullable String res) {
- *      // Do something with res
- *    }
+ * private void callback(@Nullable String res) {
+ *   // Do something with res
+ * }
  * ```
  *
- * res will be null if the user did not make a selection.
+ * `res` will be null if the user did not make a selection.
  *
  * Updated to use dynamic button mapping and generics 04/08/23.
  * Updated to be async and removed time restriction 07/09/23.
  *
- * @param opmodes Modes to map to buttons. Will be casted to strings for display and return back in type `T`.
+ * @param opModes Modes to map to buttons. Will be casted to strings for display and return back in type `T`.
  * @author Lucas Bubner, 2023
  * @since 1.0.0-pre
  */
@@ -67,7 +68,7 @@ class UserSelection<T : Any>(
      * Can be null if the user did not make a selection.
      */
     private val callback: Consumer<T?>,
-    private vararg val opmodes: T
+    private vararg val opModes: T
 ) : BunyipsComponent(), Runnable {
     private val timer = ElapsedTime()
 
@@ -90,21 +91,17 @@ class UserSelection<T : Any>(
      * @return A HashMap of operation modes to buttons.
      */
     override fun run() {
-        if (opmodes.isEmpty()) {
+        if (opModes.isEmpty()) {
             Exceptions.runUserMethod(opMode) { callback.accept(null) }
             return
         }
 
-        val buttons: HashMap<T, Controls> = Controls.mapArgs(opmodes)
-
-        // Disable auto clear if it is enabled, we might accidentally clear out static telemetry
-        require(opMode).telemetry.isAutoClear = false
+        val buttons: HashMap<T, Controls> = Controls.mapArgs(opModes)
 
         val attentionBorders = arrayOf(
             "<b>---------<font color='red'>!!!</font>--------</b>",
             "<b><font color='red'>---------</font><font color='white'>!!!</font><font color='red'>--------</font></b>"
         )
-
         val driverStation =
             Text.builder("<font color='yellow'><b>ACTION REQUIRED</b></font>: INIT OPMODE WITH GAMEPAD 1\n")
         val dashboard = Text.builder("<font color='gray'>|</font> ")
@@ -124,10 +121,6 @@ class UserSelection<T : Any>(
         val mainText = require(opMode).telemetry.addDS(driverStation)
         val bottomBorder = require(opMode).telemetry.addDS(attentionBorders[0])
         require(opMode).telemetry.addDashboard("USR", dashboard)
-
-        // Must manually call telemetry push as the BOM may not be handling them
-        // This will not clear out any other telemetry as auto clear is disabled
-        require(opMode).telemetry.update()
 
         var flash = false
         while (result == null && require(opMode).opModeInInit() && !Thread.currentThread().isInterrupted) {
@@ -149,8 +142,7 @@ class UserSelection<T : Any>(
                 topBorder.setValue(attentionBorders[0])
                 bottomBorder.setValue(attentionBorders[0])
             }
-            // Updates will be handled by the main telemetry loop, the initial call was to ensure the options did
-            // eventually make their way there in some quantity
+            // Updates will be handled by the main telemetry loop
         }
 
         val opModeName = result.toString()
@@ -176,9 +168,8 @@ class UserSelection<T : Any>(
         //This is code from lucas bubner. He is sad cause hes not important and dosent recieve capital letters. He is lonely except for LACHLAN PAUL  his coding buddy. Now i need to go but always keep this message in mind!!!
         // - Sorayya, hijacker of laptops
 
-        // Clean up telemetry and reset auto clear
+        // Clean up telemetry
         require(opMode).telemetry.remove(topBorder, mainText, bottomBorder)
-        require(opMode).telemetry.isAutoClear = true
 
         Exceptions.runUserMethod(opMode) { callback.accept(result) }
     }
