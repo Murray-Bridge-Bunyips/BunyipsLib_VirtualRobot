@@ -22,7 +22,7 @@ import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Nan
  * @author Lucas Bubner, 2024
  * @since 5.1.0
  */
-public class ProfiledServo implements Servo {
+public class ServoEx implements Servo {
     private final Servo __VIRTUAL_SERVO;
 
     @Nullable
@@ -72,11 +72,11 @@ public class ProfiledServo implements Servo {
     }
 
     /**
-     * Wrap a Servo to use with the ProfiledServo class.
+     * Wrap a Servo to use with the ServoEx class.
      *
      * @param servo the Servo from hardwareMap to use.
      */
-    public ProfiledServo(Servo servo) {
+    public ServoEx(Servo servo) {
         __VIRTUAL_SERVO = servo;
     }
 
@@ -95,7 +95,7 @@ public class ProfiledServo implements Servo {
      * range. If PWM power is enabled for the servo, the servo will attempt to move to
      * the indicated position.
      * <p>
-     * <b>Important ProfiledServo Note:</b> Since this class requires continuous update with a motion profile,
+     * <b>Important ServoEx Note:</b> Since this class requires continuous update with a motion profile,
      * it is important that this method is being called periodically if one is being used; this is similar
      * to how {@code setPower} has to be called periodically in {@link Motor} to update system controllers.
      *

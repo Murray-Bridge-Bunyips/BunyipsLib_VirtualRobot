@@ -18,7 +18,7 @@ When copying BunyipsLib to org.murraybridgebunyips, you will need to do the foll
 8. Comment out instances of `FlightRecorder` and `DownsampledWriter` in `bunyipslib/subsystems/drive/MecanumDrive.java` and `bunyipslib/subsystems/drive/TankDrive.java`
 9. Comment out instances of `DownsampledWriter` in `bunyipslib/localization/accumulators/Accumulator.java`
 10. Revert any changes done to `bunyipslib/Storage.java`
-11. Revert any changes done to `bunyipslib/ProfiledServo.java`
+11. Revert any changes done to `bunyipslib/ServoEx.java`
 12. Revert any changes done to `bunyipslib/integrated/HardwareTest.java`
 13. Comment out various uses of `ReflectionConfig` across BunyipsLib
 14. Replace `user` with `getUser()` in `bunyipslib/Scheduler.kt` error

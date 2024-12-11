@@ -11,6 +11,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Storage
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Threads
 import au.edu.sa.mbhs.studentrobotics.deps.BuildConfig
 import com.acmerobotics.roadrunner.Action
+import com.qualcomm.ftccommon.SoundPlayer
 //import com.acmerobotics.roadrunner.ftc.throwIfModulesAreOutdated
 import com.qualcomm.hardware.lynx.LynxModule
 import com.qualcomm.robotcore.hardware.Blinker
@@ -507,6 +508,7 @@ abstract class BunyipsOpMode : BOMInternal() {
             // Ensure all threads have been told to stop
             gamepadExecutor?.shutdownNow()
             Threads.stopAll()
+            SoundPlayer.getInstance().stopPlayingAll()
             try {
                 onStop()
             } catch (e: Exception) {
