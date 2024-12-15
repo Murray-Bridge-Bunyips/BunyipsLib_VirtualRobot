@@ -16,6 +16,7 @@ public class GrandTests extends CommandBasedBunyipsOpMode {
     @Override
     protected void onInitialise() {
         robot.init();
+        robot.drive.withName("Drive");
 //        ha = new HoldableActuator(robot.hw.back_left_motor)
 //                .withTolerance(1, true)
 //                .withMaxSteadyStateTime(Seconds.of(1));
