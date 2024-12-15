@@ -27,6 +27,7 @@ public class GrandTests extends CommandBasedBunyipsOpMode {
     @Override
     protected void assignCommands() {
         driver().whenPressed(Controls.A).run(Task.task().init(Dbg::stamp).onFinish(() -> Dbg.log("STOP")).on(robot.drive)).finishIf(() -> gamepad1.getDebounced(Controls.A));
+        unbind(0);
 //        ha.setDefaultTask(ha.tasks.control(() -> -gamepad1.lsy));
 //        driver().whenPressed(Controls.A).run(ha.tasks.goTo(1000));
 //        driver().whenPressed(Controls.B).run(ha.tasks.goTo(0));
