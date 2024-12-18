@@ -2,8 +2,6 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsComponent
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsSubsystem
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.EmergencyStop
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.Exceptions
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Measure
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Time
@@ -79,7 +77,7 @@ abstract class Task : BunyipsComponent(), Runnable, Action {
         get() = Optional.ofNullable(_dependency)
 
     /**
-     * Whether the task is currently running (i.e. has been started (`init()` called) and not finished).
+     * Whether the task is currently running (i.e. has been started ([init] called) and not finished).
      */
     val isRunning: Boolean
         get() = startTime != 0L && !isFinished
@@ -104,7 +102,7 @@ abstract class Task : BunyipsComponent(), Runnable, Action {
     // RoadRunner Actions compatibility, exposes the same field names as they are presented in the Action interface
     /**
      * Convenience field to get a reference to FtcDashboard's field overlay for drawing on the field.
-     * Available as soon as init() has been called for this task.
+     * Available as soon as [init] has been called for this task.
      *
      * This field is used for porting between [Action] and [Task] implementations.
      */
@@ -112,7 +110,7 @@ abstract class Task : BunyipsComponent(), Runnable, Action {
 
     /**
      * Convenience field to get a reference to a [TelemetryPacket] for sending telemetry to the dashboard.
-     * Available as soon as init() has been called for this task.
+     * Available as soon as [init] has been called for this task.
      *
      * This field is used for porting between [Action] and [Task] implementations.
      */
@@ -452,6 +450,41 @@ abstract class Task : BunyipsComponent(), Runnable, Action {
      */
     fun repeatedly(): Task = RepeatTask(this)
 
+    /**
+     * Creates a new [DynamicTask] instance by wrapping this existing [Task] instance, allowing
+     * you to add new functionality to a task without modifying the original task.
+     *
+     * This method will return the current task if it is already a [DynamicTask] instance.
+     *
+     * @since 6.2.0
+     */
+    fun mutate(): DynamicTask {
+        return if (this is DynamicTask) this else {
+            task {
+                named(this@Task.name)
+                timeout(this@Task.timeout)
+                if (this@Task.dependency.isPresent)
+                    on(this@Task.dependency.get(), this@Task.isPriority)
+                init {
+                    Dashboard.usePacket {
+                        this@Task.p = it
+                        this@Task.fieldOverlay = it.fieldOverlay()
+                    }
+                    val startTimeField = Task::class.java.getDeclaredField("startTime")
+                    startTimeField.isAccessible = true
+                    startTimeField.setLong(this@Task, startTime)
+                    this@Task.init()
+                    this@Task.poll()
+                }
+                periodic { this@Task.periodic() }
+                isFinished { this@Task.poll() }
+                onInterrupt { this@Task.onInterrupt() }
+                onReset { this@Task.reset() }
+                onFinish { this@Task.onFinish() }
+            }
+        }
+    }
+
     companion object {
         /**
          * Timeout value for an infinite task that will run forever.
@@ -476,40 +509,6 @@ abstract class Task : BunyipsComponent(), Runnable, Action {
          * DSL function to create a new [DynamicTask] instance for building a new task.
          */
         fun task(block: DynamicTask.() -> Unit) = DynamicTask().apply(block)
-
-        /**
-         * Creates a new [DynamicTask] instance by wrapping an existing [Task] instance, allowing
-         * you to add new functionality to a task without modifying the original task.
-         *
-         * @since 6.2.0
-         */
-        @JvmStatic
-        fun dyn(task: Task): DynamicTask {
-            return task {
-                named(task.name)
-                timeout(task.timeout)
-                if (task.dependency.isPresent)
-                    on(task.dependency.get(), task.isPriority)
-                init {
-                    Dashboard.usePacket {
-                        p = it
-                        fieldOverlay = it.fieldOverlay()
-                        task.p = p
-                        task.fieldOverlay = fieldOverlay
-                    }
-                    val startTimeField = Task::class.java.getDeclaredField("startTime")
-                    startTimeField.isAccessible = true
-                    startTimeField.setLong(this, task.startTime)
-                    task.init()
-                    task.poll()
-                }
-                periodic { task.periodic() }
-                isFinished { task.poll() }
-                onInterrupt { task.onInterrupt() }
-                onReset { task.reset() }
-                onFinish { task.onFinish() }
-            }
-        }
 
         /**
          * Default task setter extension for [BunyipsSubsystem] to set the default task of a subsystem.

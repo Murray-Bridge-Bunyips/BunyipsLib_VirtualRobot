@@ -25,10 +25,10 @@ public class RoadRunnerTest extends AutonomousBunyipsOpMode {
 
     @Override
     protected void onReady(@Nullable Reference<?> selectedOpMode, Controls selectedButton) {
-        add(new DynamicTask(robot.drive.makeTrajectory()
+        add(robot.drive.makeTrajectory()
                 .splineTo(new Vector2d(30, 30), Inches, 90, Degrees)
                 .turn(90, Degrees)
                 .lineToX(50)
-                .build()).addPeriodic(() -> t.add("no way we are at %", Geometry.toUserString(robot.drive.getPose()))));
+                .build().mutate().addPeriodic(() -> t.add("no way we are at %", Geometry.toUserString(robot.drive.getPose()))));
     }
 }
