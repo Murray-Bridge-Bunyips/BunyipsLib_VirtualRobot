@@ -482,12 +482,13 @@ abstract class Task : BunyipsComponent(), Runnable, Action {
         @JvmStatic
         fun dyn(task: Task): DynamicTask {
             return task {
-                init { task.init() }
-                periodic { task.periodic() }
-                isFinished { task.isTaskFinished() }
-                onFinish { task.onFinish() }
-                onInterrupt { task.onInterrupt() }
-                onReset { task.onReset() }
+                named(task.name)
+                timeout(task.timeout)
+                if (task.dependency.isPresent)
+                    on(task.dependency.get(), task.isPriority)
+                periodic { task.run() }
+                isFinished { task.poll() }
+                onReset { task.reset() }
             }
         }
 
