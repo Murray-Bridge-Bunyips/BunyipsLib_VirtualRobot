@@ -2,6 +2,8 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsComponent
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsSubsystem
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.EmergencyStop
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.Exceptions
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Measure
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Time
@@ -478,6 +480,8 @@ abstract class Task : BunyipsComponent(), Runnable, Action {
         /**
          * Creates a new [DynamicTask] instance by wrapping an existing [Task] instance, allowing
          * you to add new functionality to a task without modifying the original task.
+         *
+         * @since 6.2.0
          */
         @JvmStatic
         fun dyn(task: Task): DynamicTask {
@@ -486,9 +490,24 @@ abstract class Task : BunyipsComponent(), Runnable, Action {
                 timeout(task.timeout)
                 if (task.dependency.isPresent)
                     on(task.dependency.get(), task.isPriority)
-                periodic { task.run() }
+                init {
+                    Dashboard.usePacket {
+                        p = it
+                        fieldOverlay = it.fieldOverlay()
+                        task.p = p
+                        task.fieldOverlay = fieldOverlay
+                    }
+                    val startTimeField = Task::class.java.getDeclaredField("startTime")
+                    startTimeField.isAccessible = true
+                    startTimeField.setLong(this, task.startTime)
+                    task.init()
+                    task.poll()
+                }
+                periodic { task.periodic() }
                 isFinished { task.poll() }
+                onInterrupt { task.onInterrupt() }
                 onReset { task.reset() }
+                onFinish { task.onFinish() }
             }
         }
 

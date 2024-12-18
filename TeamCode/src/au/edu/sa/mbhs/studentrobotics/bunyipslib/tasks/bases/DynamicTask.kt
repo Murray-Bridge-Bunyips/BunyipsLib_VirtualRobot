@@ -1,6 +1,7 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases
 
 import java.util.function.BooleanSupplier
+import java.util.function.Predicate
 
 /**
  * Dynamic builder pattern implementation for [Task] instances.
@@ -82,8 +83,8 @@ open class DynamicTask() : Task() {
      *
      * This function takes in a boolean being the current [isFinished] evaluation, and returns the new [isFinished] evaluation.
      */
-    infix fun addIsFinished(isTaskFinished: java.util.function.Function<Boolean, Boolean>) =
-        apply { val f = until; until = { isTaskFinished.apply(f.invoke()) } }
+    infix fun addIsFinished(isTaskFinished: Predicate<Boolean>) =
+        apply { val f = until; until = { isTaskFinished.test(f.invoke()) } }
 
     /**
      * Adds additional [onFinish] code to run after the current [onFinish] code.
