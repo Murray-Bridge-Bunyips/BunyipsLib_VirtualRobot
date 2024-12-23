@@ -2,10 +2,14 @@ package au.edu.sa.mbhs.studentrobotics.virtual.robot.teleop;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.CommandBasedBunyipsOpMode;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Lambda;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.groups.IncrementingTaskGroup;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls;
 import au.edu.sa.mbhs.studentrobotics.virtual.robot.Robot;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
+import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds;
 
 @TeleOp
 public class GrandTests extends CommandBasedBunyipsOpMode {
@@ -28,6 +32,8 @@ public class GrandTests extends CommandBasedBunyipsOpMode {
     protected void assignCommands() {
         driver().whenPressed(Controls.A).run(Task.task().init(Dbg::stamp).onFinish(() -> Dbg.log("STOP")).on(robot.drive)).finishIf(() -> gamepad1.getDebounced(Controls.A));
         unbind(0);
+        driver().whenPressed(Controls.A)
+                .run(new IncrementingTaskGroup(new Lambda(() -> Dbg.log("one")).forAtLeast(1.0, Seconds), new Lambda(() -> Dbg.log("two")), new Lambda(() -> Dbg.log("three"))));
 //        ha.setDefaultTask(ha.tasks.control(() -> -gamepad1.lsy));
 //        driver().whenPressed(Controls.A).run(ha.tasks.goTo(1000));
 //        driver().whenPressed(Controls.B).run(ha.tasks.goTo(0));
