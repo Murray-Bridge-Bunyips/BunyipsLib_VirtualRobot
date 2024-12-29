@@ -385,7 +385,7 @@ abstract class Task : BunyipsComponent(), Runnable, Action {
      */
     infix fun until(condition: BooleanSupplier): RaceTaskGroup {
         val task = task { isFinished { condition.asBoolean } }
-        task.named("$name supervisor")
+        task.named("until $task")
         return RaceTaskGroup(this, task)
     }
 
@@ -395,7 +395,7 @@ abstract class Task : BunyipsComponent(), Runnable, Action {
      */
     infix fun forAtLeast(waitTime: Measure<Time>): ParallelTaskGroup {
         val task = WaitTask(waitTime)
-        task.named("$name wait")
+        task.named("for at least $task")
         return ParallelTaskGroup(this, task)
     }
 
@@ -422,7 +422,7 @@ abstract class Task : BunyipsComponent(), Runnable, Action {
      */
     infix fun after(waitTime: Measure<Time>): SequentialTaskGroup {
         val task = WaitTask(waitTime)
-        task.named("$name wait")
+        task.named("after $task")
         return SequentialTaskGroup(task, this)
     }
 
@@ -437,7 +437,7 @@ abstract class Task : BunyipsComponent(), Runnable, Action {
      */
     infix fun after(runnable: Runnable): SequentialTaskGroup {
         val task = Lambda(runnable)
-        task.named("$name hook")
+        task.named("after $task")
         return SequentialTaskGroup(task, this)
     }
 
@@ -459,7 +459,7 @@ abstract class Task : BunyipsComponent(), Runnable, Action {
      */
     infix fun then(runnable: Runnable): SequentialTaskGroup {
         val task = Lambda(runnable)
-        task.named("$name callback")
+        task.named("then $task")
         return SequentialTaskGroup(this, task)
     }
 
