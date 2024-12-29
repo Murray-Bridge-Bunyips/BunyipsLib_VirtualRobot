@@ -432,14 +432,20 @@ abstract class Task : BunyipsComponent(), Runnable, Action {
     fun after(waitDuration: Double, unit: Time) = after(unit.of(waitDuration))
 
     /**
-     * Implicitly run a [SequentialTaskGroup] with this supplied [Runnable],
+     * Implicitly run a [SequentialTaskGroup] with this supplied [Runnable] named [name],
      * queued to run before this task starts.
      */
-    infix fun after(runnable: Runnable): SequentialTaskGroup {
-        val task = Lambda(runnable)
+    fun after(runnable: Runnable, name: String = "Run"): SequentialTaskGroup {
+        val task = Lambda(runnable).named(name)
         task.named("after $task")
         return SequentialTaskGroup(task, this)
     }
+
+    /**
+     * Implicitly run a [SequentialTaskGroup] with this supplied [Runnable],
+     * queued to run before this task starts.
+     */
+    infix fun after(runnable: Runnable) = after(runnable, "Run")
 
     /**
      * Compose this task into a [SequentialTaskGroup] with the supplied tasks
@@ -454,14 +460,20 @@ abstract class Task : BunyipsComponent(), Runnable, Action {
     infix fun then(otherTask: Task) = SequentialTaskGroup(this, otherTask)
 
     /**
-     * Implicitly run a [SequentialTaskGroup] with this supplied [Runnable],
+     * Implicitly run a [SequentialTaskGroup] with this supplied [Runnable] named [name],
      * queued to run when this task finishes.
      */
-    infix fun then(runnable: Runnable): SequentialTaskGroup {
-        val task = Lambda(runnable)
+    fun then(runnable: Runnable, name: String = "Run"): SequentialTaskGroup {
+        val task = Lambda(runnable).named(name)
         task.named("then $task")
         return SequentialTaskGroup(this, task)
     }
+
+    /**
+     * Implicitly run a [SequentialTaskGroup] with this supplied [Runnable],
+     * queued to run when this task finishes.
+     */
+    infix fun then(runnable: Runnable) = then(runnable, "Run")
 
     /**
      * Compose this task into a [ParallelTaskGroup] with the supplied tasks
