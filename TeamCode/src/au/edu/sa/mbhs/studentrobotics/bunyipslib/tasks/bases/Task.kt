@@ -43,7 +43,7 @@ import java.util.function.BooleanSupplier
  * @since 1.0.0-pre
  */
 abstract class Task : BunyipsComponent(), Runnable, Action {
-    private var name = javaClass.simpleName
+    private var name = javaClass.simpleName.replace(Regex("([a-z])([A-Z])"), "$1 $2").replace("Task", "").trim()
     private var _dependency: BunyipsSubsystem? = null
     private var attached = false
     private var userFinished = false

@@ -52,9 +52,6 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.Localizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.MecanumLocalizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.accumulators.Accumulator;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.RoadRunnerDrive;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.DriveCommandMessage;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.MecanumCommandMessage;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.PoseMessage;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.Constants;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.DriveModel;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.ErrorThresholds;
@@ -164,7 +161,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
         this.lazyImu = lazyImu;
 
         if (gains.poseHoldingEnabled) {
-            setDefaultTask(new HoldLastPose());
+            setDefaultTask(new HoldLastPoseTask());
         }
 
         Dashboard.enableConfig(getClass());
@@ -388,12 +385,13 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
      * A task that will hold the last known pose of the robot using the RoadRunner feedback loop.
      * Useful as a default task and can be conveniently autoconfigured as the default task via the {@link MecanumGains} config option.
      */
-    public final class HoldLastPose extends Task {
+    public final class HoldLastPoseTask extends Task {
         private Pose2d hold;
 
         @Override
         protected void init() {
             hold = accumulator.getPose();
+            named("Hold " + Geometry.toUserString(hold).replace("Pose2d", ""));
         }
 
         @Override
@@ -402,10 +400,10 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 
             Pose2d robotPose = accumulator.getPose();
             PoseVelocity2d robotVel = accumulator.getVelocity();
-            // Target position with zero velocity
+            // Target position with zero velocity and acceleration
             Pose2dDual<Time> txWorldTarget = new Pose2dDual<>(
-                    Vector2dDual.constant(hold.position, 2),
-                    Rotation2dDual.constant(hold.heading, 2)
+                    Vector2dDual.constant(hold.position, 3),
+                    Rotation2dDual.constant(hold.heading, 3)
             );
 
             PoseVelocity2dDual<Time> feedback = new HolonomicController(
