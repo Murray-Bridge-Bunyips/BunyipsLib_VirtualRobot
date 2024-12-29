@@ -2,7 +2,9 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsComponent
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsSubsystem
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.Exceptions
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.Exceptions.getCallingUserCodeFunction
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Measure
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Time
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Nanoseconds
@@ -43,13 +45,25 @@ import java.util.function.BooleanSupplier
  * @since 1.0.0-pre
  */
 abstract class Task : BunyipsComponent(), Runnable, Action {
-    private var name = javaClass.simpleName.replace(Regex("([a-z])([A-Z])"), "$1 $2").replace("Task", "").trim()
+    // By default, task names will be spliced with spaces and Task removed, such that a task with the name MoveToPosTask
+    // will have the name "Move To Pos"
+    private var name = javaClass.simpleName
+        .replace(Regex("([a-z])([A-Z])"), "$1 $2")
+        .replace(Regex("Task$"), "")
+        .trim()
     private var _dependency: BunyipsSubsystem? = null
     private var attached = false
     private var userFinished = false
     private var taskFinished = false
     private var finisherFired = false
     private var startTime = 0L
+
+    /**
+     * Enabling will reject all future [on] calls.
+     * Useful for composing tasks that will internally re-schedule a wrapped Task.
+     */
+    @JvmField
+    protected var disableSubsystemAttachment = false
 
     /**
      * Maximum timeout of the task. If set to 0 magnitude (or a timeout-less constructor) this will serve as an indefinite task, and
@@ -116,7 +130,23 @@ abstract class Task : BunyipsComponent(), Runnable, Action {
      * @param override  Whether this task should override conflicting tasks on this subsystem (not incl. default tasks)
      * @return this task
      */
-    open fun on(subsystem: BunyipsSubsystem, override: Boolean) = apply {
+    fun on(subsystem: BunyipsSubsystem, override: Boolean) = apply {
+        if (disableSubsystemAttachment) {
+            val function = getCallingUserCodeFunction()
+            Dbg.error(
+                function,
+                "[%] This task are not designed to be attached to a subsystem, as it has declared it will be handling subsystem scheduling internally. The on() call should be removed for this wrapped task.",
+                javaClass.simpleName
+            )
+            opMode {
+                it.telemetry.log(
+                    function,
+                    Text.html().color("red", "error: ")
+                        .text("${javaClass.simpleName} instance should not be attached to subsystems!")
+                )
+            }
+            return@apply
+        }
         _dependency = subsystem
         isPriority = override
     }
@@ -251,6 +281,8 @@ abstract class Task : BunyipsComponent(), Runnable, Action {
 
     /**
      * RoadRunner [Action] implementation to run this Task.
+     *
+     * Directly [run]s this task, to avoid recursive cycles.
      */
     final override fun run(p: TelemetryPacket): Boolean {
         // FtcDashboard parameters are handled by the periodic method of this task, so we can ignore the packet
