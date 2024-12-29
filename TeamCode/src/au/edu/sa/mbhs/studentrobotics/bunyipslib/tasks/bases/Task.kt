@@ -385,7 +385,7 @@ abstract class Task : BunyipsComponent(), Runnable, Action {
      */
     infix fun until(condition: BooleanSupplier): RaceTaskGroup {
         val task = task { isFinished { condition.asBoolean } }
-        task.named("until $task")
+        task.named("until $condition")
         return RaceTaskGroup(this, task)
     }
 
