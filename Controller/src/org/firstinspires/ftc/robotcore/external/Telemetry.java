@@ -621,4 +621,8 @@ public interface Telemetry
      * @see Log#addData(String, Object)
      */
     Log log();
+
+    default void setNumDecimalPlaces(int lower, int upper) {
+        // no-ops as per the sdk, i dont care enough to implement this in TelemetryImpl
+    }
 }

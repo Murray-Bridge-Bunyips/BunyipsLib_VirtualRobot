@@ -1,14 +1,9 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib.util;
 
 import androidx.annotation.NonNull;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsOpMode;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsSubsystem;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.Exceptions;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.RobotConfig;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.Localizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.StartingConfiguration;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.vision.processors.ColourLocator;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.vision.processors.ColourSensor;
 import com.acmerobotics.roadrunner.Pose2d;
 
 import java.io.Closeable;
@@ -27,20 +22,6 @@ public final class Storage {
 
     private Storage() {
         throw new AssertionError("This is a utility class");
-    }
-
-    /**
-     * Global method to clear all static state for an OpMode.
-     * Called internally by {@link BunyipsOpMode}.
-     */
-    public static void resetAllStaticFieldsForOpMode() {
-        // All static field resets go here
-        Exceptions.THROWN_EXCEPTIONS.clear();
-        BunyipsSubsystem.resetForOpMode();
-        Tasks.resetForOpMode();
-        ColourLocator.resetForOpMode();
-        ColourSensor.resetForOpMode();
-        Dashboard.resetForOpMode();
     }
 
     /**

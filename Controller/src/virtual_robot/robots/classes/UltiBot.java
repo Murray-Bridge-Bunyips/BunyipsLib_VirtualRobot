@@ -289,7 +289,7 @@ public class UltiBot extends MecanumPhysicsBase implements ControlsElements {
     }
 
     /**
-     * Preload rings (if Off-Field Rings are available)
+     * dev.frozenmilk.sinister.Preload rings (if Off-Field Rings are available)
      * @param game
      */
     @Override

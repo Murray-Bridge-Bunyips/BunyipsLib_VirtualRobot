@@ -31,6 +31,7 @@ import org.dyn4j.world.World;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl;
 import org.reflections.Reflections;
+import virtual_robot.OpModeNotificationsFilter;
 import virtual_robot.config.Config;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -393,8 +394,7 @@ public class VirtualRobotController {
     }
 
     private void setupCbxOpModes(){
-//        Reflections reflections = new Reflections("");
-        Reflections reflections = new Reflections("au");
+        Reflections reflections = new Reflections("");
         Set<Class<?>> opModes = new HashSet<>();
         opModes.addAll(reflections.getTypesAnnotatedWith(TeleOp.class));
         opModes.addAll(reflections.getTypesAnnotatedWith(Autonomous.class));//Lists of OpMode classes and OpMode Names
@@ -488,6 +488,8 @@ public class VirtualRobotController {
              * INIT has been pressed.
              */
             if (!initOpMode()) return;
+            // we run our sinister filtered hooks here at the button level to replicate Notifications
+            OpModeNotificationsFilter.getPreInit().forEach(o -> o.accept(opMode));
             pathLine.getPoints().clear();
             txtTelemetry.setText("");
             driverButton.setText("START");
@@ -527,6 +529,7 @@ public class VirtualRobotController {
             /*
              * START has been pressed.
              */
+            OpModeNotificationsFilter.getPreStart().forEach(o -> o.accept(opMode));
             driverButton.setText("STOP");
             opModeStarted = true;
         } else{
@@ -559,6 +562,7 @@ public class VirtualRobotController {
             gamePadHelper.onOpModeFinished();
             initializeTelemetryTextArea();
             cbxConfig.setDisable(false);
+            OpModeNotificationsFilter.getPostStop().forEach(o -> o.accept(opMode));
         }
     }
 

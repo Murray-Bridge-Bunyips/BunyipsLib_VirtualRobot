@@ -85,7 +85,7 @@ public class SixWheelPhysicsBase extends VirtualBot {
 
     private double calculateWheelSpeed(DcMotorEx frontMotor, DcMotorEx backMotor) {
         double averageVelocity = ((frontMotor.getVelocity(AngleUnit.RADIANS) + backMotor.getVelocity(AngleUnit.RADIANS)) / 2.0);
-        double speed = wheelCircumference * averageVelocity / (2.0 * Math.PI);// 2pi = 1 rotation
+        double speed = wheelCircumference * averageVelocity / (2.0 * Math.PI);// 2π = 1 rotation
 
         //Assertion disabled by default in Intellij IDEA
 //        assert (frontMotor.getDirection() == backMotor.getDirection());

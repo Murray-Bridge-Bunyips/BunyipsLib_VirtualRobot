@@ -10,7 +10,7 @@ and may cause null exceptions if used. This includes all the Vision systems (Vis
 When copying BunyipsLib to org.murraybridgebunyips, you will need to do the following:
 1. Copy the `bunyipslib` folder to `TeamCode/src/org/murraybridgebunyips/`
 2. Remove the `throwIfModulesAreOutdated(hardwareMap)` invocation and import from `bunyipslib/BunyipsOpMode.kt`
-3. Import `deps/BuildConfig` in `bunyipslib/BunyipsOpMode.kt`, `bunyipslib/Exceptions.java`, `bunyipslib/Scheduler.java`
+3. Import `deps/BuildConfig` in `bunyipslib/BunyipsOpMode.kt`, `bunyipslib/Exceptions.java`, `bunyipslib/Scheduler.java`, `bunyipslib/hooks/BunyipsLib.kt`
 4. Comment out instances of `FtcDashboard.getInstance()` accesses in `bunyipslib/DualTelemetry.kt`, `bunyipslib/integrated/VisionTest.java`, `bunyipslib/vision/SwitchableVisionSender.java`
 5. Comment out the entire `bunyipslib/roadrunner/tuning/RoadRunnerTuningOpMode.java` file
 6. Change the `bunyipslib/RobotConfig.kt` `getLazyIMU` method to return null

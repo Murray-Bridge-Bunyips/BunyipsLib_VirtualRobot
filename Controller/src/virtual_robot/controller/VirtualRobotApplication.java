@@ -1,5 +1,6 @@
 package virtual_robot.controller;
 
+import dev.frozenmilk.sinister.Sinister;
 import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
@@ -48,6 +49,7 @@ public class VirtualRobotApplication extends Application {
 
 
     public static void main(String[] args) {
+        Sinister.doSinisterThings(); // hacky classpath scanning
         launch(args);
     }
 }

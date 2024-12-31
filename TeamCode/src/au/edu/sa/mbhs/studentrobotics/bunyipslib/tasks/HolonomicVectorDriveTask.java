@@ -225,7 +225,7 @@ public class HolonomicVectorDriveTask extends Task {
      * and is to try and hold rotation. Note that user input will override this lock, this
      * simply tells the task to respect this value as the locking value.
      *
-     * @param heading the angle to rotate to, will be wrapped from [0, 2pi] radians
+     * @param heading the angle to rotate to, will be wrapped from [0, 2π] radians
      */
     public void setHeadingTarget(@NonNull Measure<Angle> heading) {
         headingLock = Rotation2d.exp(Mathf.wrap(heading).in(Radians));
