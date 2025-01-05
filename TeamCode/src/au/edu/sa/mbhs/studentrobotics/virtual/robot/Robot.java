@@ -15,10 +15,14 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import javax.management.InstanceAlreadyExistsException;
+
 /**
  * Running under "Mecanum Bot" config
  */
+@RobotConfig.AutoInit
 public class Robot extends RobotConfig {
+    public static final Robot instance = new Robot();
     public final Hardware hw = new Hardware();
     public MecanumDrive drive;
 

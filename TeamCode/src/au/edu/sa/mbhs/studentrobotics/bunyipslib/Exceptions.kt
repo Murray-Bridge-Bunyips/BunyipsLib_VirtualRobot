@@ -1,7 +1,7 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib
 
 import au.edu.sa.mbhs.studentrobotics.deps.BuildConfig
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks.Cleanup
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks.Hook
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerImpl.ForceStopException
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -78,12 +78,11 @@ object Exceptions {
      * ensuring code execution is not stopped on a non-critical exception.
      */
     @JvmStatic
-    fun runUserMethod(opMode: BunyipsOpMode?, method: Runnable) {
+    fun runUserMethod(method: Runnable) {
         try {
             method.run()
         } catch (e: Exception) {
-            // If the BunyipsOpMode is not available, we can just swallow it and let Logcat handle it all
-            handle(e) { s -> opMode?.t?.log(s) }
+            handle(e) { s -> DualTelemetry.smartLog(s) }
         }
     }
 
@@ -107,7 +106,7 @@ object Exceptions {
         return StackTraceElement("Unknown", "userMethod", "User Code", -1)
     }
 
-    @Cleanup
+    @Hook(on = Hook.Target.POST_STOP)
     @JvmStatic
     private fun reset() {
         THROWN_EXCEPTIONS.clear()

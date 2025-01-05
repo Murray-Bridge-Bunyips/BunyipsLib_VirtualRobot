@@ -2,11 +2,13 @@ package au.edu.sa.mbhs.studentrobotics.virtual.robot.teleop;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsOpMode;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.Encoder;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.RobotConfig;
 import au.edu.sa.mbhs.studentrobotics.virtual.robot.Robot;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp
+@RobotConfig.InhibitAutoInit
 public class EncoderTest extends BunyipsOpMode {
     private final Robot robot = new Robot();
     private Encoder encoder;

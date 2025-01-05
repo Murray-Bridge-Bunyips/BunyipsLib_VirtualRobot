@@ -35,6 +35,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.firstinspires.ftc.robotcore.internal.opmode;
 
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 

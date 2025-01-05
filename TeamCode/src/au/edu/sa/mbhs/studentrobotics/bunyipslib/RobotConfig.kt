@@ -1,10 +1,14 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib
 
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.RobotConfig.AutoInit
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.IMUEx
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.InvertibleTouchSensor
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.Motor
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.ServoEx
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.SimpleRotator
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks.BunyipsLib
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks.BunyipsLib.StdSearch
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks.Hook
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Storage
 import com.acmerobotics.roadrunner.ftc.LazyImu
 import com.acmerobotics.roadrunner.ftc.RawEncoder
@@ -17,6 +21,9 @@ import com.qualcomm.robotcore.hardware.IMU
 import com.qualcomm.robotcore.hardware.ImuOrientationOnRobot
 import com.qualcomm.robotcore.hardware.Servo
 import com.qualcomm.robotcore.hardware.TouchSensor
+import dev.frozenmilk.sinister.Preload
+import dev.frozenmilk.sinister.SinisterFilter
+import dev.frozenmilk.sinister.staticInstancesOf
 import java.util.function.Consumer
 
 /**
@@ -30,6 +37,9 @@ import java.util.function.Consumer
  * ```
  *     config.init(this);
  * ```
+ *
+ * Alternatively as of v7.0.0, you can choose to use a singleton pattern where the [RobotConfig] will be initialised
+ * just before any OpMode starts, via a [BunyipsLib] hook. See [AutoInit] for more details.
  *
  * @author Lucas Bubner, 2024
  * @since 1.0.0-pre
@@ -51,56 +61,44 @@ abstract class RobotConfig {
 
     /**
      * Uses the HardwareMap to fetch HardwareDevices and assign instances from `onRuntime`.
-     * Should be called as the first line in your init cycle. This method can only be executed once.
-     * @param opMode the OpMode instance - usually the `this` object when at the root OpMode.
-     * @return the instance of the RobotConfig
-     */
-    fun init(opMode: OpMode): RobotConfig {
-        if (hasInitCalled)
-            throw IllegalStateException("RobotConfig instance was already initialised.")
-        Storage.memory().hardwareErrors.clear()
-        this.hardwareMap = opMode.hardwareMap
-        if (opMode is BunyipsOpMode) {
-            Exceptions.runUserMethod(opMode, ::onRuntime)
-            opMode.t.add("<b>${javaClass.simpleName}</b>: Hardware initialised with ${if (Storage.memory().hardwareErrors.size > 0) "<font color='red'>${Storage.memory().hardwareErrors.size} error(s)</font>" else "<font color='green'>0 errors</font>"}.")
-        } else {
-            onRuntime()
-            opMode.telemetry.addData(
-                "",
-                "${javaClass.simpleName}: Hardware initialised with ${Storage.memory().hardwareErrors.size} error(s).",
-            )
-        }
-        for (error in Storage.memory().hardwareErrors) {
-            if (opMode is BunyipsOpMode) {
-                opMode.t.addRetained("<font color='red'><b>! MISSING DEVICE</b></font>: $error")
-                opMode.t.addRetained("<font color='red'>error:</font> <i>$error</i> was not found in the current saved configuration.")
-            } else {
-                opMode.telemetry.addData("", "! MISSING DEVICE: $error").setRetained(true)
-                opMode.telemetry.log().add("error: '$error' was not found in the current saved configuration.")
-            }
-        }
-        hasInitCalled = true
-        return this
-    }
-
-    /**
-     * Implicit OpMode config initialisation for use in BunyipsOpModes. This will not work in normal SDK OpModes.
      *
-     * Uses the HardwareMap to fetch HardwareDevices and assign instances from `onRuntime`.
-     * Should be called as the first line in your init cycle.
+     * Should be called as the first line in your init cycle if not using [AutoInit].
+     * This method can only be executed once (further calls will no-op).
      *
-     * @throws UnsupportedOperationException if not called from a BunyipsOpMode.
-     * @see init(opMode: OpMode)
+     * As of BunyipsLib v7.0.0, passing the `opMode` parameter is no longer necessary as it will be retrieved
+     * through a [BunyipsLib] utility.
+     *
      * @return the instance of the RobotConfig
      */
     fun init(): RobotConfig {
-        try {
-            // Access the singleton associated with a BunyipsOpMode, if we're not running one Kotlin
-            // will throw a UninitializedPropertyAccessException, so we can tell the user off here.
-            return init(BunyipsOpMode.instance)
-        } catch (e: UninitializedPropertyAccessException) {
-            throw UnsupportedOperationException("Argument-less .init() method is only supported in a BunyipsOpMode. Use .init(this) instead.")
+        if (hasInitCalled) {
+            Dbg.warn(RobotConfig::class.java, "instance (%) already initialised!", javaClass.simpleName)
+            return this
         }
+        if (globalInitCalled) {
+            // Usually when two RobotConfig instances are initialised there has been a redefinition as there should
+            // really only be one. We will warn and continue.
+            Dbg.warn(
+                RobotConfig::class.java,
+                "a second RobotConfig instance (%) is being initialised when one has been initialised previously; please ensure this is intended behaviour!",
+                javaClass.simpleName
+            )
+        }
+        this.hardwareMap = BunyipsLib.opMode.hardwareMap
+        Exceptions.runUserMethod(::onRuntime)
+        DualTelemetry.smartAdd(
+            false,
+            "<b>${javaClass.simpleName}</b>",
+            "Hardware initialised with ${if (Storage.memory().hardwareErrors.size > 0) "<font color='red'>${Storage.memory().hardwareErrors.size} error(s)</font>" else "<font color='green'>0 errors</font>"}."
+        )
+        Dbg.logd(javaClass, "hardware initialised with % errors.", Storage.memory().hardwareErrors.size)
+        for (error in Storage.memory().hardwareErrors) {
+            DualTelemetry.smartAdd(true, error, "<font color='red'><b>MISSING DEVICE!</b></font>")
+            DualTelemetry.smartLog("<font color='red'>error:</font> <i>$error</i> was not found in the current saved configuration.")
+        }
+        hasInitCalled = true
+        globalInitCalled = true
+        return this
     }
 
     private val dcMotorCastable = listOf(RawEncoder::class.java, Ramping.DcMotor::class.java, Motor::class.java)
@@ -193,5 +191,110 @@ abstract class RobotConfig {
         return null
 //        if (getHardware(name, IMU::class.java) == null) return null
 //        return LazyImu(hardwareMap, name, orientationOnRobot, 700)
+    }
+
+    /**
+     * Attaching this annotation to a [RobotConfig] derivative class will cause the [init] method to be executed
+     * automatically on the initialisation of *any* OpMode.
+     *
+     * This is useful if you wish to make a "singleton" pattern for your [RobotConfig] class, where instantiating
+     * and initialising this class can be handled automatically via a hook.
+     *
+     * NOTE: A singleton field on the classpath is required for your config, otherwise an instance can't be known to initialise.
+     *
+     * ```java
+     * @RobotConfig.AutoInit // annotation attached
+     * public class Robot extends RobotConfig {
+     *     public static final Robot instance = new Robot(); // access your RobotConfig instance through a static field.
+     *                                                       // a field exposing an instance like this *MUST* be present;
+     *                                                       // the field name can be anything you choose and technically
+     *                                                       // this field doesn't have to exist in this class.
+     *                                                       // you can also use the kotlin `object` for a singleton.
+     *
+     *     @Override
+     *     protected void onRuntime() {
+     *       // will now be executed as a pre-init @Hook with access to OpMode information through BunyipsLib.getOpMode()
+     *       // and the conventional BunyipsOpMode.getInstance() for BunyipsOpMode users
+     *
+     *       // calling init() manually will no-op now
+     *     }
+     * }
+     * ```
+     *
+     * @since 7.0.0
+     */
+    @Preload
+    @MustBeDocumented
+    @Target(AnnotationTarget.CLASS)
+    @Retention(AnnotationRetention.RUNTIME)
+    annotation class AutoInit
+
+    /**
+     * Inhibits the effect of [AutoInit] on an [OpMode] derivative.
+     * This is useful if you don't wish to initialise hardware automatically on this [OpMode].
+     *
+     * Manual [RobotConfig] calls will still function.
+     *
+     * Must be attached on the running [OpMode] to work.
+     *
+     * ```java
+     * @TeleOp
+     * @RobotConfig.InhibitAutoInit
+     * public class MyMinimalTestOpMode extends BunyipsOpMode {
+     *   // RobotConfig instance will *NOT* be automatically initialised when this OpMode is run.
+     *   // Only has an impact if your RobotConfig is annotated with @AutoInit
+     *   // ...
+     * }
+     * ```
+     *
+     * @since 7.0.0
+     */
+    @MustBeDocumented
+    @Target(AnnotationTarget.CLASS)
+    @Retention(AnnotationRetention.RUNTIME)
+    annotation class InhibitAutoInit
+
+    private object AutoInitHookFilter : SinisterFilter {
+        val candidates = mutableSetOf<RobotConfig>()
+
+        override val targets = StdSearch()
+
+        override fun init() {
+            candidates.clear()
+        }
+
+        override fun filter(clazz: Class<*>) {
+            candidates.addAll(clazz.staticInstancesOf(RobotConfig::class.java)
+                .filter { clazz.isAnnotationPresent(AutoInit::class.java) })
+        }
+    }
+
+    companion object {
+        private var globalInitCalled = false
+
+        @JvmStatic
+        @Hook(on = Hook.Target.POST_STOP)
+        private fun reset() {
+            globalInitCalled = false
+            AutoInitHookFilter.candidates.forEach { it.hasInitCalled = false }
+        }
+
+        @JvmStatic
+        @Hook(on = Hook.Target.PRE_INIT, priority = 1)
+        private fun autoInit() {
+            AutoInitHookFilter.candidates.forEach {
+                if (BunyipsLib.opMode.javaClass.isAnnotationPresent(InhibitAutoInit::class.java)) {
+                    Dbg.log(
+                        RobotConfig::class.java,
+                        "auto-initialisation of % inhibited by `@RobotConfig.InhibitAutoInit`",
+                        it.javaClass.simpleName
+                    )
+                    // Stop all iteration
+                    return
+                }
+                Dbg.logd(RobotConfig::class.java, "auto-initialising: % ...", it.javaClass.simpleName)
+                it.init()
+            }
+        }
     }
 }

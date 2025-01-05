@@ -7,10 +7,13 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Time;
 import com.acmerobotics.roadrunner.Twist2dDual;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.DualTelemetry;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks.BunyipsLib;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Text;
 
@@ -83,6 +86,7 @@ public class SwitchableLocalizer implements Localizer {
         @NonNull
         public Task autoTestMainLocalizer() {
             return new Task() {
+                private final OpMode opMode = BunyipsLib.getOpMode();
                 private double SELF_TEST_VELOCITY_INCHES = 7;
 
                 private Telemetry.Item telemetry;
@@ -103,7 +107,9 @@ public class SwitchableLocalizer implements Localizer {
 
                 @Override
                 protected void init() {
-                    telemetry = require(opMode).telemetry.addRetained("Initialising Localizer Self Test...").bold();
+                    telemetry = DualTelemetry.smartAdd(true, "Initialising Localizer Self Test...");
+                    if (telemetry instanceof DualTelemetry.HtmlItem item)
+                        item.bold();
                 }
 
                 @Override
@@ -113,7 +119,7 @@ public class SwitchableLocalizer implements Localizer {
                     minY = Math.min(minY, vel.linearVel.y);
                     maxX = Math.max(maxX, vel.linearVel.x);
                     maxY = Math.max(maxY, vel.linearVel.y);
-                    if (require(opMode).gamepad1.left_bumper) {
+                    if (opMode.gamepad1.left_bumper) {
                         forwardCheck = false;
                         backwardCheck = false;
                         leftCheck = false;
@@ -154,12 +160,12 @@ public class SwitchableLocalizer implements Localizer {
                 protected void onFinish() {
                     telemetry.setRetained(false);
                     if (!forwardCheck || !backwardCheck || !leftCheck || !rightCheck) {
-                        require(opMode).telemetry.log("<font color='yellow'>Localizer test failed. Falling back to backup localizer.</font>");
+                        DualTelemetry.smartLog("<font color='yellow'>Localizer test failed. Falling back to backup localizer.</font>");
                         USING_FALLBACK_LOCALIZER = true;
                         return;
                     }
                     USING_FALLBACK_LOCALIZER = false;
-                    require(opMode).telemetry.log("<font color='green'>Localizer test passed.</font>");
+                    DualTelemetry.smartLog("<font color='green'>Localizer test passed.</font>");
                 }
 
                 @Override
@@ -178,13 +184,16 @@ public class SwitchableLocalizer implements Localizer {
         @NonNull
         public Task manualTestMainLocalizer() {
             return new Task() {
+                private final OpMode opMode = BunyipsLib.getOpMode();
                 private Telemetry.Item telemetry;
                 private double minX, minY, minAng;
                 private double maxX, maxY, maxAng;
 
                 @Override
                 protected void init() {
-                    telemetry = require(opMode).telemetry.addRetained("Initialising Localizer Test...").bold();
+                    telemetry = DualTelemetry.smartAdd(true, "Initialising Localizer Self Test...");
+                    if (telemetry instanceof DualTelemetry.HtmlItem item)
+                        item.bold();
                 }
 
                 @Override
@@ -196,16 +205,16 @@ public class SwitchableLocalizer implements Localizer {
                     maxX = Math.max(maxX, vel.linearVel.x);
                     maxY = Math.max(maxY, vel.linearVel.y);
                     maxAng = Math.max(maxAng, vel.angVel);
-                    if (require(opMode).gamepad1.left_bumper) {
+                    if (opMode.gamepad1.left_bumper) {
                         USING_FALLBACK_LOCALIZER = true;
-                        opMode.telemetry.log("<font color='yellow'>Localizer test failed. Falling back to backup localizer.</font>");
+                        DualTelemetry.smartLog("<font color='yellow'>Localizer test failed. Falling back to backup localizer.</font>");
                         telemetry.setValue("");
                         finish();
                         return;
                     }
                     if (opMode.gamepad1.right_bumper) {
                         USING_FALLBACK_LOCALIZER = false;
-                        opMode.telemetry.log("<font color='green'>Localizer test passed.</font>");
+                        DualTelemetry.smartLog("<font color='green'>Localizer test passed.</font>");
                         telemetry.setValue("");
                         finish();
                         return;

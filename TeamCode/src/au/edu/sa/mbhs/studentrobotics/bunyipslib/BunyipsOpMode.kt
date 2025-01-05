@@ -5,6 +5,8 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Measure
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Time
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.*
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.Controller
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks.BunyipsLib
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks.Hook
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dashboard
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Threads
@@ -120,7 +122,11 @@ abstract class BunyipsOpMode : BOMInternal() {
          *
          * If you choose to access the current OpMode through this property, you must ensure that the OpMode
          * is actively running, otherwise this property will be null and you will raise a full-crashing exception.
+         * The OpMode is generally available upon construction of your OpMode, so exceptions should be rare if you
+         * are using a [BunyipsOpMode].
          *
+         * You may also choose to access the currently running base `OpMode` instance through the [BunyipsLib] class.
+         * 
          * @throws UninitializedPropertyAccessException If a [BunyipsOpMode] is not running, this exception will be raised.
          * @return The instance of the current [BunyipsOpMode].
          */
@@ -129,7 +135,12 @@ abstract class BunyipsOpMode : BOMInternal() {
             // If Kotlin throws an UninitializedPropertyAccessException, it will crash the DS and require a full
             // restart, so we will handle this exception ourselves and supply a more informative message.
             get() = _instance
-                ?: throw UninitializedPropertyAccessException("Attempted to access a BunyipsOpMode that is not running! This is due to a BunyipsOpMode.getInstance() call that has been invoked without checking if there is an active BunyipsOpMode running.")
+                ?: throw UninitializedPropertyAccessException(
+                    "Attempted to access a BunyipsOpMode that is not running! " +
+                            "This is due to a `BunyipsOpMode.getInstance()` call that has been invoked without checking if there is an active BunyipsOpMode running. " +
+                            "The most likely cause is that a component has tried to access a running BunyipsOpMode when none is running. " +
+                            "For this component to function properly, it must be run during the execution of a BunyipsOpMode or initialisation should be delayed until an instance is available."
+                )
 
         /**
          * Whether a [BunyipsOpMode] is currently running. This is useful for checking if the OpMode singleton can be accessed
@@ -152,13 +163,25 @@ abstract class BunyipsOpMode : BOMInternal() {
             if (isRunning)
                 opModeConsumer.accept(instance)
         }
+
+        @JvmStatic
+        @Hook(on = Hook.Target.PRE_INIT, priority = 2)
+        private fun configureObjects() {
+            if (_instance == null) return
+            Dbg.logv("BunyipsOpMode: setting up...")
+            instance.timer = MovingAverageTimer()
+            instance.telemetry = DualTelemetry(instance, instance.timer)
+            instance.t = instance.telemetry
+            instance.gamepad1 = Controller(instance.sdkGamepad1)
+            instance.gamepad2 = Controller(instance.sdkGamepad2)
+        }
     }
 
     init {
         // Early assign an instance of BunyipsOpMode to allow member field access of the derived class
         // to access references to the OpMode. We re-assign this value in runBunyipsOpMode() for paranoia to ensure
         // a fully constructed instance is available. Usually, we don't need to get the instance of the derived class,
-        // so leaking the instance here is fine.
+        // so leaking the instance here is fine. We need this field to be available to early assign values for preInit.
         @Suppress("LeakingThis")
         _instance = this
     }
@@ -166,9 +189,13 @@ abstract class BunyipsOpMode : BOMInternal() {
     /**
      * Runs upon the pressing of the `INIT` button on the Driver Station.
      *
-     * This is where you should initialise your hardware and other components.
+     * This is where you should initialise your hardware (if applicable) and other components.
+     *
+     * Override this method to use it.
      */
-    protected abstract fun onInit()
+    protected open fun onInit() {
+        // no-op (>= v7.0.0)
+    }
 
     /**
      * Run code in a loop AFTER [onInit] has completed, until start is pressed on the Driver Station
@@ -246,27 +273,12 @@ abstract class BunyipsOpMode : BOMInternal() {
         // BunyipsOpMode
         _instance = this
         try {
-            Dbg.logv("BunyipsOpMode: setting up...")
 //            throwIfModulesAreOutdated(hardwareMap)
             robotControllers.forEach { module ->
                 module.bulkCachingMode = LynxModule.BulkCachingMode.MANUAL
                 module.setConstant(Color.CYAN)
             }
-            // Ring-buffer timing utility
-            timer = MovingAverageTimer()
-            // Telemetry
-            telemetry = DualTelemetry(
-                this,
-                timer,
-                "<b>${javaClass.simpleName}</b>",
-                "<small><font color='#e5ffde'>bunyipslib</font> <font color='gray'>v${BuildConfig.SEMVER}-${BuildConfig.GIT_COMMIT}-${BuildConfig.BUILD_TIME}</font></small>"
-            )
-            // Configure alias
-            t = telemetry
-            telemetry.logBracketColor = "gray"
-            // Controller setup and monitoring threads
-            gamepad1 = Controller(sdkGamepad1)
-            gamepad2 = Controller(sdkGamepad2)
+            // Gamepad monitors to update gamepad custom functions
             gamepadExecutor = ThreadPool.newFixedThreadPool(2, "BunyipsLib BunyipsOpMode Gamepad1+2")
             gamepadExecutor?.submit {
                 while (!Thread.currentThread().isInterrupted)
@@ -276,9 +288,12 @@ abstract class BunyipsOpMode : BOMInternal() {
                 while (!Thread.currentThread().isInterrupted)
                     gamepad2.update()
             }
+            telemetry.init("<small><font color='#e5ffde'>bunyipslib</font> <font color='gray'>v${BuildConfig.SEMVER}-${BuildConfig.GIT_COMMIT}-${BuildConfig.BUILD_TIME}</font></small>")
+            telemetry.overheadTag = "<b>${javaClass.simpleName}</b>"
             telemetry.update()
 
             telemetry.opModeStatus = "<b><font color='yellow'>static_init</font></b>"
+            telemetry.logBracketColor = "gray"
             Dbg.logv("BunyipsOpMode: firing onInit()...")
             // Store telemetry objects raised by onInit() by turning off auto-clear
             telemetry.isAutoClear = false
@@ -440,7 +455,7 @@ abstract class BunyipsOpMode : BOMInternal() {
                 robotControllers.forEach { m -> m.clearBulkCache() }
                 try {
                     // Run user-defined active loop
-                    runnables.forEach { Exceptions.runUserMethod(this, it) }
+                    runnables.forEach { Exceptions.runUserMethod(it) }
                     activeLoop()
                 } catch (e: Exception) {
                     telemetry.overrideStatus = "<font color='red'><b>error</b></font>"
@@ -493,7 +508,7 @@ abstract class BunyipsOpMode : BOMInternal() {
             Dbg.logd("BunyipsOpMode: opmode stop requested. cleaning up...")
             // Ensure all threads have been told to stop
             gamepadExecutor?.shutdownNow()
-            Threads.stopAll()
+            Threads.stopAll() // paranoia
             SoundPlayer.getInstance().stopPlayingAll()
             try {
                 onStop()

@@ -6,9 +6,18 @@ public class OpModeManagerImpl {
     public void registerListener(Object thisObjectIsDefinitelyUsed) {
 
     }
+    
+    public static OpModeManagerImpl getOpModeManagerOfActivity(Object activity) {
+        return new OpModeManagerImpl();
+    }
 
     public String getActiveOpModeName() {
         return "Virtual OpMode";
+    }
+    public static OpMode heyThisisTheOpModeThatsRunning;
+    
+    public OpMode getActiveOpMode() {
+        return heyThisisTheOpModeThatsRunning;
     }
 
     public static class DefaultOpMode extends OpMode {

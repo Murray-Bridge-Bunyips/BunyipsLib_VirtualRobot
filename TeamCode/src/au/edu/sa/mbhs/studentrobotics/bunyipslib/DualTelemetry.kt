@@ -6,7 +6,9 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Time
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Milliseconds
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Second
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks.BunyipsLib
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dashboard
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Text
 import com.acmerobotics.dashboard.FtcDashboard
 import com.acmerobotics.dashboard.canvas.Canvas
@@ -33,31 +35,21 @@ import kotlin.math.roundToInt
 class DualTelemetry @JvmOverloads constructor(
     private val opMode: OpMode,
     private val movingAverageTimer: MovingAverageTimer? = null,
-    /**
-     * A tag to prepend to the overhead telemetry status message.
-     */
-    private val overheadTag: String? = null,
-    /**
-     * A string to display as the first log message in the telemetry log.
-     */
-    private val infoString: String? = null
 ) : Telemetry {
-    companion object {
-        /**
-         * The maximum number of telemetry logs that can be stored in the telemetry log.
-         * If the number of logs exceeds this limit, the oldest logs will be removed to make space for new logs to
-         * avoid crashing the Driver Station.
-         */
-        @JvmField
-        var TELEMETRY_LOG_LINE_LIMIT = 200
-    }
-
+    private val initActions = mutableListOf<Runnable>()
     private lateinit var overheadTelemetry: Item
     private var dashboardItems = Collections.synchronizedSet(mutableSetOf<Pair<ItemType, Reference<String>>>())
     private var userPacket: TelemetryPacket = TelemetryPacket()
+    private var info: String? = null
 
     @Volatile
     private var telemetryQueue = 0
+
+    /**
+     * A tag to prepend to the overhead telemetry status message.
+     */
+    @JvmField
+    var overheadTag: String? = null
 
     /**
      * A string to display the current 'status' of the OpMode, used for overhead telemetry.
@@ -111,7 +103,17 @@ class DualTelemetry @JvmOverloads constructor(
         LOG
     }
 
-    init {
+    /**
+     * Call to initialise [DualTelemetry].
+     *
+     * Internally called by [BunyipsOpMode].
+     *
+     * @param info the information string to be added as the first log; should never be null
+     * @since 7.0.0
+     */
+    @JvmOverloads
+    fun init(info: String = "") {
+        this.info = info
         clearAll()
         opMode.telemetry.setDisplayFormat(DisplayFormat.HTML)
         opMode.telemetry.log().displayOrder = Telemetry.Log.DisplayOrder.OLDEST_FIRST
@@ -119,17 +121,18 @@ class DualTelemetry @JvmOverloads constructor(
         opMode.telemetry.log().capacity = TELEMETRY_LOG_LINE_LIMIT
         // Separate log from telemetry on the DS with an empty line
         opMode.telemetry.log().add("")
-        if (infoString != null) {
+        if (info.isNotEmpty()) {
             synchronized(dashboardItems) {
                 dashboardItems.add(
                     Pair(
                         ItemType.LOG,
-                        Reference.of(infoString)
+                        Reference.of(info)
                     )
                 )
             }
-            opMode.telemetry.log().add(infoString)
+            opMode.telemetry.log().add(info)
         }
+        initActions.forEach { it.run() }
     }
 
     /**
@@ -146,7 +149,7 @@ class DualTelemetry @JvmOverloads constructor(
      * will split this to an item for FtcDashboard automagically, replicating what [addDashboard] would do.
      * @param format An object string to add to telemetry
      * @param args The objects to format into the object format string via [Text.format]
-     * @return The telemetry item added to the Driver Station, null if the send failed from overflow
+     * @return The telemetry item added to the Driver Station
      */
     fun add(format: Any, vararg args: Any?): HtmlItem {
         flushTelemetryQueue()
@@ -167,7 +170,7 @@ class DualTelemetry @JvmOverloads constructor(
      * @param caption Caption before appended separator ([dashboardCaptionValueAutoSeparator])
      * @param format Format string to append after separator ([dashboardCaptionValueAutoSeparator])
      * @param args Objects to format into the format string via [Text.format]
-     * @return The telemetry item added to the Driver Station, null if the send failed from overflow
+     * @return The telemetry item added to the Driver Station
      */
     override fun addData(caption: String, format: String, vararg args: Any?): Item {
         return add(caption + dashboardCaptionValueAutoSeparator + format, *args)
@@ -275,6 +278,11 @@ class DualTelemetry @JvmOverloads constructor(
     }
 
     private fun logMessage(msg: String) {
+        if (info == null) {
+            // Defer until init
+            initActions.add { logMessage(msg) }
+            return
+        }
         var prepend = ""
         if (movingAverageTimer != null)
             prepend =
@@ -330,6 +338,11 @@ class DualTelemetry @JvmOverloads constructor(
      */
     @Suppress("UNCHECKED_CAST")
     override fun update(): Boolean {
+        if (info == null) {
+            init()
+            throw IllegalStateException("DualTelemetry has not been initialised via `.init(String)`! Initialisation has been dispatched automatically. This may cause unexpected behaviour.")
+        }
+
         // Update main DS telemetry
         val retVal = opMode.telemetry.update()
 
@@ -407,7 +420,7 @@ class DualTelemetry @JvmOverloads constructor(
                     )
 
                     ItemType.LOG -> {
-                        if (value == infoString) {
+                        if (value == info) {
                             // BunyipsLib info, this is an always log and will always
                             // be the first log in the list as it is added at the start
                             // of the init cycle
@@ -583,7 +596,7 @@ class DualTelemetry @JvmOverloads constructor(
      *
      * @author Lachlan Paul, 2024
      */
-    class HtmlItem(
+    inner class HtmlItem(
         private var value: String,
         retained: Boolean,
         /**
@@ -604,11 +617,19 @@ class DualTelemetry @JvmOverloads constructor(
         private var applyOnlyIf: BooleanSupplier? = null
 
         init {
-            if (!isOverflow) {
+            val init = {
                 // To let dynamic reformatting on an item that already exists, we will use the Func<T> attribute against
                 // the HTML string builder, which will ensure changes made after the item has been sent are reflected.
                 item = opMode.telemetry.addData("", ::build)
                 item?.setRetained(retained)
+            }
+            if (!isOverflow) {
+                if (info == null) {
+                    // We have to wait for a bit, so we'll delay the item being available until init() is called
+                    initActions.add { init.invoke() }
+                } else {
+                    init.invoke()
+                }
             }
         }
 
@@ -969,9 +990,6 @@ class DualTelemetry @JvmOverloads constructor(
         }
     }
 
-    /**
-     * Create a new telemetry object and add it to the management queue.
-     */
     private fun createTelemetryItem(value: String, retained: Boolean, isOverflow: Boolean): HtmlItem {
         // Use a reference of the string to be added to telemetry. This allows us to pass it into HtmlItem where it
         // may be modified at an arbitrary time, and the changes will be reflected in the telemetry object as part of
@@ -1077,5 +1095,103 @@ class DualTelemetry @JvmOverloads constructor(
     )
     override fun setNumDecimalPlaces(minDecimalPlaces: Int, maxDecimalPlaces: Int) {
         // no-op
+    }
+
+    companion object {
+        /**
+         * The maximum number of telemetry logs that can be stored in the telemetry log.
+         *
+         * If the number of logs exceeds this limit, the oldest logs will be removed to make space for new logs to
+         * avoid crashing the Driver Station.
+         */
+        @JvmField
+        var TELEMETRY_LOG_LINE_LIMIT = 200
+
+        /**
+         * Whether to strip HTML from [smartAdd] and [smartLog] calls for [OpMode] instances.
+         * Note: This does not apply to [BunyipsOpMode] instances as it is using a [DualTelemetry] object.
+         *
+         * This option is retained through OpModes.
+         */
+        @JvmField
+        var SMART_CALL_BASE_OPMODE_HTML_STRIP = false
+
+        /**
+         * [smartAdd] is a static utility that will attempt to access a [Telemetry] object to add new data to either
+         * a [DualTelemetry] object affixed to a [BunyipsOpMode], or a standard [Telemetry] out affixed to any
+         * [OpMode] derivative.
+         *
+         * This provides components such as subsystems the ability to add telemetry regardless of whether a [BunyipsOpMode]
+         * or a standard [OpMode] is currently executing, while using [Text] utilities. This also allows non-DualTelemetry
+         * instances to work similarly with FtcDashboard routing and smart parsing.
+         *
+         * @since 7.0.0
+         */
+        @JvmStatic
+        fun smartAdd(retained: Boolean, caption: String, format: String, vararg objs: Any?): Item {
+            if (BunyipsOpMode.isRunning) {
+                val t = BunyipsOpMode.instance.telemetry
+                return if (caption.isBlank()) {
+                    if (!retained) t.add(format, *objs) else t.addRetained(format, *objs)
+                } else {
+                    if (!retained) t.addData(caption, format, *objs) else
+                        t.addRetained(caption + t.dashboardCaptionValueAutoSeparator + format, *objs)
+                }
+            } else if (BunyipsLib.isOpModeRunning) {
+                val formatted = Text.format(format, *objs)
+                    .replace("%", "%%") // May be piped into String.format so we properly format now
+                val nCap = caption.ifBlank { System.currentTimeMillis().toString() }
+                val cap = if (SMART_CALL_BASE_OPMODE_HTML_STRIP) Text.removeHtml(nCap) else nCap
+                val str = if (SMART_CALL_BASE_OPMODE_HTML_STRIP) Text.removeHtml(formatted) else formatted
+                Dashboard.usePacket {
+                    it.put(nCap, formatted)
+                }
+                return BunyipsLib.opMode.telemetry.addData(cap, str).setRetained(retained)
+            }
+            throw IllegalStateException("No OpMode is running!")
+        }
+
+        @JvmStatic
+        fun smartAdd(retained: Boolean, format: String, vararg objs: Any?) = smartAdd(retained, "", format, *objs)
+        @JvmStatic
+        fun smartAdd(caption: String, format: String, vararg objs: Any?) = smartAdd(false, caption, format, *objs)
+        @JvmStatic
+        fun smartAdd(format: String, vararg objs: Any?) = smartAdd(false, "", format, *objs)
+
+        /**
+         * [smartLog] is a static utility that will attempt to access a [Telemetry] object to append a new log to
+         * a [DualTelemetry] object affixed to a [BunyipsOpMode], or a standard [Telemetry] out affixed to any
+         * [OpMode] derivative.
+         *
+         * This provides components such as subsystems the ability to add logs regardless of whether a [BunyipsOpMode]
+         * or a standard [OpMode] is currently executing, while using [Text] utilities. This also allows non-DualTelemetry
+         * instances to work similarly with FtcDashboard routing and smart parsing.
+         *
+         * @since 7.0.0
+         */
+        @JvmStatic
+        fun smartLog(format: Any, vararg objs: Any?) {
+            if (BunyipsOpMode.isRunning) {
+                BunyipsOpMode.instance.telemetry.log(format, *objs)
+            } else if (BunyipsLib.isOpModeRunning) {
+                val formatted = Text.format(format.toString(), *objs)
+                    .replace("%", "%%")
+                BunyipsLib.opMode.telemetry.log().add(
+                    if (SMART_CALL_BASE_OPMODE_HTML_STRIP) Text.removeHtml(formatted) else formatted
+                )
+                Dashboard.usePacket {
+                    it.put(System.currentTimeMillis().toString(), formatted)
+                }
+            }
+            throw IllegalStateException("No OpMode is running!")
+        }
+
+        @JvmStatic
+        fun smartLog(obj: Class<*>, format: Any, vararg objs: Any?) =
+            smartLog("<font color='gray'>[${obj.simpleName}]</font> $format", *objs)
+
+        @JvmStatic
+        fun smartLog(stck: StackTraceElement, format: Any, vararg objs: Any?) =
+            smartLog("<font color='gray'>[$stck]</font> $format", *objs)
     }
 }

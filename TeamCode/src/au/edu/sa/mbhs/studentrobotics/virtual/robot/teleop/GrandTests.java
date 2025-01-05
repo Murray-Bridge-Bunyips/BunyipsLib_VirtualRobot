@@ -2,6 +2,7 @@ package au.edu.sa.mbhs.studentrobotics.virtual.robot.teleop;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.CommandBasedBunyipsOpMode;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.RobotConfig;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Lambda;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.groups.IncrementingTaskGroup;
@@ -12,6 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds;
 
 @TeleOp
+@RobotConfig.InhibitAutoInit
 public class GrandTests extends CommandBasedBunyipsOpMode {
     private final Robot robot = new Robot();
 //    private ServoEx servo;

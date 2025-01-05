@@ -1,12 +1,14 @@
 package au.edu.sa.mbhs.studentrobotics.virtual.robot.teleop;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.CommandBasedBunyipsOpMode;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.RobotConfig;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.HolonomicDriveTask;
 import au.edu.sa.mbhs.studentrobotics.virtual.robot.Robot;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp
+@RobotConfig.InhibitAutoInit
 public class Drive extends CommandBasedBunyipsOpMode {
     private final Robot robot = new Robot();
 

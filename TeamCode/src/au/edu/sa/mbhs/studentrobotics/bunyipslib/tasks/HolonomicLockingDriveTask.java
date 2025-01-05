@@ -34,11 +34,11 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dashboard;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry;
 
 /**
- * Gamepad drive for all holonomic drivetrains which will use a vector-based approach to drive.
+ * Gamepad drive for all holonomic drivetrains which will use a vector lock based approach to drive.
  * This task is designed to be used as a default/standard-priority task, other tasks will override it.
  * <p>
- * Compared to {@link HolonomicDriveTask}, this task will constantly track the (x,y,r) pose of the robot, rather than
- * setting the powers directly from the gamepad inputs. When the translational/rotational components for these poses
+ * Compared to {@link HolonomicDriveTask}, this task will constantly track the (x,y,r) pose of the robot, and will
+ * set the drive powers directly from the gamepad inputs. When the translational/rotational components for these vectors
  * are zero, this task will take a snapshot of the values they were at, using PID controllers to attempt to stay in place.
  * This allows for more predictable and consistent driving, as the robot will only accept movement when told to do so,
  * ensuring that all movements of the robot can only be achieved via the controller.
@@ -53,7 +53,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry;
  * @author Lucas Bubner, 2024
  * @since 4.0.0
  */
-public class HolonomicVectorDriveTask extends Task {
+public class HolonomicLockingDriveTask extends Task {
     /**
      * Default controller to use for the x (forward) axis.
      */
@@ -92,7 +92,7 @@ public class HolonomicVectorDriveTask extends Task {
      *                            if possible. A localizer attached is required.
      * @param fieldCentricEnabled A BooleanSupplier that returns whether field centric drive is enabled
      */
-    public HolonomicVectorDriveTask(@NonNull Supplier<PoseVelocity2d> vel, @NonNull Moveable drive, @NonNull BooleanSupplier fieldCentricEnabled) {
+    public HolonomicLockingDriveTask(@NonNull Supplier<PoseVelocity2d> vel, @NonNull Moveable drive, @NonNull BooleanSupplier fieldCentricEnabled) {
         if (drive instanceof BunyipsSubsystem)
             on((BunyipsSubsystem) drive, false);
         this.drive = drive;
@@ -114,7 +114,7 @@ public class HolonomicVectorDriveTask extends Task {
      *              called unlike the differential control task. This task will be auto-attached to this BunyipsSubsystem
      *              if possible. A localizer attached is required.
      */
-    public HolonomicVectorDriveTask(@NonNull Supplier<PoseVelocity2d> vel, @NonNull Moveable drive) {
+    public HolonomicLockingDriveTask(@NonNull Supplier<PoseVelocity2d> vel, @NonNull Moveable drive) {
         this(vel, drive, () -> false);
     }
 
@@ -128,7 +128,7 @@ public class HolonomicVectorDriveTask extends Task {
      *                            if possible. A localizer attached is required.
      * @param fieldCentricEnabled A BooleanSupplier that returns whether field centric drive is enabled
      */
-    public HolonomicVectorDriveTask(@NonNull Gamepad driver, @NonNull Moveable drive, @NonNull BooleanSupplier fieldCentricEnabled) {
+    public HolonomicLockingDriveTask(@NonNull Gamepad driver, @NonNull Moveable drive, @NonNull BooleanSupplier fieldCentricEnabled) {
         this(() -> Controls.vel(driver.left_stick_x, driver.left_stick_y, driver.right_stick_x), drive, fieldCentricEnabled);
     }
 
@@ -141,7 +141,7 @@ public class HolonomicVectorDriveTask extends Task {
      *               called unlike the differential control task. This task will be auto-attached to this BunyipsSubsystem
      *               if possible. A localizer attached is required.
      */
-    public HolonomicVectorDriveTask(@NonNull Gamepad driver, @NonNull Moveable drive) {
+    public HolonomicLockingDriveTask(@NonNull Gamepad driver, @NonNull Moveable drive) {
         this(() -> Controls.vel(driver.left_stick_x, driver.left_stick_y, driver.right_stick_x), drive, () -> false);
     }
 
@@ -152,7 +152,7 @@ public class HolonomicVectorDriveTask extends Task {
      * @return this
      */
     @NonNull
-    public HolonomicVectorDriveTask withXController(@NonNull SystemController x) {
+    public HolonomicLockingDriveTask withXController(@NonNull SystemController x) {
         xController = x;
         return this;
     }
@@ -164,7 +164,7 @@ public class HolonomicVectorDriveTask extends Task {
      * @return this
      */
     @NonNull
-    public HolonomicVectorDriveTask withYController(@NonNull SystemController y) {
+    public HolonomicLockingDriveTask withYController(@NonNull SystemController y) {
         yController = y;
         return this;
     }
@@ -176,7 +176,7 @@ public class HolonomicVectorDriveTask extends Task {
      * @return this
      */
     @NonNull
-    public HolonomicVectorDriveTask withRController(@NonNull SystemController r) {
+    public HolonomicLockingDriveTask withRController(@NonNull SystemController r) {
         rController = r;
         return this;
     }
@@ -188,7 +188,7 @@ public class HolonomicVectorDriveTask extends Task {
      * @return this
      */
     @NonNull
-    public HolonomicVectorDriveTask withTolerance(@NonNull Pose2d inchRad) {
+    public HolonomicLockingDriveTask withTolerance(@NonNull Pose2d inchRad) {
         toleranceInchRad = inchRad;
         return this;
     }
@@ -202,7 +202,7 @@ public class HolonomicVectorDriveTask extends Task {
      * @return this
      */
     @NonNull
-    public HolonomicVectorDriveTask withStabilisationTimeout(@NonNull Measure<Time> lockTimeout) {
+    public HolonomicLockingDriveTask withStabilisationTimeout(@NonNull Measure<Time> lockTimeout) {
         lockingTimeout = lockTimeout;
         return this;
     }
@@ -216,7 +216,7 @@ public class HolonomicVectorDriveTask extends Task {
      * @return this
      */
     @NonNull
-    public HolonomicVectorDriveTask withTolerance(@NonNull Measure<Distance> poseX, @NonNull Measure<Distance> poseY, @NonNull Measure<Angle> poseR) {
+    public HolonomicLockingDriveTask withTolerance(@NonNull Measure<Distance> poseX, @NonNull Measure<Distance> poseY, @NonNull Measure<Angle> poseR) {
         return withTolerance(new Pose2d(poseX.in(Inches), poseY.in(Inches), poseR.in(Radians)));
     }
 

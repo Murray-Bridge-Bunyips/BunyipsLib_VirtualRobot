@@ -488,13 +488,12 @@ public class VirtualRobotController {
              * INIT has been pressed.
              */
             if (!initOpMode()) return;
-            // we run our sinister filtered hooks here at the button level to replicate Notifications
-            OpModeNotificationsFilter.getPreInit().forEach(o -> o.accept(opMode));
             pathLine.getPoints().clear();
             txtTelemetry.setText("");
             driverButton.setText("START");
             opModeInitialized = true;
             cbxConfig.setDisable(true);
+            OpModeManagerImpl.heyThisisTheOpModeThatsRunning = opMode;
             Runnable runOpMode = new Runnable() {
                 @Override
                 public void run() {
@@ -529,6 +528,7 @@ public class VirtualRobotController {
             /*
              * START has been pressed.
              */
+            // we run our sinister filtered hooks here at the button level to replicate Notifications
             OpModeNotificationsFilter.getPreStart().forEach(o -> o.accept(opMode));
             driverButton.setText("STOP");
             opModeStarted = true;
@@ -563,6 +563,7 @@ public class VirtualRobotController {
             initializeTelemetryTextArea();
             cbxConfig.setDisable(false);
             OpModeNotificationsFilter.getPostStop().forEach(o -> o.accept(opMode));
+            OpModeManagerImpl.heyThisisTheOpModeThatsRunning = null;
         }
     }
 
@@ -575,6 +576,8 @@ public class VirtualRobotController {
             //will return hardware objects
             bot.getHardwareMap().setActive(true);
 
+            OpModeNotificationsFilter.getPreInit().forEach(o -> o.accept(opMode));
+            
             //For regular opMode, run user-defined init() method. For Linear opMode, init() starts the execution of
             //runOpMode on a helper thread.
             opMode.init();

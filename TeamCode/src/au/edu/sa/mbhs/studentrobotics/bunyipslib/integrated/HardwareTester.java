@@ -70,7 +70,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.TelemetryMenu;
 @TeleOp(name = "Hardware Tester", group = "BunyipsLib Integrated")
 public final class HardwareTester extends OpMode {
     private TelemetryMenu menu;
-    private Telemetry telemetry;
+    private DualTelemetry telemetry;
     private MovingAverageTimer timer;
 
     /**
@@ -80,7 +80,9 @@ public final class HardwareTester extends OpMode {
     @SuppressWarnings("unchecked")
     public void init() {
         timer = new MovingAverageTimer();
-        telemetry = new DualTelemetry(this, timer, "<b>HardwareTester</b>");
+        telemetry = new DualTelemetry(this, timer);
+        telemetry.overheadTag = "<b>HardwareTester</b>";
+        telemetry.init();
         Map<String, List<HardwareDevice>> hardware;
 //        hardwareMap.logDevices();
         try {
