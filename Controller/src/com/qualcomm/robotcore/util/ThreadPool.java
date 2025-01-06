@@ -10,11 +10,11 @@ public class ThreadPool {
     {
         return new ScheduledThreadPoolExecutor(maxWorkerThreadCount);
     }
-//    private static ExecutorService defaultExecutor = null;
-//    public static ExecutorService getDefault() {
-//        if (defaultExecutor == null) {
-//            defaultExecutor = new ThreadPoolExecutor(0, 1000, 30L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
-//        }
-//        return defaultExecutor;
-//    }
+    private static ExecutorService defaultExecutor = null;
+    public static ExecutorService getDefault() {
+        if (defaultExecutor == null) {
+            defaultExecutor = new ThreadPoolExecutor(8, 16, 6L, TimeUnit.SECONDS, new SynchronousQueue<>());
+        }
+        return defaultExecutor;
+    }
 }
