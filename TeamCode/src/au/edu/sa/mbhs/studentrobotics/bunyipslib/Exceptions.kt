@@ -82,7 +82,7 @@ object Exceptions {
         try {
             method.run()
         } catch (e: Exception) {
-            handle(e) { s -> DualTelemetry.smartLog(s) }
+            handle(e) { DualTelemetry.smartLog(it) }
         }
     }
 

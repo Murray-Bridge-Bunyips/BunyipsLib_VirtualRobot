@@ -183,6 +183,7 @@ class Scheduler {
      *
      * @param index The index of the task to unbind.
      * @throws IndexOutOfBoundsException If the index is out of bounds.
+     * @since 7.0.0
      */
     fun unbind(index: Int) {
         Dbg.logd(javaClass, "unbound task %: %", allocatedTasks.size - 1, allocatedTasks.removeAt(index))
@@ -192,6 +193,7 @@ class Scheduler {
      * Unbind a scheduled task from the scheduler.
      *
      * @param task The [ScheduledTask] to unbind.
+     * @since 7.0.0
      */
     fun unbind(task: ScheduledTask) {
         if (allocatedTasks.remove(task))
