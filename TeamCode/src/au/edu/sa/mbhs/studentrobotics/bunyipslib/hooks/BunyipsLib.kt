@@ -15,6 +15,8 @@ import dev.frozenmilk.sinister.SinisterFilter
 import dev.frozenmilk.sinister.apphooks.OnCreateEventLoop
 import dev.frozenmilk.sinister.isStatic
 import dev.frozenmilk.sinister.targeting.FocusedSearch
+import dev.frozenmilk.util.cell.LateInitCell
+import org.firstinspires.ftc.ftccommon.internal.manualcontrol.ManualControlOpMode
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil
 import java.lang.reflect.Method
 import java.util.function.Consumer
@@ -36,9 +38,12 @@ object BunyipsLib {
      * @return Instance for the OpMode manager
      */
     @JvmStatic
-    val opModeManager: OpModeManagerImpl by lazy {
-        OpModeManagerImpl.getOpModeManagerOfActivity(AppUtil.getInstance().activity)
-    }
+    val opModeManager: OpModeManagerImpl
+        get() {
+            if (!_opModeManager.initialised)
+                _opModeManager.accept(OpModeManagerImpl.getOpModeManagerOfActivity(AppUtil.getInstance().activity))
+            return _opModeManager.get()
+        }
 
     /**
      * @return The currently active OpMode via [opModeManager]
@@ -52,7 +57,7 @@ object BunyipsLib {
      */
     @JvmStatic
     val isOpModeRunning: Boolean
-        get() = opMode !is DefaultOpMode
+        get() = opMode !is DefaultOpMode && opMode !is ManualControlOpMode
 
     /**
      * Runs [ifRunning] if the [opMode] is an active user OpMode.
@@ -60,8 +65,12 @@ object BunyipsLib {
     @JvmStatic
     fun ifOpModeRunning(ifRunning: Consumer<OpMode>) = if (isOpModeRunning) ifRunning.accept(opMode) else Unit
 
+    private val _opModeManager = LateInitCell<OpModeManagerImpl>()
+
     private object EventLoopHook : OnCreateEventLoop {
         override fun onCreateEventLoop(context: Context, ftcEventLoop: FtcEventLoop) {
+            _opModeManager.safeInvoke { it.unregisterListener(OpModeHook) }
+            _opModeManager.accept(ftcEventLoop.opModeManager)
             opModeManager.registerListener(OpModeHook)
             Dbg.log(
                 "loaded BunyipsLib v% %-% uid:%",

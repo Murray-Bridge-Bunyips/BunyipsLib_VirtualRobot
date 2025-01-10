@@ -5,7 +5,7 @@ import java.lang.reflect.Member
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.util.function.Predicate
-////
+/////
 @JvmOverloads
 fun Class<*>.getAllMethods(predicate: Predicate<Method> = Predicate { true } ): List<Method> {
 	return this.declaredMethods.toList().filter(predicate::test) + (this.superclass?.getAllMethods(predicate) ?: emptyList())

@@ -7,6 +7,10 @@ public class OpModeManagerImpl {
 
     }
     
+    public void unregisterListener(Object thisObjectIsDefinitelyUsed) {
+
+    }
+    
     public static OpModeManagerImpl getOpModeManagerOfActivity(Object activity) {
         return new OpModeManagerImpl();
     }
