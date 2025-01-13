@@ -83,7 +83,6 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
      */
     public static double PATH_FOLLOWER_ENDPOINT_PROJECTION_TOLERANCE_INCHES = 1.0;
 
-    private final MecanumKinematics kinematics;
     private final TurnConstraints defaultTurnConstraints;
     private final VelConstraint defaultVelConstraint;
     private final AccelConstraint defaultAccelConstraint;
@@ -108,6 +107,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
     public MecanumGains gains;
     private Localizer localizer;
     private Accumulator accumulator;
+    private MecanumKinematics kinematics;
     private ErrorThresholds errorThresholds = ErrorThresholds.DEFAULT;
     private volatile double leftFrontPower;
     private volatile double leftBackPower;
@@ -197,6 +197,9 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
     @NonNull
     @Override
     public MecanumDrive withLocalizer(@NonNull Localizer localizer) {
+        // Reassign kinematics as it may have been updated
+        kinematics = new MecanumKinematics(model.inPerTick * model.trackWidthTicks, model.inPerTick / model.lateralInPerTick);
+//        FlightRecorder.write("MECANUM_DRIVE_MODEL", model);
         this.localizer = localizer;
         return this;
     }
@@ -324,7 +327,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
     @Override
     public void periodic() {
         if (localizer == null) {
-            localizer = new MecanumLocalizer(model, leftFront, leftBack, rightBack, rightFront, lazyImu.get());
+            withLocalizer(new MecanumLocalizer(model, leftFront, leftBack, rightBack, rightFront, lazyImu.get()));
         }
 
         accumulator.accumulate(localizer.update());

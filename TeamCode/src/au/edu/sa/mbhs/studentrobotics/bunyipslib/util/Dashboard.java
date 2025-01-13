@@ -22,7 +22,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks.Hook;
  * @author Lucas Bubner, 2024
  * @since 6.0.0
  */
-@Config
+//@Config
 public final class Dashboard {
     /**
      * The radius of the robot for drawing in inches.
