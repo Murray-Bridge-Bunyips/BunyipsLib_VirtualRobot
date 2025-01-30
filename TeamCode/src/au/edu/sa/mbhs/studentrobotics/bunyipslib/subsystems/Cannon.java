@@ -5,8 +5,14 @@ import androidx.annotation.Nullable;
 
 import com.qualcomm.robotcore.hardware.Servo;
 
+import java.util.function.Supplier;
+
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsSubsystem;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.DualTelemetry;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Measure;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Time;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.ServoEx;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Lambda;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
 
@@ -44,8 +50,8 @@ public class Cannon extends BunyipsSubsystem {
         if (openPosition == closePosition)
             throw new IllegalArgumentException("Open and close positions cannot be the same");
 
-        FIRED = openPosition;
-        RESET = closePosition;
+        FIRED = Mathf.clamp(openPosition, 0, 1);
+        RESET = Mathf.clamp(closePosition, 0, 1);
 
         if (!assertParamsNotNull(prolong)) return;
         this.prolong = prolong;
@@ -121,7 +127,13 @@ public class Cannon extends BunyipsSubsystem {
          */
         @NonNull
         public Task fire() {
-            return new Lambda(Cannon.this::fire).on(Cannon.this, true).named(name + ":Fire");
+            Supplier<Measure<Time>> taskTimeout = () -> ServoEx.tryGetEndToEndTime(prolong, target, FIRED);
+            return new Lambda((t) -> {
+                t.timeout = taskTimeout.get();
+                Cannon.this.fire();
+            }).on(Cannon.this, true)
+                    .timeout(taskTimeout.get()) // preliminary
+                    .named(forThisSubsystem("Fire"));
         }
 
         /**
@@ -131,7 +143,13 @@ public class Cannon extends BunyipsSubsystem {
          */
         @NonNull
         public Task reset() {
-            return new Lambda(Cannon.this::reset).on(Cannon.this, true).named(name + ":Reset");
+            Supplier<Measure<Time>> taskTimeout = () -> ServoEx.tryGetEndToEndTime(prolong, target, RESET);
+            return new Lambda((t) -> {
+                t.timeout = taskTimeout.get();
+                Cannon.this.reset();
+            }).on(Cannon.this, true)
+                    .timeout(taskTimeout.get()) // preliminary
+                    .named(forThisSubsystem("Reset"));
         }
     }
 }

@@ -153,6 +153,9 @@ object Mathf {
     /**
      * Scale a number in the range of `x1` to `x2`, to the range of `y1` to `y2`.
      *
+     * Inputs outside the bounds will be mapped correspondingly to outputs inside the output bounds.
+     * Inputs equal to [x1] will be mapped to [y1], and inputs equal to [x2] will be mapped to [y2].
+     *
      * @param x1 lower bound range of n
      * @param x2 upper bound range of n
      * @param y1 lower bound of scale
@@ -173,6 +176,9 @@ object Mathf {
 
     /**
      * Scale a number in the range of `x1` to `x2`, to the range of `y1` to `y2`.
+     *
+     * Inputs outside the bounds will be mapped correspondingly to outputs inside the output bounds.
+     * Inputs equal to [x1x2] will be mapped to [y1y2].
      *
      * @param x1x2 range of n
      * @param y1y2 range of scale

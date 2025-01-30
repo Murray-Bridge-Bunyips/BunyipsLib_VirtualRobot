@@ -1,15 +1,21 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.TrapezoidProfile;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Measure;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Time;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.DualServos;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.Switch;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Lambda;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoController;
 
+import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Milliseconds;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Nanoseconds;
+import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds;
 
 /**
  * Extension of the extended {@link Servo} interface that allows for motion profiling via a {@link TrapezoidProfile}.
@@ -36,6 +42,18 @@ public class ServoEx implements Servo {
     private long lastUpdate;
 
     /**
+     * Attempts to get the end-to-end time for this servo (only available on ServoEx).
+     *
+     * @param servo the servo to get the time for (rescaling parameters are ignored if this is not a ServoEx)
+     * @param from  the rescaling lower limit where the servo is currently
+     * @param to    the rescaling upper limit where the servo should go to
+     * @return the rescaled servo end-to-end time if available, else {@link Lambda#EPSILON_MS}.
+     */
+    public static Measure<Time> tryGetEndToEndTime(Servo servo, double from, double to) {
+        return servo instanceof ServoEx sex ? sex.endToEndTime.times(to - from) : Milliseconds.of(Lambda.EPSILON_MS);
+    }
+
+    /**
      * Set the delta in servo position required to propagate a hardware write.
      *
      * @param magnitude absolute magnitude of delta in servo position, 0/default will disable
@@ -55,6 +73,30 @@ public class ServoEx implements Servo {
     }
 
     /**
+     * The user-defined time it takes for this servo to travel from position 0 to 1 or 1 to 0.
+     * Default of 1 second.
+     *
+     * @return end to end time
+     */
+    @NonNull
+    public Measure<Time> getEndToEndTime() {
+        return endToEndTime;
+    }
+
+    /**
+     * Set the time at which it takes the servo to complete a full rotation from the programmed 0 to 1 position (and
+     * vice versa). This value is used to define the task timing for several subsystems, including the {@link Switch}
+     * and {@link DualServos}.
+     * <p>
+     * This value can also be used for your own purposes accessed through {@link #getEndToEndTime()}.
+     *
+     * @param servoFullRotationTime the time it takes for the servo to travel from programmed position 0 to 1 or 1 to 0.
+     */
+    public void setEndToEndTime(@NonNull Measure<Time> servoFullRotationTime) {
+        endToEndTime = servoFullRotationTime;
+    }
+
+    /**
      * Sets the trapezoidal constraints to apply to this servo's positions. These constraints are in units
      * of delta step of position (for example, 1 corresponds with the full servo travel distance per second).
      *
@@ -70,6 +112,8 @@ public class ServoEx implements Servo {
     public void disableConstraints() {
         constraints = null;
     }
+
+    private Measure<Time> endToEndTime = Seconds.one();
 
     /**
      * Wrap a Servo to use with the ServoEx class.

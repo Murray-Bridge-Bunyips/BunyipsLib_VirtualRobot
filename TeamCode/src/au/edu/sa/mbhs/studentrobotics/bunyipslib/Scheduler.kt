@@ -6,6 +6,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Measure
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Time
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks.BunyipsLib
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks.Hook
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.IdleTask
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Lambda
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task
@@ -29,16 +30,10 @@ class Scheduler {
     private val subsystems = ArrayList<BunyipsSubsystem>()
     private val allocatedTasks = ArrayList<ScheduledTask>()
 
-    init {
-        isMuted = false
-    }
-
     /**
      * Get all allocated tasks.
      */
-    fun getAllocatedTasks(): Array<ScheduledTask> {
-        return allocatedTasks.toTypedArray<ScheduledTask>()
-    }
+    fun getAllocatedTasks() = allocatedTasks.toTypedArray<ScheduledTask>()
 
     /**
      * All subsystems attached to and managed by the Scheduler.
@@ -70,32 +65,14 @@ class Scheduler {
      * Disable all subsystems attached to the Scheduler.
      */
     fun disable() {
-        for (subsystem in subsystems) {
-            subsystem.disable()
-        }
+        subsystems.forEach { it.disable() }
     }
 
     /**
      * Enable all subsystems attached to the Scheduler, unless they failed from null assertion.
      */
     fun enable() {
-        for (subsystem in subsystems) {
-            subsystem.enable()
-        }
-    }
-
-    /**
-     * Mute Scheduler telemetry.
-     */
-    fun mute() {
-        isMuted = true
-    }
-
-    /**
-     * Unmute Scheduler telemetry.
-     */
-    fun unmute() {
-        isMuted = false
+        subsystems.forEach { it.enable() }
     }
 
     /**
@@ -104,9 +81,7 @@ class Scheduler {
      * in [CommandBasedBunyipsOpMode].
      */
     fun run() {
-        for (subsystem in subsystems) {
-            subsystem.update()
-        }
+        subsystems.forEach { it.update() }
 
         if (!isMuted) {
             // Task count will account for tasks on subsystems that are not IdleTasks, and also subsystem tasks
@@ -211,9 +186,7 @@ class Scheduler {
      * @return The controller trigger creator.
      */
     @SuppressLint("NoHardKeywords")
-    fun `when`(user: Gamepad): ControllerTriggerCreator {
-        return ControllerTriggerCreator(user)
-    }
+    fun `when`(user: Gamepad) = ControllerTriggerCreator(user)
 
     /**
      * Create a new controller trigger creator.
@@ -221,18 +194,14 @@ class Scheduler {
      * @param user The Controller instance to use.
      * @return The controller button trigger creator.
      */
-    fun on(user: Gamepad): ControllerTriggerCreator {
-        return ControllerTriggerCreator(user)
-    }
+    fun on(user: Gamepad) = ControllerTriggerCreator(user)
 
     /**
      * Create a new controller trigger creator for the driver (gamepad 1).
      *
      * @return The controller trigger creator.
      */
-    fun driver(): ControllerTriggerCreator {
-        return ControllerTriggerCreator(BunyipsLib.opMode.gamepad1)
-    }
+    fun driver() = ControllerTriggerCreator(BunyipsLib.opMode.gamepad1)
 
     /**
      * Create a new controller trigger creator for gamepad 1 (driver).
@@ -246,9 +215,7 @@ class Scheduler {
      *
      * @return The controller trigger creator.
      */
-    fun operator(): ControllerTriggerCreator {
-        return ControllerTriggerCreator(BunyipsLib.opMode.gamepad2)
-    }
+    fun operator() = ControllerTriggerCreator(BunyipsLib.opMode.gamepad2)
 
     /**
      * Create a new controller trigger creator for gamepad 2 (operator).
@@ -269,12 +236,12 @@ class Scheduler {
      * @return Task scheduling builder
      */
     @SuppressLint("NoHardKeywords")
-    fun `when`(condition: BooleanSupplier): ScheduledTask {
+    fun `when`(condition: BooleanSupplier) =
         if (condition is Condition) {
-            return ScheduledTask(condition)
+            ScheduledTask(condition)
+        } else {
+            ScheduledTask(Condition(condition))
         }
-        return ScheduledTask(Condition(condition))
-    }
 
     /**
      * Run a task when a condition is met.
@@ -283,9 +250,7 @@ class Scheduler {
      * @param condition Supplier to provide a boolean value of when the task should be run.
      * @return Task scheduling builder
      */
-    fun on(condition: BooleanSupplier): ScheduledTask {
-        return `when`(condition)
-    }
+    fun on(condition: BooleanSupplier) = `when`(condition)
 
     /**
      * Run a task when a condition is met.
@@ -294,9 +259,7 @@ class Scheduler {
      * @param condition Supplier to provide a boolean value of when the task should be run.
      * @return Task scheduling builder
      */
-    fun whenRising(condition: BooleanSupplier): ScheduledTask {
-        return ScheduledTask(Condition(Condition.Edge.RISING, condition))
-    }
+    fun whenRising(condition: BooleanSupplier) = ScheduledTask(Condition(Condition.Edge.RISING, condition))
 
     /**
      * Run a task when a condition is met.
@@ -305,36 +268,30 @@ class Scheduler {
      * @param condition Supplier to provide a boolean value of when the task should be run.
      * @return Task scheduling builder
      */
-    fun whenFalling(condition: BooleanSupplier): ScheduledTask {
-        return ScheduledTask(Condition(Condition.Edge.FALLING, condition))
-    }
+    fun whenFalling(condition: BooleanSupplier) = ScheduledTask(Condition(Condition.Edge.FALLING, condition))
 
     /**
      * Run a task always. This is the same as calling `.when(() -> true)`.
      *
      * @return Task scheduling builder
      */
-    fun always(): ScheduledTask {
-        return ScheduledTask(Condition { true })
-    }
+    fun always() = ScheduledTask(Condition { true })
 
-    private class ControllerButtonBind(val controller: Gamepad, val button: Controls, edge: Edge) :
-        Condition(edge, { controller[button] }) {
-        override fun toString(): String {
-            return "Button($edge):GP${controller.getUser().id}->$button"
-        }
+    private class ControllerButtonBind(
+        val controller: Gamepad,
+        val button: Controls,
+        edge: Edge
+    ) : Condition(edge, { controller[button] }) {
+        override fun toString() = "Button($edge):GP${controller.getUser().id}->$button"
     }
 
     private class ControllerAxisThreshold(
-        private val user: Gamepad,
+        private val controller: Gamepad,
         private val axis: Analog,
         threshold: (Float) -> Boolean,
         edge: Edge
-    ) :
-        Condition(edge, { threshold.invoke(user[axis]) }) {
-        override fun toString(): String {
-            return "Axis($edge):GP${user.getUser().id}->$axis"
-        }
+    ) : Condition(edge, { threshold.invoke(controller[axis]) }) {
+        override fun toString() = "Axis($edge):GP${controller.getUser().id}->$axis"
     }
 
     /**
@@ -354,9 +311,8 @@ class Scheduler {
          * @return Task scheduling builder
          */
         @SuppressLint("NoHardKeywords")
-        fun `when`(axis: Analog, threshold: (Float) -> Boolean): ScheduledTask {
-            return ScheduledTask(ControllerAxisThreshold(user, axis, threshold, Condition.Edge.ACTIVE))
-        }
+        fun `when`(axis: Analog, threshold: (Float) -> Boolean) =
+            ScheduledTask(ControllerAxisThreshold(user, axis, threshold, Condition.Edge.ACTIVE))
 
         /**
          * Run a task once this analog axis condition is met.
@@ -366,9 +322,7 @@ class Scheduler {
          * @param threshold The threshold to meet.
          * @return Task scheduling builder
          */
-        fun on(axis: Analog, threshold: (Float) -> Boolean): ScheduledTask {
-            return `when`(axis, threshold)
-        }
+        fun on(axis: Analog, threshold: (Float) -> Boolean) = `when`(axis, threshold)
 
         /**
          * Run a task once this analog axis condition is met.
@@ -377,9 +331,7 @@ class Scheduler {
          * @param condition The condition to meet.
          * @return Task scheduling builder
          */
-        infix fun on(condition: Pair<Analog, (Float) -> Boolean>): ScheduledTask {
-            return `when`(condition.first, condition.second)
-        }
+        infix fun on(condition: Pair<Analog, (Float) -> Boolean>) = `when`(condition.first, condition.second)
 
         /**
          * Run a task once this analog axis condition is met.
@@ -389,9 +341,8 @@ class Scheduler {
          * @param threshold The threshold to meet.
          * @return Task scheduling builder
          */
-        fun whenRising(axis: Analog, threshold: (Float) -> Boolean): ScheduledTask {
-            return ScheduledTask(ControllerAxisThreshold(user, axis, threshold, Condition.Edge.RISING))
-        }
+        fun whenRising(axis: Analog, threshold: (Float) -> Boolean) =
+            ScheduledTask(ControllerAxisThreshold(user, axis, threshold, Condition.Edge.RISING))
 
         /**
          * Run a task once this analog axis condition is met.
@@ -400,16 +351,8 @@ class Scheduler {
          * @param condition The condition to meet.
          * @return Task scheduling builder
          */
-        infix fun whenRising(condition: Pair<Analog, (Float) -> Boolean>): ScheduledTask {
-            return ScheduledTask(
-                ControllerAxisThreshold(
-                    user,
-                    condition.first,
-                    condition.second,
-                    Condition.Edge.RISING
-                )
-            )
-        }
+        infix fun whenRising(condition: Pair<Analog, (Float) -> Boolean>) =
+            ScheduledTask(ControllerAxisThreshold(user, condition.first, condition.second, Condition.Edge.RISING))
 
         /**
          * Run a task once this analog axis condition is met.
@@ -419,9 +362,8 @@ class Scheduler {
          * @param threshold The threshold to meet.
          * @return Task scheduling builder
          */
-        fun whenFalling(axis: Analog, threshold: (Float) -> Boolean): ScheduledTask {
-            return ScheduledTask(ControllerAxisThreshold(user, axis, threshold, Condition.Edge.FALLING))
-        }
+        fun whenFalling(axis: Analog, threshold: (Float) -> Boolean) =
+            ScheduledTask(ControllerAxisThreshold(user, axis, threshold, Condition.Edge.FALLING))
 
         /**
          * Run a task once this analog axis condition is met.
@@ -430,16 +372,8 @@ class Scheduler {
          * @param condition The condition to meet.
          * @return Task scheduling builder
          */
-        infix fun whenFalling(condition: Pair<Analog, (Float) -> Boolean>): ScheduledTask {
-            return ScheduledTask(
-                ControllerAxisThreshold(
-                    user,
-                    condition.first,
-                    condition.second,
-                    Condition.Edge.FALLING
-                )
-            )
-        }
+        infix fun whenFalling(condition: Pair<Analog, (Float) -> Boolean>) =
+            ScheduledTask(ControllerAxisThreshold(user, condition.first, condition.second, Condition.Edge.FALLING))
 
         /**
          * Run a task when a controller button is held.
@@ -448,9 +382,8 @@ class Scheduler {
          * @param button The button of the controller.
          * @return Task scheduling builder
          */
-        infix fun whenHeld(button: Controls): ScheduledTask {
-            return ScheduledTask(ControllerButtonBind(user, button, Condition.Edge.ACTIVE))
-        }
+        infix fun whenHeld(button: Controls) =
+            ScheduledTask(ControllerButtonBind(user, button, Condition.Edge.ACTIVE))
 
         /**
          * Run a task when a controller button is pressed (will run once when pressing the desired input).
@@ -459,9 +392,8 @@ class Scheduler {
          * @param button The button of the controller.
          * @return Task scheduling builder
          */
-        infix fun whenPressed(button: Controls): ScheduledTask {
-            return ScheduledTask(ControllerButtonBind(user, button, Condition.Edge.RISING))
-        }
+        infix fun whenPressed(button: Controls) =
+            ScheduledTask(ControllerButtonBind(user, button, Condition.Edge.RISING))
 
         /**
          * Run a task when a controller button is released (will run once letting go of the desired input).
@@ -470,9 +402,8 @@ class Scheduler {
          * @param button The button of the controller.
          * @return Task scheduling builder
          */
-        infix fun whenReleased(button: Controls): ScheduledTask {
-            return ScheduledTask(ControllerButtonBind(user, button, Condition.Edge.FALLING))
-        }
+        infix fun whenReleased(button: Controls) =
+            ScheduledTask(ControllerButtonBind(user, button, Condition.Edge.FALLING))
     }
 
     /**
@@ -530,12 +461,11 @@ class Scheduler {
          * @param task The task to run.
          * @return Current builder for additional task parameters
          */
-        infix fun run(task: Task): ScheduledTask {
+        infix fun run(task: Task) = apply {
             if (taskToRun !is IdleTask) {
                 throw EmergencyStop("A run(Task) method has been called more than once on a scheduler task. If you wish to run multiple tasks see about using a task group as your task.")
             }
             taskToRun = task
-            return this
         }
 
         /**
@@ -549,9 +479,7 @@ class Scheduler {
          * @param runnable The code to run
          * @return Current builder for additional task parameters
          */
-        infix fun run(runnable: Runnable): ScheduledTask {
-            return run(Lambda(runnable))
-        }
+        infix fun run(runnable: Runnable) = run(Lambda(runnable))
 
         /**
          * Implicitly make a new [Lambda] to run as the condition is met.
@@ -565,9 +493,7 @@ class Scheduler {
          * @param runnable The code to run
          * @return Current builder for additional task parameters
          */
-        fun run(name: String, runnable: Runnable): ScheduledTask {
-            return run(Lambda(runnable).named(name))
-        }
+        fun run(name: String, runnable: Runnable) = run(Lambda(runnable).named(name))
 
         /**
          * Queue a task when the condition is met, debouncing the task from queueing more than once the condition is met.
@@ -583,10 +509,7 @@ class Scheduler {
          * @param task The task to run.
          * @return Current builder for additional task parameters
          */
-        infix fun runOnce(task: Task): ScheduledTask {
-            debouncing = true
-            return run(task)
-        }
+        infix fun runOnce(task: Task) = run(task).also { debouncing = true }
 
         /**
          * Implicitly make a new [Lambda] to run once the condition is met, debouncing the task from queueing more than once the condition is met.
@@ -602,9 +525,7 @@ class Scheduler {
          * @param runnable The code to run
          * @return Current builder for additional task parameters
          */
-        infix fun runOnce(runnable: Runnable): ScheduledTask {
-            return runOnce(Lambda(runnable))
-        }
+        infix fun runOnce(runnable: Runnable) = runOnce(Lambda(runnable))
 
         /**
          * Implicitly make a new [Lambda] to run once the condition is met, debouncing the task from queueing more than once the condition is met.
@@ -621,18 +542,15 @@ class Scheduler {
          * @param runnable The code to run
          * @return Current builder for additional task parameters
          */
-        fun runOnce(name: String, runnable: Runnable): ScheduledTask {
-            return runOnce(Lambda(runnable).named(name))
-        }
+        fun runOnce(name: String, runnable: Runnable) = runOnce(Lambda(runnable).named(name))
 
         /**
          * Mute this task from being a part of the Scheduler report.
          *
          * @return Current builder for additional task parameters
          */
-        fun muted(): ScheduledTask {
+        fun muted() = apply {
             muted = true
-            return this
         }
 
         /**
@@ -642,9 +560,8 @@ class Scheduler {
          * @param condition The AND condition to chain.
          * @return Current builder for additional task parameters
          */
-        infix fun and(condition: BooleanSupplier): ScheduledTask {
+        infix fun and(condition: BooleanSupplier) = apply {
             and.add(condition)
-            return this
         }
 
         /**
@@ -654,9 +571,8 @@ class Scheduler {
          * @param condition The OR condition to chain.
          * @return Current builder for additional task parameters
          */
-        infix fun or(condition: BooleanSupplier): ScheduledTask {
+        infix fun or(condition: BooleanSupplier) = apply {
             or.add(condition)
-            return this
         }
 
         /**
@@ -672,9 +588,8 @@ class Scheduler {
          * @return Current builder for additional task parameters
          */
         @SuppressLint("NoHardKeywords")
-        infix fun `in`(interval: Measure<Time>): ScheduledTask {
+        infix fun `in`(interval: Measure<Time>) = apply {
             originalRunCondition.withActiveDelay(interval)
-            return this
         }
 
         /**
@@ -685,9 +600,7 @@ class Scheduler {
          * @param interval The time interval
          * @return Current builder for additional task parameters
          */
-        infix fun after(interval: Measure<Time>): ScheduledTask {
-            return `in`(interval)
-        }
+        infix fun after(interval: Measure<Time>) = `in`(interval)
 
         /**
          * Run the task assigned to in [run] until this condition is met. Once this condition is met, the task will
@@ -698,7 +611,7 @@ class Scheduler {
          * this condition simply allows for an early finish if this condition is met.
          * @return Current builder for additional task parameters
          */
-        infix fun finishIf(condition: BooleanSupplier): ScheduledTask {
+        infix fun finishIf(condition: BooleanSupplier) = apply {
             // Use prev to avoid a stack overflow
             val prev = stopCondition
             stopCondition = if (prev == null) {
@@ -706,7 +619,6 @@ class Scheduler {
             } else {
                 { prev.invoke() || condition.asBoolean }
             }
-            return this
         }
 
         override fun toString(): String {
@@ -749,7 +661,45 @@ class Scheduler {
         }
     }
 
+    /**
+     * Mute all Scheduler instances telemetry for the rest of the OpMode.
+     */
+    fun mute() {
+        isMuted = true
+    }
+
+    /**
+     * Unmute all Scheduler instances telemetry for the rest of the OpMode.
+     */
+    fun unmute() {
+        isMuted = false
+    }
+
     companion object {
         private var isMuted = false
+
+        /**
+         * Unmute all Scheduler instances telemetry for the rest of the OpMode.
+         */
+        @JvmStatic
+        @JvmName("muteTelemetry")
+        fun mute() {
+            isMuted = true
+        }
+
+        /**
+         * Unmute all Scheduler instances telemetry for the rest of the OpMode.
+         */
+        @JvmStatic
+        @JvmName("unmuteTelemetry")
+        fun unmute() {
+            isMuted = false
+        }
+
+        @JvmStatic
+        @Hook(on = Hook.Target.POST_STOP)
+        private fun reset() {
+            isMuted = false
+        }
     }
 }

@@ -24,7 +24,6 @@ import kotlin.math.hypot
 /**
  * Defines useful conversion methods for RoadRunner geometry types, restoring some removed methods from RoadRunner v0.5.
  *
- *
  * This class was created for migration purposes between RoadRunner v0.5 and v1.0, where new types were introduced
  * and some methods removed, but these methods are still useful within BunyipsLib.
  *
@@ -170,6 +169,16 @@ object Geometry {
     @JvmStatic
     fun Pose2d.toUserString(): String {
         return "Pose2d(x=%.1f, y=%.1f, r=%.1f°)".format(this.position.x, this.position.y, Math.toDegrees(this.heading.toDouble()))
+    }
+    
+    /**
+     * Returns a user-friendly representation of a [PoseVelocity2d].
+     *
+     * @return the user-friendly string
+     */
+    @JvmStatic
+    fun PoseVelocity2d.toUserString(): String {
+        return "PoseVelocity2d(x=%.1f, y=%.1f, r=%.1f°)".format(this.linearVel.x, this.linearVel.y, Math.toDegrees(this.angVel))
     }
 
     /**

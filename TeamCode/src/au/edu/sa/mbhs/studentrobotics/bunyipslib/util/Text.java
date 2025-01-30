@@ -8,8 +8,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg;
-
 /**
  * Text and string manipulation utilities.
  *
@@ -307,8 +305,7 @@ public final class Text {
         @NonNull
         public HtmlBuilder header(int level, @NonNull String text) {
             if (level < 1 || level > 6) {
-                Dbg.warn("Invalid header level " + level + " in HtmlBuilder.header()");
-                return this;
+                throw new IllegalArgumentException("Invalid header level " + level + " in HtmlBuilder.header()");
             }
             html.append("<h").append(level).append(">").append(text).append("</h").append(level).append(">");
             return this;
@@ -368,10 +365,10 @@ public final class Text {
         @Override
         public boolean equals(Object obj) {
             if (obj == this) return true;
-            if (obj.toString().equals(html.toString())) return true;
+            if (obj.toString().contentEquals(html)) return true;
             if (!(obj instanceof HtmlBuilder)) return false;
             HtmlBuilder other = (HtmlBuilder) obj;
-            return html.toString().equals(other.html.toString());
+            return html.toString().contentEquals(other.html);
         }
 
         @Override
