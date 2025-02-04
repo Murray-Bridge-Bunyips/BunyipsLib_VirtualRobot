@@ -4,6 +4,7 @@ import android.content.Context
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsOpMode
 //import au.edu.sa.mbhs.studentrobotics.bunyipslib.BuildConfig
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.Exceptions
 import au.edu.sa.mbhs.studentrobotics.deps.BuildConfig
 import com.qualcomm.ftccommon.FtcEventLoop
 import com.acmerobotics.dashboard.FtcDashboard
@@ -111,7 +112,7 @@ object BunyipsLib {
                 opMode.javaClass.simpleName,
                 opModeManager.activeOpModeName
             )
-            HookFilter.preInit.forEach { it.invoke(null) }
+            HookFilter.preInit.forEach { Exceptions.runUserMethod { it.invoke(null) } }
         }
 
         override fun onOpModePreStart(opMode: OpMode) {
@@ -121,7 +122,7 @@ object BunyipsLib {
                 opMode.javaClass.simpleName,
                 opModeManager.activeOpModeName
             )
-            HookFilter.preStart.forEach { it.invoke(null) }
+            HookFilter.preStart.forEach { Exceptions.runUserMethod { it.invoke(null) } }
         }
 
         override fun onOpModePostStop(opMode: OpMode) {
@@ -131,7 +132,7 @@ object BunyipsLib {
                 opMode.javaClass.simpleName,
                 opModeManager.activeOpModeName
             )
-            HookFilter.postStop.forEach { it.invoke(null) }
+            HookFilter.postStop.forEach { Exceptions.runUserMethod { it.invoke(null) } }
         }
     }
 
