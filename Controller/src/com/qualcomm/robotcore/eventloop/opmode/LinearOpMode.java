@@ -211,10 +211,16 @@ public abstract class LinearOpMode extends OpMode {
     }
 
     @Override
-    public final void internalPostInitLoop(){((TelemetryImpl)telemetry).tryUpdateIfDirty();}
+    public final void internalPostInitLoop(){
+//        telemetry.update();
+//        ((TelemetryImpl)telemetry).tryUpdateIfDirty();
+    }
 
     @Override
-    public final void internalPostLoop() {((TelemetryImpl)telemetry).tryUpdateIfDirty();}
+    public final void internalPostLoop() {
+        telemetry.update();
+//        ((TelemetryImpl)telemetry).tryUpdateIfDirty();
+    }
 
     /**
      * For internal use only.

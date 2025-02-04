@@ -963,8 +963,8 @@ public class VirtualRobotController {
      */
     public class OpModeBase {
         public final HardwareMap hardwareMap;
-        public final Gamepad gamepad1;
-        public final Gamepad gamepad2;
+        public Gamepad gamepad1;
+        public Gamepad gamepad2;
         public Telemetry telemetry;
 
         public OpModeBase() {
