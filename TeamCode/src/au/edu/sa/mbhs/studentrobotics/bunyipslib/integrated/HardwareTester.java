@@ -80,7 +80,7 @@ public final class HardwareTester extends OpMode {
     @SuppressWarnings("unchecked")
     public void init() {
         timer = new MovingAverageTimer();
-        telemetry = new DualTelemetry(this, timer);
+        telemetry = new DualTelemetry(super.telemetry, timer);
         telemetry.overheadTag = "<b>HardwareTester</b>";
         telemetry.init();
         Map<String, List<HardwareDevice>> hardware;
