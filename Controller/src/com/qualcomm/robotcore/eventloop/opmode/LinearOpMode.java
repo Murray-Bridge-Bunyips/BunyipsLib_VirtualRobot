@@ -218,7 +218,7 @@ public abstract class LinearOpMode extends OpMode {
 
     @Override
     public final void internalPostLoop() {
-        telemetry.update();
+//        telemetry.update();
 //        ((TelemetryImpl)telemetry).tryUpdateIfDirty();
     }
 
