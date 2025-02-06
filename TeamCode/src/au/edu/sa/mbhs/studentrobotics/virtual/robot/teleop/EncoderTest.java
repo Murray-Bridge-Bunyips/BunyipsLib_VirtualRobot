@@ -3,13 +3,16 @@ package au.edu.sa.mbhs.studentrobotics.virtual.robot.teleop;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsOpMode;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.RobotConfig;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.TrapezoidProfile;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PIDFController;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.ProfiledPIDController;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Milliseconds;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds;
 
 @TeleOp
@@ -28,7 +31,7 @@ public class EncoderTest extends BunyipsOpMode {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        pid = new PIDFController(20, 0.0, 20, 0.0);
+        pid = new ProfiledPIDController(15, 0.0, 0.4, new TrapezoidProfile.Constraints(10, 10));
         pid.setDerivativeSmoothingGain(0.8);
         try {
             file.write("time,s,v,a");
@@ -42,8 +45,8 @@ public class EncoderTest extends BunyipsOpMode {
     @Override
     protected void activeLoop() {
         double target = 100;
-        double maxVelocity = 10;
-        double maxAcceleration = 5;
+        double maxVelocity = Double.MAX_VALUE;
+        double maxAcceleration = Double.MAX_VALUE;
         
         double targetVelocity = pid.calculate(displacement, target);
         double dV = Mathf.moveTowards(velocity, targetVelocity, maxAcceleration * timer.deltaTime().in(Seconds)) - velocity;
