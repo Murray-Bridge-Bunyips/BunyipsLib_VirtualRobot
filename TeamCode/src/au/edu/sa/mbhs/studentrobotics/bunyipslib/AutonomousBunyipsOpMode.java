@@ -44,7 +44,7 @@ public abstract class AutonomousBunyipsOpMode extends BunyipsOpMode {
      * Purely visual, and does not affect the actual task (hence why this field is not exposed to FtcDashboard).
      */
     public static double INFINITE_TASK_ASSUMED_DURATION_SECONDS = 5.0;
-    private final ArrayList<RefCell<?>> opModes = new ArrayList<>();
+    private final ArrayList<Object> opModes = new ArrayList<>();
     private final ConcurrentLinkedDeque<Task> tasks = new ConcurrentLinkedDeque<>();
     // Pre- and post-queues cannot have their tasks removed, so we can rely on their .size() methods
     private final ConcurrentLinkedDeque<Task> postQueue = new ConcurrentLinkedDeque<>();
@@ -52,21 +52,21 @@ public abstract class AutonomousBunyipsOpMode extends BunyipsOpMode {
     @NonNull
     private HashSet<BunyipsSubsystem> updatedSubsystems = new HashSet<>();
     private int taskCount;
-    private UserSelection<RefCell<?>> userSelection;
+    private UserSelection<?> userSelection;
     private int currentTask = 1;
     private volatile boolean safeToAddTasks;
     private volatile boolean callbackReceived;
     private OnTasksDone onTasksDone = OnTasksDone.FINISH_OPMODE;
     private boolean tasksFinished;
 
-    private void callback(@Nullable RefCell<?> selectedOpMode) {
+    private void callback(@Nullable Object selectedOpMode) {
         // Safety as the OpMode may not be running anymore (due to it being on another thread)
         if (isStopRequested())
             return;
 
         safeToAddTasks = true;
 
-        Exceptions.runUserMethod(() -> onReady(selectedOpMode));
+        Exceptions.runUserMethod(() -> onReady(selectedOpMode == null ? null : Ref.of(selectedOpMode)));
         callbackReceived = true;
 
         // Add any queued tasks that were delayed previously and we can do now
@@ -690,21 +690,19 @@ public abstract class AutonomousBunyipsOpMode extends BunyipsOpMode {
      *     // which is the recommended way to define OpModes (OpModes themselves define objectives, not positions)
      * }</pre>
      */
-    protected final UserSelection<RefCell<?>> setOpModes(@Nullable Object... selectableOpModes) {
+    protected final UserSelection<?> setOpModes(@Nullable Object... selectableOpModes) {
         if (selectableOpModes == null) return null;
         opModes.clear();
         for (Object selectableOpMode : selectableOpModes) {
-            if (selectableOpMode instanceof RefCell<?>) {
-                opModes.add((RefCell<?>) selectableOpMode);
-            } else if (selectableOpMode instanceof StartingConfiguration.Builder.PrebuiltPosition) {
+            if (selectableOpMode instanceof StartingConfiguration.Builder.PrebuiltPosition) {
                 // Preemptive catch for non-built StartingConfigurations which are a common use case
                 // No point in throwing errors for the little stuff we can solve here now
-                opModes.add(Ref.of(((StartingConfiguration.Builder.PrebuiltPosition) selectableOpMode).build()));
+                opModes.add(((StartingConfiguration.Builder.PrebuiltPosition) selectableOpMode).build());
             } else {
-                opModes.add(Ref.of(selectableOpMode));
+                opModes.add(selectableOpMode);
             }
         }
-        RefCell<?>[] selections = opModes.toArray(new RefCell[0]);
+        Object[] selections = opModes.toArray(new Object[0]);
         // This will run asynchronously later, and the callback will be called when the user has selected an OpMode
         // An empty selections array will cause an immediate return of the callback on execution, handled on init
         userSelection = new UserSelection<>(this::callback, selections);
