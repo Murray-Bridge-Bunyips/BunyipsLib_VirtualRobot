@@ -67,11 +67,11 @@ import java.util.function.Consumer
  * which will be of `Array<*>` or `Collection<*>` will return the selections made for each section. Null values will
  * fill the array at the point the selection is terminated early, hence the return type is still `T?`.
  * You can choose to disable this behaviour by calling [disableChaining].
- * 
+ *
  * This class is currently only supported for use in a [BunyipsOpMode] context
  * as it references several of its internal components.
  *
- * @param selections Modes to map to buttons. Will be casted to strings for display and return back in type `T`.
+ * @param selections Modes to map to buttons. Will be cast to strings for display and return back in type `T`.
  * @author Lucas Bubner, 2023
  * @since 1.0.0-pre
  */
@@ -155,13 +155,14 @@ class UserSelection<T : Any>(
             var result: Any? = null
             var selectedButton = Controls.NONE
 
-            val driverStation = Text.builder("<font color='yellow'><b>(${index + 1}/${buttonLayers.size}) " +
-                    "ACTION REQUIRED</b></font>: CHOOSE ON GAMEPAD\n")
+            var header = "<font color='yellow'><b>(${index + 1}/${buttonLayers.size}) " +
+                    "ACTION REQUIRED</b></font>: CHOOSE ON GAMEPAD\n"
             // No point in displaying the number on the DS if there's only one
             if (buttonLayers.size == 1)
-                driverStation.replaceFirst(Regex("\\(\\d+/\\d+\\)\\s"), "")
+                header = header.replaceFirst(Regex("\\(\\d+/\\d+\\)\\s"), "")
             // Dashboard is a backup/secondary so it doesn't really matter if we're overly verbose
             val dashboard = Text.builder("<font color='gray'>(${index + 1}/${buttonLayers.size}) |</font> ")
+            val driverStation = Text.builder(header)
 
             for ((n, button) in it) {
                 val name = n.stringify()
