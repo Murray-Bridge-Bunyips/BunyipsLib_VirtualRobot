@@ -15,7 +15,6 @@ import com.qualcomm.robotcore.hardware.ServoController;
 
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Milliseconds;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Nanoseconds;
-import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds;
 
 /**
  * Extension of the extended {@link Servo} interface that allows for motion profiling via a {@link TrapezoidProfile}.
@@ -113,7 +112,7 @@ public class ServoEx implements Servo {
         constraints = null;
     }
 
-    private Measure<Time> endToEndTime = Seconds.one();
+    private Measure<Time> endToEndTime = Milliseconds.of(500);
 
     /**
      * Wrap a Servo to use with the ServoEx class.
