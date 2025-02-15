@@ -75,7 +75,7 @@ import java.util.function.Consumer
  * @author Lucas Bubner, 2023
  * @since 1.0.0-pre
  */
-class UserSelection<T : Any>(
+class UserSelection<T : Any> @SafeVarargs constructor(
     /**
      * Runs once the user has made a selection or the thread is interrupted. The result will be the selection made by the user.
      * Can be null if the user did not make a selection.
