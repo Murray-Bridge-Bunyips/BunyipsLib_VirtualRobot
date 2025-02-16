@@ -130,12 +130,12 @@ object StartingConfiguration {
         }
 
         /**
-         * Returns a HTML string to represent this starting configuration.
+         * Returns an HTML string to represent this starting configuration.
          */
         override fun toString(): String {
             val lowCaseAlliance = Text.lower(alliance.name)
             return Text.format(
-                "On <font color='%'>%</font>, % from % wall%%",
+                "On <font color='%'>%</font>: % from % wall%%%",
                 if (isRed) "red" else "#3863ff",
                 Text.upper(lowCaseAlliance.substring(0, 1))
                         + lowCaseAlliance.substring(1),
@@ -154,6 +154,11 @@ object StartingConfiguration {
                 },
                 if (ccwRotation.magnitude() != 0.0) {
                     ", ↺ ${ccwRotation to Degrees}°"
+                } else {
+                    ""
+                },
+                if (flags.isNotEmpty()) {
+                    " $flags"
                 } else {
                     ""
                 }
