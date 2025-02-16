@@ -5,6 +5,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks.Hook
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.StartingConfiguration
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.StartingConfiguration.Builder.PrebuiltPosition
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.StartingPositions
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Ref.stringify
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Storage
@@ -181,7 +182,7 @@ class UserSelection<T : Any> @SafeVarargs constructor(
         val results: MutableList<Any?> = mutableListOf()
 
         run loop@{
-            buttonLayers.forEachIndexed { index, it ->
+            buttonLayers.forEachIndexed { index, layer ->
                 var result: Any? = null
                 var selectedButton = Controls.NONE
 
@@ -193,9 +194,20 @@ class UserSelection<T : Any> @SafeVarargs constructor(
                 // Dashboard is a backup/secondary so it doesn't really matter if we're overly verbose
                 val dashboard = Text.builder("<font color='gray'>(${index + 1}/${buttonLayers.size}) |</font> ")
                 val driverStation = Text.builder(header)
+                
+                val it = layer.map {
+                    val key = it.key
+                    // Preemptive catch for non-built StartingConfigurations which are a common use case
+                    // No point in throwing errors for the little stuff we can solve here now
+                    if (key is StartingConfiguration.Builder.PrebuiltPosition) {
+                        key.build() to it.value
+                    } else {
+                        key to it.value
+                    }
+                }
 
-                for ((n, button) in it) {
-                    val name = n.stringify()
+                for ((item, button) in it) {
+                    val name = item.stringify()
                     dashboard.append("%: % <font color='gray'>|</font> ", button.name, name)
                     driverStation.append(
                         "| %: <b>%</b>\n",
