@@ -9,4 +9,17 @@ public class ServoControllerImpl implements ServoController{
         }
         return theInstance;
     }
+    
+    private Servo servo;
+    
+    public static ServoControllerImpl useOnServo(Servo servo) {
+        ServoControllerImpl servoController = new ServoControllerImpl();
+        servoController.servo = servo;
+        return servoController;
+    }
+
+    @Override
+    public Servo getUnderlyingServo() {
+        return servo;
+    }
 }

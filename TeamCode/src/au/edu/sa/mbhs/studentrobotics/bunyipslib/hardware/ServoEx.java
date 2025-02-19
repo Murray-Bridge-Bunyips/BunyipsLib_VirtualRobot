@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoController;
 import com.qualcomm.robotcore.hardware.ServoControllerEx;
+import com.qualcomm.robotcore.hardware.ServoImpl;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.TrapezoidProfile;
@@ -32,7 +33,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Lambda;
  * @author Lucas Bubner, 2024
  * @since 5.1.0
  */
-public class ServoEx extends ServoImplEx implements PwmControl {
+public class ServoEx extends ServoImpl implements PwmControl {
     @Nullable
     private TrapezoidProfile.Constraints constraints;
     private TrapezoidProfile.State setpoint = new TrapezoidProfile.State();

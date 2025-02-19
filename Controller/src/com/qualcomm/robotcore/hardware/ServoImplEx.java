@@ -56,6 +56,11 @@ public class ServoImplEx implements Servo{
         limitPositionMax = max;
     }
 
+    @Override
+    public ServoController getController() {
+        return ServoControllerImpl.useOnServo(this);
+    }
+
     /**
      * Set position of servo.
      * @param pos Must be between 0 and 1

@@ -37,6 +37,7 @@ package com.qualcomm.robotcore.hardware;
 
 public interface ServoController extends HardwareDevice {
 
+    Servo getUnderlyingServo();
     /**
      * PWM Status - is pwm enabled?
      */

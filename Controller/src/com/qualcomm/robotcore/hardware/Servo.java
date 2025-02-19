@@ -87,7 +87,7 @@ public interface Servo extends HardwareDevice {
      */
     void scaleRange(double min, double max);
 
-    default ServoController getController(){ return ServoControllerImpl.getInstance(); }
+    ServoController getController();
 
     default int getPortNumber() { return 0; }
 
