@@ -26,8 +26,8 @@ object OpModes : OpModeRegistrar {
      *
      * @param opModeManager used manager
      */
-    override fun registerOpModes(opModeManager: AnnotatedOpModeManager?) {
-        if (suppressOpModes || opModeManager == null) return
+    override fun registerOpModes(opModeManager: AnnotatedOpModeManager) {
+        if (suppressOpModes) return
         opModeManager.register(
             OpModeMeta.Builder()
                 .setName("Hardware Tester")
