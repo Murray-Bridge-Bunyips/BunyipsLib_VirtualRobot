@@ -28,8 +28,8 @@ import com.acmerobotics.roadrunner.TrajectoryBuilderParams;
 import com.acmerobotics.roadrunner.TurnConstraints;
 import com.acmerobotics.roadrunner.Vector2dDual;
 import com.acmerobotics.roadrunner.VelConstraint;
-//import com.acmerobotics.roadrunner.ftc.DownsampledWriter;
-//import com.acmerobotics.roadrunner.ftc.FlightRecorder;
+import com.acmerobotics.roadrunner.ftc.DownsampledWriter;
+import com.acmerobotics.roadrunner.ftc.FlightRecorder;
 import com.acmerobotics.roadrunner.ftc.LazyImu;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -78,9 +78,9 @@ public class TankDrive extends BunyipsSubsystem implements RoadRunnerDrive {
     private final List<DcMotorEx> leftMotors, rightMotors;
     private final DriveModel model;
     private final MotionProfile profile;
-//    private final DownsampledWriter targetPoseWriter = new DownsampledWriter("TARGET_POSE", 50_000_000);
-//    private final DownsampledWriter driveCommandWriter = new DownsampledWriter("DRIVE_COMMAND", 50_000_000);
-//    private final DownsampledWriter tankCommandWriter = new DownsampledWriter("TANK_COMMAND", 50_000_000);
+    private final DownsampledWriter targetPoseWriter = new DownsampledWriter("TARGET_POSE", 50_000_000);
+    private final DownsampledWriter driveCommandWriter = new DownsampledWriter("DRIVE_COMMAND", 50_000_000);
+    private final DownsampledWriter tankCommandWriter = new DownsampledWriter("TANK_COMMAND", 50_000_000);
     /**
      * Gains used for tank drive control.
      */
@@ -136,9 +136,8 @@ public class TankDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 
         voltageSensor = voltageSensorMapping.iterator().next();
 
-//        FlightRecorder.write("TANK_GAINS", gains);
-//        FlightRecorder.write("TANK_DRIVE_MODEL", model);
-//        FlightRecorder.write("TANK_PROFILE", profile);
+        FlightRecorder.write("TANK_GAINS", gains);
+        FlightRecorder.write("TANK_PROFILE", profile);
     }
 
     /**
@@ -167,7 +166,7 @@ public class TankDrive extends BunyipsSubsystem implements RoadRunnerDrive {
     @Override
     public TankDrive withLocalizer(@NonNull Localizer localizer) {
         kinematics = new TankKinematics(model.inPerTick * model.trackWidthTicks);
-//        FlightRecorder.write("TANK_DRIVE_MODEL", model);
+        FlightRecorder.write("TANK_DRIVE_MODEL", model);
         this.localizer = localizer;
         return this;
     }
@@ -355,11 +354,11 @@ public class TankDrive extends BunyipsSubsystem implements RoadRunnerDrive {
             DualNum<Time> x = timeTrajectory.profile.get(t);
 
             Pose2dDual<Arclength> txWorldTarget = timeTrajectory.path.get(x.value(), 3);
-//            targetPoseWriter.write(new PoseMessage(txWorldTarget.value()));
+            targetPoseWriter.write(new PoseMessage(txWorldTarget.value()));
 
             PoseVelocity2dDual<Time> feedback = new RamseteController(kinematics.trackWidth, gains.ramseteZeta, gains.ramseteBBar)
                     .compute(x, txWorldTarget, accumulator.getPose());
-//            driveCommandWriter.write(new DriveCommandMessage(feedback));
+            driveCommandWriter.write(new DriveCommandMessage(feedback));
 
             TankKinematics.WheelVelocities<Time> wheelVels = kinematics.inverse(feedback);
             double voltage = voltageSensor.getVoltage();
@@ -367,7 +366,7 @@ public class TankDrive extends BunyipsSubsystem implements RoadRunnerDrive {
                     profile.kS, profile.kV / model.inPerTick, profile.kA / model.inPerTick);
             leftPower = feedforward.compute(wheelVels.left) / voltage;
             rightPower = feedforward.compute(wheelVels.right) / voltage;
-//            tankCommandWriter.write(new TankCommandMessage(voltage, leftPower, rightPower));
+            tankCommandWriter.write(new TankCommandMessage(voltage, leftPower, rightPower));
 
             Pose2d error = txWorldTarget.value().minusExp(accumulator.getPose());
             dashboard.put("xError", error.position.x);
@@ -429,7 +428,7 @@ public class TankDrive extends BunyipsSubsystem implements RoadRunnerDrive {
             }
 
             Pose2dDual<Time> txWorldTarget = turn.get(t);
-//            targetPoseWriter.write(new PoseMessage(txWorldTarget.value()));
+            targetPoseWriter.write(new PoseMessage(txWorldTarget.value()));
 
             PoseVelocity2d robotVelRobot = accumulator.getVelocity();
 
@@ -440,7 +439,7 @@ public class TankDrive extends BunyipsSubsystem implements RoadRunnerDrive {
                                     gains.turnVelGain * (robotVelRobot.angVel - txWorldTarget.heading.velocity().value())
                     )
             );
-//            driveCommandWriter.write(new DriveCommandMessage(feedback));
+            driveCommandWriter.write(new DriveCommandMessage(feedback));
 
             TankKinematics.WheelVelocities<Time> wheelVels = kinematics.inverse(feedback);
             double voltage = voltageSensor.getVoltage();
@@ -448,7 +447,7 @@ public class TankDrive extends BunyipsSubsystem implements RoadRunnerDrive {
                     profile.kS, profile.kV / model.inPerTick, profile.kA / model.inPerTick);
             leftPower = feedforward.compute(wheelVels.left) / voltage;
             rightPower = feedforward.compute(wheelVels.right) / voltage;
-//            tankCommandWriter.write(new TankCommandMessage(voltage, leftPower, rightPower));
+            tankCommandWriter.write(new TankCommandMessage(voltage, leftPower, rightPower));
 
             Canvas c = dashboard.fieldOverlay();
             c.setStrokeWidth(1);

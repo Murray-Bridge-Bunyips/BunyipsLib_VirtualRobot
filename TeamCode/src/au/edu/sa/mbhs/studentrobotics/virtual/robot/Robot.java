@@ -3,6 +3,7 @@ package au.edu.sa.mbhs.studentrobotics.virtual.robot;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.RobotConfig;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PController;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PIDController;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.IMUEx;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.Motor;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.MecanumLocalizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.DriveModel;
@@ -13,6 +14,7 @@ import com.acmerobotics.roadrunner.ftc.LazyImu;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import javax.management.InstanceAlreadyExistsException;
@@ -68,8 +70,12 @@ public class Robot extends RobotConfig {
                 .setHeadingGain(20)
                 .build();
 
-        hw.lazyImu = new LazyImu(hardwareMap, "imu",
-                new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
+        hw.lazyImu = getHardware("imu", IMUEx.class, d -> {
+            d.lazyInitialize(new IMU.Parameters(new RevHubOrientationOnRobot(
+                    RevHubOrientationOnRobot.LogoFacingDirection.UP, 
+                    RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
+            )));
+        });
 
         drive = new MecanumDrive(driveModel, motionProfile, mecanumGains, hw.front_left_motor, hw.back_left_motor, hw.back_right_motor, hw.front_right_motor, hw.lazyImu, hardwareMap.voltageSensor);
         MecanumLocalizer l = (MecanumLocalizer) drive.getLocalizer();

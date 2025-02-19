@@ -43,7 +43,10 @@ import androidx.annotation.NonNull;
  * HardwareMap provides access to the virtual robot hardware
  */
 public class HardwareMap implements Iterable<HardwareDevice>{
-
+    public void logDevices() {
+        
+    }
+    
     /**
      * Map of all DcMotor devices in this HardwareMap.
      */

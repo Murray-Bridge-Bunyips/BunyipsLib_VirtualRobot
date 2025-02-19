@@ -5,6 +5,7 @@ import androidx.annotation.NonNull;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Vector2d;
@@ -22,7 +23,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks.Hook;
  * @author Lucas Bubner, 2024
  * @since 6.0.0
  */
-//@Config
+@Config
 public final class Dashboard {
     /**
      * The radius of the robot for drawing in inches.
@@ -91,9 +92,11 @@ public final class Dashboard {
      *
      * @param clazz the class to send
      */
-    public static void enableConfig(Class<?> clazz) {
-//        FtcDashboard.getInstance().withConfigRoot(c ->
-//                c.putVariable(clazz.getSimpleName(), ReflectionConfig.createVariableFromClass(clazz)));
+    public static void enableConfig(@NonNull Class<?> clazz) {
+        FtcDashboard dash = FtcDashboard.getInstance();
+        if (dash != null)
+            dash.withConfigRoot(c ->
+                    c.putVariable(clazz.getSimpleName(), ReflectionConfig.createVariableFromClass(clazz)));
     }
 
     /**

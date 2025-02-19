@@ -1,14 +1,36 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib.util;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.acmerobotics.roadrunner.Pose2d;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
+
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.RobotConfig;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.Localizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.StartingConfiguration;
-import com.acmerobotics.roadrunner.Pose2d;
-
-import java.io.Closeable;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Global filesystem and volatile storage utilities for robot operation.
@@ -29,6 +51,7 @@ public final class Storage {
      *
      * @return Instance for volatile memory storage
      */
+    @NonNull
     public static Memory memory() {
         if (memory == null)
             memory = new Memory();
@@ -41,6 +64,7 @@ public final class Storage {
      *
      * @return Instance for persistent storage
      */
+    @NonNull
     public static Filesystem filesystem() {
         if (filesystem == null)
             filesystem = new Filesystem();
@@ -63,6 +87,7 @@ public final class Storage {
          *
          * @see StartingConfiguration
          */
+        @Nullable
         public StartingConfiguration.Alliance lastKnownAlliance = null;
         /**
          * The last known position of the robot from odometry localization.
@@ -100,7 +125,8 @@ public final class Storage {
          * @return the value associated with the key
          * @throws IllegalArgumentException if key not found
          */
-        public Object getVolatile(String key) throws IllegalArgumentException {
+        @Nullable
+        public Object getVolatile(@NonNull String key) throws IllegalArgumentException {
             if (!store.containsKey(key))
                 throw new IllegalArgumentException("Key not found in memory: " + key);
             return store.get(key);
@@ -112,19 +138,36 @@ public final class Storage {
          * @param key   the key to store the value under
          * @param value the value to store
          */
-        public void setVolatile(String key, Object value) {
+        public void setVolatile(@NonNull String key, @NonNull Object value) {
             store.put(key, value);
         }
     }
 
     /**
      * Represents persistent, file-saved storage for the robot.
-     * Note: In this virtual configuration, filesystem storage is not available and the store is infact volatile.
      */
     public static class Filesystem implements Closeable {
         private final HashMap<String, Object> store = new HashMap<>();
+        private final File file = new File(AppUtil.ROBOT_DATA_DIR, "bunyipslib_storage.json");
+        private final Gson gson = new GsonBuilder()
+                .registerTypeAdapter(Class.class, new ClassTypeAdapter())
+                .setPrettyPrinting()
+                .create();
+        private final Type storeType = new TypeToken<HashMap<String, Object>>() {
+        }.getType();
 
         private Filesystem() {
+            File dir = file.getParentFile();
+            AppUtil.getInstance().ensureDirectoryExists(dir);
+
+            if (!file.exists())
+                return;
+
+            try (FileReader reader = new FileReader(file)) {
+                store.putAll(gson.fromJson(reader, storeType));
+            } catch (IOException | JsonSyntaxException e) {
+                Dbg.error("Failed to load storage file: " + e.getMessage());
+            }
         }
 
         /**
@@ -136,6 +179,7 @@ public final class Storage {
          *
          * @return the stored values
          */
+        @NonNull
         public HashMap<String, Object> access() {
             return store;
         }
@@ -148,12 +192,34 @@ public final class Storage {
          */
         public void delete() {
             store.clear();
+            close();
             filesystem = null;
         }
 
         @Override
         public void close() {
+            try (FileWriter writer = new FileWriter(file)) {
+                gson.toJson(store, writer);
+            } catch (IOException e) {
+                Dbg.error("Failed to save storage file: " + e.getMessage());
+            }
+        }
 
+        private static class ClassTypeAdapter implements JsonSerializer<Class<?>>, JsonDeserializer<Class<?>> {
+            @Override
+            public JsonElement serialize(Class<?> src, Type typeOfSrc, JsonSerializationContext context) {
+                return new JsonPrimitive(src.getName());
+            }
+
+            @Override
+            public Class<?> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+                    throws JsonParseException {
+                try {
+                    return Class.forName(json.getAsString());
+                } catch (ClassNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 }

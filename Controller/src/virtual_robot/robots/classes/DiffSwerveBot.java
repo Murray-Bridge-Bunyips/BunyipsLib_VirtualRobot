@@ -29,7 +29,7 @@ public class DiffSwerveBot extends VirtualBot {
     private BNO055IMUImpl imu = null;
     private BNO055IMUNew imuNew = null;
     private VirtualRobotController.ColorSensorImpl colorSensor = null;
-    private ServoImpl servo = null;
+    private ServoImplEx servo = null;
     private VirtualRobotController.DistanceSensorImpl[] distanceSensors = null;
 
     // backServoArm is instantiated during loading via a fx:id property.
@@ -75,7 +75,7 @@ public class DiffSwerveBot extends VirtualBot {
         imu = hardwareMap.get(BNO055IMUImpl.class, "imu");
         imuNew = hardwareMap.get(BNO055IMUNew.class, "imu");
         colorSensor = (VirtualRobotController.ColorSensorImpl)hardwareMap.colorSensor.get("color_sensor");
-        servo = (ServoImpl)hardwareMap.servo.get("back_servo");
+        servo = (ServoImplEx)hardwareMap.servo.get("back_servo");
         wheelCircumferenceMeters = Math.PI * botWidth / (4.5 * VirtualField.PIXELS_PER_METER);
         interWheelWidth = botWidth * 12.0 / (18.0 * VirtualField.PIXELS_PER_METER);
 
@@ -99,7 +99,7 @@ public class DiffSwerveBot extends VirtualBot {
         hardwareMap.put("imu", new BNO055IMUImpl(this, 10));
         hardwareMap.put("imu", new BNO055IMUNew(this, 10));
         hardwareMap.put("color_sensor", controller.new ColorSensorImpl());
-        hardwareMap.put("back_servo", new ServoImpl());
+        hardwareMap.put("back_servo", new ServoImplEx());
     }
 
     public synchronized void updateStateAndSensors(double millis){

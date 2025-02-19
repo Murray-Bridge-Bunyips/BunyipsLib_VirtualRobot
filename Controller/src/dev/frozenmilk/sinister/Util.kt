@@ -5,7 +5,7 @@ import java.lang.reflect.Member
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.util.function.Predicate
-/////
+///////
 @JvmOverloads
 fun Class<*>.getAllMethods(predicate: Predicate<Method> = Predicate { true } ): List<Method> {
 	return this.declaredMethods.toList().filter(predicate::test) + (this.superclass?.getAllMethods(predicate) ?: emptyList())
@@ -28,6 +28,7 @@ fun Member.isProtected() : Boolean = Modifier.isProtected(modifiers)
 fun Member.isAbstract() : Boolean = Modifier.isAbstract(modifiers)
 fun Member.isFinal() : Boolean = Modifier.isFinal(modifiers)
 
+//
 fun <T> Class<*>.staticInstancesOf(type: Class<T>) : List<T> =
 	this.getAllFields {
 		it.isStatic() && type.isAssignableFrom(it.type)

@@ -6,8 +6,6 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units;
 
 import androidx.annotation.NonNull;
 
-import androidx.annotation.NonNull;
-
 import java.util.Objects;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.collections.LongToObjectHashMap;

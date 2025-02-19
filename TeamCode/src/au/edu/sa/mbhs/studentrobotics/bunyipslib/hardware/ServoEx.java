@@ -1,7 +1,17 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware;
 
+import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Milliseconds;
+import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Nanoseconds;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.PwmControl;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.ServoController;
+import com.qualcomm.robotcore.hardware.ServoControllerEx;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.TrapezoidProfile;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Measure;
@@ -9,12 +19,6 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Time;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.DualServos;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.Switch;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Lambda;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.ServoController;
-
-import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Milliseconds;
-import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Nanoseconds;
 
 /**
  * Extension of the extended {@link Servo} interface that allows for motion profiling via a {@link TrapezoidProfile}.
@@ -22,14 +26,13 @@ import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Nan
  * optimisation similar to an {@link SimpleRotator}.
  * <p>
  * This class serves as a drop-in replacement for the {@link Servo}, similar to {@link Motor} with the {@link DcMotor}.
- * The virtual configuration of this class extends the Servo interface as advanced PWM controls are not possible.
+ * Do note that this class cannot be cast to a {@link ServoImplEx} instance, but it does implement the extended
+ * {@link PwmControl} interface for extended operations.
  *
  * @author Lucas Bubner, 2024
  * @since 5.1.0
  */
-public class ServoEx implements Servo {
-    private final Servo __VIRTUAL_SERVO;
-
+public class ServoEx extends ServoImplEx implements PwmControl {
     @Nullable
     private TrapezoidProfile.Constraints constraints;
     private TrapezoidProfile.State setpoint = new TrapezoidProfile.State();
@@ -39,6 +42,17 @@ public class ServoEx implements Servo {
     private double lastPosition = -1;
     private long refreshRateNanos;
     private long lastUpdate;
+
+    private Measure<Time> endToEndTime = Milliseconds.of(500);
+
+    /**
+     * Wrap a Servo to use with the ServoEx class.
+     *
+     * @param servo the Servo from hardwareMap to use.
+     */
+    public ServoEx(@NonNull Servo servo) {
+        super(servo.getController(), servo.getPortNumber(), servo.getDirection());
+    }
 
     /**
      * Attempts to get the end-to-end time for this servo (only available on ServoEx).
@@ -67,7 +81,7 @@ public class ServoEx implements Servo {
      *
      * @param refreshRate the refresh rate interval, <=0/default will disable
      */
-    public void setPositionRefreshRate(Measure<Time> refreshRate) {
+    public void setPositionRefreshRate(@NonNull Measure<Time> refreshRate) {
         refreshRateNanos = (long) refreshRate.in(Nanoseconds);
     }
 
@@ -112,27 +126,6 @@ public class ServoEx implements Servo {
         constraints = null;
     }
 
-    private Measure<Time> endToEndTime = Milliseconds.of(500);
-
-    /**
-     * Wrap a Servo to use with the ServoEx class.
-     *
-     * @param servo the Servo from hardwareMap to use.
-     */
-    public ServoEx(Servo servo) {
-        __VIRTUAL_SERVO = servo;
-    }
-
-    @Override
-    public void setDirection(Direction direction) {
-        __VIRTUAL_SERVO.setDirection(direction);
-    }
-
-    @Override
-    public Direction getDirection() {
-        return __VIRTUAL_SERVO.getDirection();
-    }
-
     /**
      * Sets the current position of the servo, expressed as a fraction of its available
      * range. If PWM power is enabled for the servo, the servo will attempt to move to
@@ -174,16 +167,64 @@ public class ServoEx implements Servo {
 
         lastUpdate = now;
         lastPosition = targetPosition;
-        __VIRTUAL_SERVO.setPosition(targetPosition);
+        super.setPosition(targetPosition);
     }
 
+    // Servo configuration type cannot be accessed from this class, so we'll need to implement the extended interface
+    // methods manually - we can't actually extend ServoImplEx. The servo configuration type is not exposed but is
+    // important for operations, so we won't try to feed the configuration fake data.
+
+    /**
+     * Returns the current PWM range limits for the servo
+     *
+     * @return the current PWM range limits for the servo
+     * @see #setPwmRange(PwmRange)
+     */
+    @NonNull
     @Override
-    public double getPosition() {
-        return __VIRTUAL_SERVO.getPosition();
+    public PwmRange getPwmRange() {
+        return ((ServoControllerEx) getController()).getServoPwmRange(getPortNumber());
     }
 
+    /**
+     * Sets the PWM range limits for the servo
+     *
+     * @param range the new PWM range limits for the servo
+     * @see #getPwmRange()
+     */
     @Override
-    public void scaleRange(double min, double max) {
-        __VIRTUAL_SERVO.scaleRange(min, max);
+    public void setPwmRange(@NonNull PwmRange range) {
+        ((ServoControllerEx) getController()).setServoPwmRange(getPortNumber(), range);
+    }
+
+    /**
+     * Individually energizes the PWM for this particular servo.
+     *
+     * @see #setPwmDisable()
+     * @see #isPwmEnabled()
+     */
+    @Override
+    public void setPwmEnable() {
+        ((ServoControllerEx) getController()).setServoPwmEnable(getPortNumber());
+    }
+
+    /**
+     * Individually de-energizes the PWM for this particular servo
+     *
+     * @see #setPwmEnable()
+     */
+    @Override
+    public void setPwmDisable() {
+        ((ServoControllerEx) getController()).setServoPwmDisable(getPortNumber());
+    }
+
+    /**
+     * Returns whether the PWM is energized for this particular servo
+     *
+     * @see #setPwmEnable()
+     */
+    @Override
+    public boolean isPwmEnabled() {
+        return ((ServoControllerEx) getController()).isServoPwmEnabled(getPortNumber());
     }
 }

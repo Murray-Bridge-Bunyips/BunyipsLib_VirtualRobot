@@ -2,7 +2,7 @@ package virtual_robot.robots.classes;
 
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorExImpl;
-import com.qualcomm.robotcore.hardware.ServoImpl;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.hardware.configuration.MotorType;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
@@ -49,7 +49,7 @@ public class ArmBot extends MecanumPhysicsBase {
     private DcMotorExImpl armMotor = null;
 
     //Servo to control the hand at the end of the arm. Note use of ServoImpl class rather than Servo interface.
-    private ServoImpl handServo = null;
+    private ServoImplEx handServo = null;
 
     /*
     Variables representing graphical UI nodes that we will need to manipulate. The @FXML annotation will
@@ -120,7 +120,7 @@ public class ArmBot extends MecanumPhysicsBase {
         armMotor.setPositionLimitsEnabled(true);
 
         //Instantiate the hand servo. Note the cast to ServoImpl.
-        handServo = (ServoImpl)hardwareMap.servo.get("hand_servo");
+        handServo = (ServoImplEx)hardwareMap.servo.get("hand_servo");
 
         //Deactivate the hardwaremap to prevent users from accessing hardware until after INIT is pressed
         hardwareMap.setActive(false);
@@ -192,7 +192,7 @@ public class ArmBot extends MecanumPhysicsBase {
         hardwareMap.put("arm_motor", new DcMotorExImpl(MotorType.Neverest40, motorController1, 0));
 
         //Add the ServoImpl object
-        hardwareMap.put("hand_servo", new ServoImpl());
+        hardwareMap.put("hand_servo", new ServoImplEx());
     }
 
     /**

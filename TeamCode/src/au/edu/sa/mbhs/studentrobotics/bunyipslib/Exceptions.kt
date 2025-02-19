@@ -1,7 +1,7 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib
 
-import au.edu.sa.mbhs.studentrobotics.deps.BuildConfig
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks.Hook
+import au.edu.sa.mbhs.studentrobotics.deps.BuildConfig
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerImpl.ForceStopException
 import java.io.PrintWriter
 import java.io.StringWriter

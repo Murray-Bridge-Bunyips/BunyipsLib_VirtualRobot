@@ -67,7 +67,7 @@ public class DualServos extends BunyipsSubsystem {
 
     /**
      * Create a new DualServos with default open and close positions.
-     * This relies that your servos are configured at the hardware level to move in the correct directions.
+     * This relies on that your servos are configured at the hardware level to move in the correct directions.
      *
      * @param left  the left servo
      * @param right the right servo
@@ -147,15 +147,11 @@ public class DualServos extends BunyipsSubsystem {
      * @return whether the servo side is open
      */
     public boolean isOpen(@NonNull ServoSide servo) {
-        switch (servo) {
-            case LEFT:
-                return left.getPosition() == leftOpen;
-            case RIGHT:
-                return right.getPosition() == rightOpen;
-            case BOTH:
-                return left.getPosition() == leftOpen && right.getPosition() == rightOpen;
-        }
-        return false;
+        return switch (servo) {
+            case LEFT -> left.getPosition() == leftOpen;
+            case RIGHT -> right.getPosition() == rightOpen;
+            case BOTH -> left.getPosition() == leftOpen && right.getPosition() == rightOpen;
+        };
     }
 
     /**

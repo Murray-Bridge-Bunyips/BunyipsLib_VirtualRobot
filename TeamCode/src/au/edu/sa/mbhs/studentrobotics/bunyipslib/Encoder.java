@@ -64,10 +64,20 @@ public class Encoder {
      *
      * @return the logical direction this encoder operates
      */
+    @NonNull
     public DcMotorSimple.Direction getDirection() {
         if (directionSupplier != null)
             direction = directionSupplier.get();
         return direction;
+    }
+
+    /**
+     * Sets the direction of the encoder to forward or reverse
+     *
+     * @param direction the desired direction
+     */
+    public void setDirection(@NonNull DcMotorSimple.Direction direction) {
+        this.direction = direction;
     }
 
     /**
@@ -108,15 +118,6 @@ public class Encoder {
     public void setKnownPosition(int position) {
         resetVal = 0;
         accumulation = position;
-    }
-
-    /**
-     * Sets the direction of the encoder to forward or reverse
-     *
-     * @param direction the desired direction
-     */
-    public void setDirection(@NonNull DcMotorSimple.Direction direction) {
-        this.direction = direction;
     }
 
     /**

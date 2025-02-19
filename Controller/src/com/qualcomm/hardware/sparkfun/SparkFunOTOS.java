@@ -31,6 +31,10 @@ public class SparkFunOTOS implements HardwareDevice {
 
     protected double linearScalar = 1.0;
     protected double angularScalar = 1.0;
+    
+    public boolean initialize() {
+        return true;
+    }
 
     /*
      * Save everything in METERS, RADIANS, and only convert to inches and/or

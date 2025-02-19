@@ -1,7 +1,6 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib.integrated;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 /**
@@ -10,7 +9,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
  * @author Lucas Bubner, 2024
  * @since 6.0.0
  */
-@TeleOp(name = "Reset Motor Encoders", group = "BunyipsLib Integrated")
 public final class ResetEncoders extends LinearOpMode {
     @Override
     public void runOpMode() {

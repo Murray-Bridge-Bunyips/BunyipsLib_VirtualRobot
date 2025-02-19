@@ -294,7 +294,7 @@ public class PIDFController implements SystemController {
         }
         setPoint = sp;
         errorP = setPoint - currentPv;
-        errorD = Math.abs(period) > 1.0e-6  ? derivativeFilter.apply(errorP - prevErrorP) / period : 0;
+        errorD = Math.abs(period) > 1.0e-6 ? derivativeFilter.apply(errorP - prevErrorP) / period : 0;
         return this;
     }
 
@@ -453,7 +453,7 @@ public class PIDFController implements SystemController {
             errorP = setPoint - pv;
             currentPv = pv;
         }
-        
+
         if (continuousInput) {
             double bound = (maxContinuousInput - minContinuousInput) / 2.0;
             errorP = Mathf.wrap(errorP, -bound, bound);

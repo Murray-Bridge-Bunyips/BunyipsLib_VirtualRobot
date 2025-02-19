@@ -35,6 +35,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.qualcomm.robotcore.hardware.configuration.typecontainers;
 
+import com.qualcomm.robotcore.hardware.configuration.DistributorInfo;
 import com.qualcomm.robotcore.hardware.configuration.MotorType;
 import org.firstinspires.ftc.robotcore.external.navigation.Rotation;
 
@@ -53,6 +54,27 @@ public final class MotorConfigurationType implements Cloneable{
     private double maxRPM;
     private double achieveableMaxRPMFraction = 1.0; //In FTC SDK, this is 0.85 by default
     private Rotation orientation;
+    
+    public DistribInfo getDistributorInfo() {
+        return new DistribInfo();
+    }
+    
+    public static class DistribInfo {
+        public String getDistributor() {
+            return "VIRT ROBOT";
+        }
+        public String getModel() {
+            return "VIRTUAL";
+        }
+    }
+    
+    public String getHubVelocityParams() {
+        return "VIRT PID";
+    }
+    
+    public String getHubPositionParams() {
+        return "VIRT PID";
+    }
 
     public static MotorConfigurationType getUnspecifiedMotorType()
     {

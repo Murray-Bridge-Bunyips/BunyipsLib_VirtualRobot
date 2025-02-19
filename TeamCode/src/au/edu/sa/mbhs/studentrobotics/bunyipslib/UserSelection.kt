@@ -5,7 +5,6 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks.Hook
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.StartingConfiguration
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.StartingConfiguration.Builder.PrebuiltPosition
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.StartingPositions
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Ref.stringify
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Storage
@@ -96,12 +95,12 @@ class UserSelection<T : Any> @SafeVarargs constructor(
 
     /**
      * The captions used which are appended after the text "ACTION REQUIRED: " on the DS.
-     * 
+     *
      * If you populate this map before the user selection is run, each layer based on index will use the caption
      * associated with that index.
-     * 
+     *
      * If you don't edit used layer entries, the standard "CHOOSE ON GAMEPAD" message will fill each empty layer slot.
-     * 
+     *
      * @since 7.0.0
      */
     @JvmField
@@ -139,9 +138,9 @@ class UserSelection<T : Any> @SafeVarargs constructor(
     /**
      * Chaining utility to add a layering caption to [captionLayers], which will display the given caption on the desired
      * selection layer. Since this string will be added to telemetry, if HTML is available for telemetry you can use HTML here for formatting.
-     * 
+     *
      * If you're only using 1 layer, add to the 0th element of this map.
-     * 
+     *
      * @since 7.0.0
      */
     fun captionLayer(layer: Int, caption: String) = apply { captionLayers[layer] = caption }
@@ -194,9 +193,10 @@ class UserSelection<T : Any> @SafeVarargs constructor(
                 if (buttonLayers.size == 1)
                     header = header.replaceFirst(Regex("\\(\\d+/\\d+\\)\\s"), "")
                 // Dashboard is a backup/secondary so it doesn't really matter if we're overly verbose
-                val dashboard = Text.builder("<font color='gray'>(${index + 1}/${buttonLayers.size}) |</font> ")
+                val dashboard =
+                    Text.builder("(${index + 1}/${buttonLayers.size}) ${captions[index].second} <font color='gray'>|</font> ")
                 val driverStation = Text.builder(header)
-                
+
                 val it = layer.map {
                     val key = it.key
                     // Preemptive catch for non-built StartingConfigurations which are a common use case
@@ -230,7 +230,14 @@ class UserSelection<T : Any> @SafeVarargs constructor(
                 while (result == null && opMode.opModeInInit() && !Thread.currentThread().isInterrupted) {
                     for ((option, button) in it) {
                         if (opMode.gamepad1.getDebounced(button) || opMode.gamepad2.getDebounced(button)) {
-                            Dbg.logv(javaClass, "user selected (button %, layer %/%): % ...", button, index + 1, buttonLayers.size, Text.removeHtml(option.toString()))
+                            Dbg.logv(
+                                javaClass,
+                                "user selected (button %, layer %/%): % ...",
+                                button,
+                                index + 1,
+                                buttonLayers.size,
+                                Text.removeHtml(option.toString())
+                            )
                             selectedButton = button
                             result = option
                             break
@@ -310,7 +317,7 @@ class UserSelection<T : Any> @SafeVarargs constructor(
 
         //This is code from lucas bubner. He is sad cause hes not important and dosent recieve capital letters. He is lonely except for LACHLAN PAUL  his coding buddy. Now i need to go but always keep this message in mind!!!
         // - Sorayya, hijacker of laptops
-        
+
         // We used getDebounced so we reset it for further user implementation
         Controls.entries.forEach {
             opMode.gamepad1.resetDebounce(it)
@@ -338,7 +345,7 @@ class UserSelection<T : Any> @SafeVarargs constructor(
         Exceptions.runUserMethod { callback.accept(userRes) }
         return userRes
     }
-    
+
     private fun tryAutoboxArray(it: Any): Any {
         // Required to check for Array<*> since the primitive arrays do *not* inherit Array
         return when (it) {

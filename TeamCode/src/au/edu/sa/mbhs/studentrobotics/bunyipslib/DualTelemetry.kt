@@ -147,7 +147,7 @@ class DualTelemetry @JvmOverloads constructor(
 
     /**
      * Add data to the telemetry object for the Driver Station and FtcDashboard, with integrated formatting.
-     * Note that using a separator element (defined by [dashboardCaptionValueAutoSeparator], default ": ") in your formatted string
+     * Note that using a separator element (defined by [dashboardCaptionValueAutoSeparator], default `: `) in your formatted string
      * will split this to an item for FtcDashboard automagically, replicating what [addDashboard] would do.
      * @param format An object string to add to telemetry
      * @param args The objects to format into the object format string via [Text.format]
@@ -184,7 +184,7 @@ class DualTelemetry @JvmOverloads constructor(
      * for FtcDashboard.
      * @param caption Caption before appended separator ([dashboardCaptionValueAutoSeparator])
      * @param value Value to append after separator ([dashboardCaptionValueAutoSeparator])
-     * @return The telemetry item added to the Driver Station, null if the send failed from overflow
+     * @return The telemetry item added to the Driver Station
      */
     override fun addData(caption: String, value: Any?): Item {
         return add(caption + dashboardCaptionValueAutoSeparator + value)
@@ -316,7 +316,7 @@ class DualTelemetry @JvmOverloads constructor(
 
     /**
      * Log a message into the telemetry log
-     * @param stck StackTraceElement with information about where this log was called (see Text.getCallingUserCodeFunction())
+     * @param stck StackTraceElement with information about where this log was called (see [Exceptions.getCallingUserCodeFunction])
      * @param format An object string to add to telemetry
      * @param args The objects to format into the object format string
      */
@@ -424,7 +424,7 @@ class DualTelemetry @JvmOverloads constructor(
 
                     ItemType.LOG -> {
                         if (value == info) {
-                            // BunyipsLib info, this is an always log and will always
+                            // BunyipsLib info, this is an always-log and will always
                             // be the first log in the list as it is added at the start
                             // of the init cycle
                             packet.put("INFO", value)
@@ -520,7 +520,7 @@ class DualTelemetry @JvmOverloads constructor(
         synchronized(dashboardItems) {
             dashboardItems.clear()
         }
-//        FtcDashboard.getInstance().clearTelemetry()
+        FtcDashboard.getInstance().clearTelemetry()
         telemetryQueue = 0
         overheadTelemetry = telemetry.addData("", "")
             .setRetained(true)
@@ -582,12 +582,12 @@ class DualTelemetry @JvmOverloads constructor(
      */
     override fun setMsTransmissionInterval(msTransmissionInterval: Int) {
         telemetry.msTransmissionInterval = msTransmissionInterval
-//        FtcDashboard.getInstance().telemetryTransmissionInterval = msTransmissionInterval
+        FtcDashboard.getInstance().telemetryTransmissionInterval = msTransmissionInterval
     }
 
     /**
      * Set the current display format for the Driver Station.
-     * By default this is already set to HTML formatting, and it is recommended to leave this as-is.
+     * By default, this is already set to HTML formatting, and it is recommended to leave this as-is.
      */
     override fun setDisplayFormat(displayFormat: DisplayFormat) {
         telemetry.setDisplayFormat(displayFormat)
@@ -662,7 +662,7 @@ class DualTelemetry @JvmOverloads constructor(
         }
 
         /**
-         * Apply the HTML formatting to the string only if if this condition is true.
+         * Apply the HTML formatting to the string only if this condition is true.
          */
         fun applyStylesIf(condition: BooleanSupplier): HtmlItem {
             applyOnlyIf = condition
@@ -930,7 +930,7 @@ class DualTelemetry @JvmOverloads constructor(
          */
         @Deprecated(
             "This method is not used with DualTelemetry. Split data into separate items or use a single item value with a newline.",
-            replaceWith = ReplaceWith("/* split data into seperate items or use a single item with newlines */"),
+            replaceWith = ReplaceWith("/* split data into separate items or use a single item with newlines */"),
             level = DeprecationLevel.ERROR
         )
         override fun addData(caption: String, format: String, vararg args: Any): Item? {
@@ -943,7 +943,7 @@ class DualTelemetry @JvmOverloads constructor(
          */
         @Deprecated(
             "This method is not used with DualTelemetry. Split data into separate items or use a single item value with a newline.",
-            replaceWith = ReplaceWith("/* split data into seperate items or use a single item with newlines */"),
+            replaceWith = ReplaceWith("/* split data into separate items or use a single item with newlines */"),
             level = DeprecationLevel.ERROR
         )
         override fun addData(caption: String, value: Any): Item? {
@@ -956,7 +956,7 @@ class DualTelemetry @JvmOverloads constructor(
          */
         @Deprecated(
             "This method is not used with DualTelemetry. Split data into separate items or use a single item value with a newline.",
-            replaceWith = ReplaceWith("/* split data into seperate items or use a single item with newlines */"),
+            replaceWith = ReplaceWith("/* split data into separate items or use a single item with newlines */"),
             level = DeprecationLevel.ERROR
         )
         override fun <T : Any> addData(caption: String, valueProducer: Func<T>): Item? {
@@ -969,7 +969,7 @@ class DualTelemetry @JvmOverloads constructor(
          */
         @Deprecated(
             "This method is not used with DualTelemetry. Split data into separate items or use a single item value with a newline.",
-            replaceWith = ReplaceWith("/* split data into seperate items or use a single item with newlines */"),
+            replaceWith = ReplaceWith("/* split data into separate items or use a single item with newlines */"),
             level = DeprecationLevel.ERROR
         )
         override fun <T : Any> addData(caption: String, format: String, valueProducer: Func<T>): Item? {

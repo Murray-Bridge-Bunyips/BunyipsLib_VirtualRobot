@@ -1,7 +1,6 @@
 package dev.frozenmilk.sinister
 
 import android.content.Context
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg
 import com.qualcomm.ftccommon.FtcEventLoop
 import com.qualcomm.robotcore.util.RobotLog
 import com.qualcomm.robotcore.util.ThreadPool

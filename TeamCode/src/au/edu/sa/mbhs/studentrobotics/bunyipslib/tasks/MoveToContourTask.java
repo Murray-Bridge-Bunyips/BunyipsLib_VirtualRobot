@@ -3,8 +3,6 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-//import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
@@ -17,6 +15,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.SystemControll
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PDController;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive.Moveable;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dashboard;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.vision.data.ContourData;
 
@@ -38,10 +37,12 @@ public class MoveToContourTask extends FieldOrientableDriveTask {
     /**
      * Default controller to use for the x (forward) axis.
      */
+    @NonNull
     public static SystemController DEFAULT_X_CONTROLLER = new PDController(1, 0.0001);
     /**
      * Default controller to use for the r (rotation) axis.
      */
+    @NonNull
     public static SystemController DEFAULT_R_CONTROLLER = new PDController(1, 0.0001);
 
     private final Supplier<List<ContourData>> contours;
@@ -68,8 +69,7 @@ public class MoveToContourTask extends FieldOrientableDriveTask {
         withXController(DEFAULT_X_CONTROLLER);
         withRController(DEFAULT_R_CONTROLLER);
         named("Move to Contour");
-//        FtcDashboard.getInstance().withConfigRoot(c ->
-//                c.putVariable(getClass().getSimpleName(), ReflectionConfig.createVariableFromClass(getClass())));
+        Dashboard.enableConfig(getClass());
     }
 
     /**
@@ -122,7 +122,7 @@ public class MoveToContourTask extends FieldOrientableDriveTask {
     /**
      * Sets a custom error supplier for the forward movement of the robot.
      *
-     * @param forwardErrorSupplier the error that dictates the forward movement of the robot (whether by pitch or area, etc),
+     * @param forwardErrorSupplier the error that dictates the forward movement of the robot (whether by pitch or area, etc.),
      *                             by default this is a pitch target of 0.0 (middle of frame)
      * @return the task
      */

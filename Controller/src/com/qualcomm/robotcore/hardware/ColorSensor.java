@@ -62,4 +62,5 @@ public interface ColorSensor extends HardwareDevice {
      */
     public int alpha();
 
+    void enableLed(boolean a);
 }

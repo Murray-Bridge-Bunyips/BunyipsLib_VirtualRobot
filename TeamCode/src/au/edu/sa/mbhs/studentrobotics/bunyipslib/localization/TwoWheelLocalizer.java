@@ -10,7 +10,7 @@ import com.acmerobotics.roadrunner.Twist2dDual;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.Vector2dDual;
 import com.acmerobotics.roadrunner.ftc.Encoder;
-//import com.acmerobotics.roadrunner.ftc.FlightRecorder;
+import com.acmerobotics.roadrunner.ftc.FlightRecorder;
 import com.acmerobotics.roadrunner.ftc.OverflowEncoder;
 import com.acmerobotics.roadrunner.ftc.PositionVelocityPair;
 import com.acmerobotics.roadrunner.ftc.RawEncoder;
@@ -20,7 +20,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
-//import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.TwoDeadWheelInputsMessage;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.TwoDeadWheelInputsMessage;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.DriveModel;
 
 /**
@@ -70,11 +70,11 @@ public class TwoWheelLocalizer implements Localizer {
         this.perp = perp != null ? new OverflowEncoder(perp) : null;
         this.imu = imu;
 
-        // Wake up the IMU if it's a DynIMU
+        // Wake up the IMU if it's an IMUEx
         if (imu != null)
             imu.getRobotOrientationAsQuaternion();
 
-//        FlightRecorder.write("TWO_DEAD_WHEEL_PARAMS", params);
+        FlightRecorder.write("TWO_DEAD_WHEEL_PARAMS", params);
     }
 
     @NonNull
@@ -87,11 +87,13 @@ public class TwoWheelLocalizer implements Localizer {
 
         PositionVelocityPair parPosVel = par.getPositionAndVelocity();
         PositionVelocityPair perpPosVel = perp.getPositionAndVelocity();
+        assert parPosVel.velocity != null;
+        assert perpPosVel.velocity != null;
 
         YawPitchRollAngles angles = imu.getRobotYawPitchRollAngles();
         AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.RADIANS);
 
-//        FlightRecorder.write("TWO_DEAD_WHEEL_INPUTS", new TwoDeadWheelInputsMessage(parPosVel, perpPosVel, angles, angularVelocity));
+        FlightRecorder.write("TWO_DEAD_WHEEL_INPUTS", new TwoDeadWheelInputsMessage(parPosVel, perpPosVel, angles, angularVelocity));
 
         Rotation2d heading = Rotation2d.exp(angles.getYaw(AngleUnit.RADIANS));
         double headingVel = angularVelocity.zRotationRate;

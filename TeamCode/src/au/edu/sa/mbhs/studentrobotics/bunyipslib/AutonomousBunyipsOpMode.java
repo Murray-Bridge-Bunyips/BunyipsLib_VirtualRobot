@@ -6,12 +6,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -24,7 +22,6 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.WaitTask;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.DeferredTask;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Lambda;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.StartingConfiguration;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Ref;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Text;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Threads;
@@ -44,11 +41,11 @@ public abstract class AutonomousBunyipsOpMode extends BunyipsOpMode {
      * Purely visual, and does not affect the actual task (hence why this field is not exposed to FtcDashboard).
      */
     public static double INFINITE_TASK_ASSUMED_DURATION_SECONDS = 5.0;
-    private Object[] selections = {};
     private final ConcurrentLinkedDeque<Task> tasks = new ConcurrentLinkedDeque<>();
     // Pre- and post-queues cannot have their tasks removed, so we can rely on their .size() methods
     private final ConcurrentLinkedDeque<Task> postQueue = new ConcurrentLinkedDeque<>();
     private final ConcurrentLinkedDeque<Task> preQueue = new ConcurrentLinkedDeque<>();
+    private Object[] selections = {};
     @NonNull
     private HashSet<BunyipsSubsystem> updatedSubsystems = new HashSet<>();
     private int taskCount;
@@ -656,18 +653,11 @@ public abstract class AutonomousBunyipsOpMode extends BunyipsOpMode {
      * from these options during initialisation asynchronously. If you return null or don't call this method,
      * then the user will not be prompted for a selection, and the OpMode will move to task-ready state immediately.
      * <p>
-     * Review the {@link UserSelection} class for more information regarding this feature, including chaining and
-     * what to expect regarding the runtime of this class.
-     * <pre>{@code
-     *     setOpModes(
-     *             "GO_PARK",
-     *             "GO_SHOOT",
-     *             "GO_SHOOT_AND_PARK",
-     *             "SABOTAGE_ALLIANCE"
-     *     );
-     *     // See the StartingConfiguration class for advanced builder patterns of robot starting positions,
-     *     // which is the recommended way to define OpModes (OpModes themselves define objectives, not positions)
-     * }</pre>
+     * Review the {@link UserSelection} class and wiki documentation for more information regarding this feature,
+     * including chaining and what to expect regarding the runtime of this class.
+     * <p>
+     * By setting OpModes here, the {@link #onReady(RefCell)} parameter will be of type {@link T} and you can cast
+     * it without needing to check.
      */
     @SafeVarargs
     protected final <T> UserSelection<?> setOpModes(@Nullable T... selectableOpModes) {
@@ -676,14 +666,14 @@ public abstract class AutonomousBunyipsOpMode extends BunyipsOpMode {
         // This will run asynchronously later, and the callback will be called when the user has selected an OpMode
         // An empty selections array will cause an immediate return of the callback on execution, handled on init
         userSelection = new UserSelection<>(this::callback, selectableOpModes);
+        // Note we already downcast to a wildcard since T can be modified if we're using a prebuilt
+        // starting position (legacy), and we also expect a wildcard type on onReady.
         return userSelection; // Allow chaining if the user wants to disable v7.0.0 features
-                              // Note we already downcast to a wildcard since T can be modified if we're using a prebuilt
-                              // starting position (legacy), and we also expect a wildcard type on onReady.
     }
 
     /**
      * Called when the OpMode is ready to process tasks.
-     * This will happen when the user has selected an OpMode, or if {@link #setOpModes(Object...)} returned null,
+     * This will happen when the user has selected an OpMode, or if {@link #setOpModes(Object...)} was not called,
      * in which case it will run immediately after {@code static_init} has completed.
      * This is where you should add your tasks to the run queue.
      * <p>

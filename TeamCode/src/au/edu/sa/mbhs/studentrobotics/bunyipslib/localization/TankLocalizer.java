@@ -9,7 +9,7 @@ import com.acmerobotics.roadrunner.Twist2dDual;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.Vector2dDual;
 import com.acmerobotics.roadrunner.ftc.Encoder;
-//import com.acmerobotics.roadrunner.ftc.FlightRecorder;
+import com.acmerobotics.roadrunner.ftc.FlightRecorder;
 import com.acmerobotics.roadrunner.ftc.OverflowEncoder;
 import com.acmerobotics.roadrunner.ftc.PositionVelocityPair;
 import com.acmerobotics.roadrunner.ftc.RawEncoder;
@@ -74,9 +74,11 @@ public class TankLocalizer implements Localizer {
     @Override
     public Twist2dDual<Time> update() {
         List<PositionVelocityPair> leftReadings = new ArrayList<>(), rightReadings = new ArrayList<>();
+
         double meanLeftPos = 0.0, meanLeftVel = 0.0;
         for (Encoder e : leftEncs) {
             PositionVelocityPair p = e.getPositionAndVelocity();
+            assert p.velocity != null;
             meanLeftPos += p.position;
             meanLeftVel += p.velocity;
             leftReadings.add(p);
@@ -88,14 +90,15 @@ public class TankLocalizer implements Localizer {
         for (Encoder e : rightEncs) {
             PositionVelocityPair p = e.getPositionAndVelocity();
             meanRightPos += p.position;
+            assert p.velocity != null;
             meanRightVel += p.velocity;
             rightReadings.add(p);
         }
         meanRightPos /= rightEncs.size();
         meanRightVel /= rightEncs.size();
 
-//        FlightRecorder.write("TANK_LOCALIZER_INPUTS",
-//                new TankLocalizerInputsMessage(leftReadings, rightReadings));
+        FlightRecorder.write("TANK_LOCALIZER_INPUTS",
+                new TankLocalizerInputsMessage(leftReadings, rightReadings));
 
         if (!initialized) {
             initialized = true;

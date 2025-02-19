@@ -4,21 +4,19 @@ import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Rad
 
 import androidx.annotation.NonNull;
 
-//import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.canvas.Canvas;
-//import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Time;
 import com.acmerobotics.roadrunner.Twist2dDual;
 import com.acmerobotics.roadrunner.Vector2d;
-//import com.acmerobotics.roadrunner.ftc.DownsampledWriter;
+import com.acmerobotics.roadrunner.ftc.DownsampledWriter;
 
 import java.util.LinkedList;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.Localizable;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.Localizer;
-//import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.PoseMessage;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.PoseMessage;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dashboard;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Storage;
@@ -35,7 +33,7 @@ public class Accumulator implements Localizable {
      */
     public static int MAX_POSE_HISTORY = 100;
 
-//    private final DownsampledWriter estimatedPoseWriter = new DownsampledWriter("ESTIMATED_POSE", 50_000_000);
+    private final DownsampledWriter estimatedPoseWriter = new DownsampledWriter("ESTIMATED_POSE", 50_000_000);
     @NonNull
     protected Pose2d pose;
     @NonNull
@@ -50,8 +48,7 @@ public class Accumulator implements Localizable {
     public Accumulator(@NonNull Pose2d initialPose) {
         pose = initialPose;
         Storage.memory().lastKnownPosition = initialPose;
-//        FtcDashboard.getInstance().withConfigRoot(c ->
-//                c.putVariable(getClass().getSimpleName(), ReflectionConfig.createVariableFromClass(getClass())));
+        Dashboard.enableConfig(getClass());
     }
 
     /**
@@ -77,7 +74,7 @@ public class Accumulator implements Localizable {
         while (poseHistory.size() > MAX_POSE_HISTORY) {
             poseHistory.removeFirst();
         }
-//        estimatedPoseWriter.write(new PoseMessage(pose));
+        estimatedPoseWriter.write(new PoseMessage(pose));
 
         Dashboard.usePacket(p -> {
             p.put("x (in)", pose.position.x);

@@ -1,9 +1,7 @@
 package com.qualcomm.hardware.bosch;
 
+import org.firstinspires.ftc.robotcore.external.navigation.*;
 import virtual_robot.controller.VirtualBot;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 /**
  * Implementation of the BNO055IMU interface
@@ -25,6 +23,91 @@ public class BNO055IMUImpl implements BNO055IMU {
     public BNO055IMUImpl(VirtualBot bot, int latencyMillis){
         this.bot = bot;
         latencyNanos = latencyMillis * 1000000;
+    }
+
+    @Override
+    public String getSystemStatus() {
+        return "VIRTUAL ENABLE";
+    }
+
+    @Override
+    public String getCalibrationStatus() {
+        return "NOT REQ.";
+    }
+
+    @Override
+    public String getSystemError() {
+        return "NONE";
+    }
+
+    @Override
+    public String isSystemCalibrated() {
+        return "YES";
+    }
+
+    @Override
+    public String isGyroCalibrated() {
+        return "YES";
+    }
+
+    @Override
+    public String isAccelerometerCalibrated() {
+        return "YES";
+    }
+
+    @Override
+    public String isMagnetometerCalibrated() {
+        return "YES";
+    }
+
+    @Override
+    public Position getPosition() {
+        return new Position();
+    }
+
+    @Override
+    public Velocity getVelocity() {
+        return new Velocity();
+    }
+
+    @Override
+    public String getAcceleration() {
+        return "NA";
+    }
+
+    @Override
+    public String getOverallAcceleration() {
+        return "NA";
+    }
+
+    @Override
+    public String getLinearAcceleration() {
+        return "NA";
+    }
+
+    @Override
+    public String getGravity() {
+        return "9.80665";
+    }
+
+    @Override
+    public String getAngularVelocity() {
+        return "NONE";
+    }
+
+    @Override
+    public Tempa getTemperature() {
+        return new Tempa();
+    }
+
+    @Override
+    public String getMagneticFieldStrength() {
+        return "INFINITE";
+    }
+
+    @Override
+    public void startAccelerationIntegration(Position a, Velocity b, int g) {
+
     }
 
     /**

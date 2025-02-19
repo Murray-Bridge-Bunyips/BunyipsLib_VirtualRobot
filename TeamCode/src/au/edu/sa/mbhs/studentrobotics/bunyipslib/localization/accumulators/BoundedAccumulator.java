@@ -2,11 +2,13 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.accumulators;
 
 import androidx.annotation.NonNull;
 
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry;
-//import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
-import com.acmerobotics.roadrunner.*;
+import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.PoseVelocity2d;
+import com.acmerobotics.roadrunner.Time;
+import com.acmerobotics.roadrunner.Twist2dDual;
+import com.acmerobotics.roadrunner.Vector2d;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
-import java.lang.Math;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -14,8 +16,9 @@ import java.util.List;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Distance;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Measure;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Rect;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dashboard;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Field;
-import com.qualcomm.robotcore.util.ElapsedTime;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry;
 
 /**
  * Accumulator to define clamping limits on the field.
@@ -25,10 +28,20 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  */
 public class BoundedAccumulator extends Accumulator {
     /**
-     * Maximum bounds (FTC field)
+     * Maximum bounds (default full FTC field)
      */
     @NonNull
     public static Rect MAX_BOUNDS = Field.MAX_BOUNDS;
+    /**
+     * Time in seconds that will be used to inhibit the velocity calculation after the robot pose is rebounded.
+     * This is to sustain the velocity calculation for a short period of time as the rebound is not called every loop.
+     */
+    public static double MANUAL_VELOCITY_INHIBITION_TIME = 0.5;
+    /**
+     * Time in seconds to use for the delta step in deriving velocity ({@code s'(t) = (s(t) - s(t + dt)) / dt}).
+     * Too low of a resolution will cause floating point errors, while too high will cause the velocity to be inaccurate
+     */
+    public static double MANUAL_VELOCITY_DT_RESOLUTION = 0.1;
 
     private final List<Rect> restrictedAreas = new ArrayList<>();
     private final Rect robotBoundingBox;
@@ -46,8 +59,7 @@ public class BoundedAccumulator extends Accumulator {
     public BoundedAccumulator(@NonNull Measure<Distance> robotRadius) {
         robotBoundingBox = new Rect(new Vector2d(-robotRadius.magnitude(), -robotRadius.magnitude()),
                 new Vector2d(robotRadius.magnitude(), robotRadius.magnitude()), robotRadius.unit());
-//        FtcDashboard.getInstance().withConfigRoot(c ->
-//                c.putVariable(getClass().getSimpleName(), ReflectionConfig.createVariableFromClass(getClass())));
+        Dashboard.enableConfig(getClass());
     }
 
     /**
@@ -99,7 +111,7 @@ public class BoundedAccumulator extends Accumulator {
                 double newY = currentPose.position.y;
 
                 // Recalculate the new position to be the nearest edge of the bounding box
-                // Note: Cases where the robot is in the corner of the area perform a bit strangely as
+                // Future: Cases where the robot is in the corner of the area perform a bit strangely as
                 // they are snapped to the nearest corner of the bounding box
                 if (currentPose.position.x < area.point1.x || currentPose.position.x > area.point2.x) {
                     if (currentPose.position.x < area.point1.x) {
@@ -125,12 +137,12 @@ public class BoundedAccumulator extends Accumulator {
         }
 
         // Switch to manual velocity calculation based on the adjusted pose
-        if (velocityInhibitionTimer.seconds() < 0.5) {
-            // Resolutions under 0.1 seconds are too small for floating point calculations
-            if (deltaTime.seconds() >= 0.1) {
-                // We latch it for 0.5 seconds due to the non-constant nature of the rebounding calculation
+        // We latch the inhibition for some time due to the non-constant nature of the rebounding calculation
+        if (velocityInhibitionTimer.seconds() < MANUAL_VELOCITY_INHIBITION_TIME) {
+            // Too small of resolutions are too small for floating point calculations
+            if (deltaTime.seconds() >= MANUAL_VELOCITY_DT_RESOLUTION) {
                 velocity = new PoseVelocity2d(
-                        // s'(t) and keep unaffected angular velocity
+                        // Derivative of position and keep unaffected angular velocity
                         currentPose.position.minus(lastPos).div(deltaTime.seconds()),
                         twist.velocity().value().angVel
                 );
@@ -138,7 +150,7 @@ public class BoundedAccumulator extends Accumulator {
                 lastPos = currentPose.position;
                 deltaTime.reset();
             } else {
-                // We still need to inhibit the velocity, so we keep the last velocity
+                // We still need to inhibit the velocity, so we keep the last manual velocity calculation
                 velocity = lastVel;
             }
         }

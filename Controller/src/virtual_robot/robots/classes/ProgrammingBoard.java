@@ -40,7 +40,7 @@ public class ProgrammingBoard extends VirtualBot {
     private BNO055IMUImpl imu = null;
     private BNO055IMUNew imuNew = null;
     private PassiveColorSensorImpl colorSensor = null;
-    private ServoImpl servo = null;
+    private ServoImplEx servo = null;
     private DigitalChannelImpl digitalChannel = null;
     private AnalogInput analogInput = null;
     private PassiveDistanceSensorImpl distanceSensor = null;
@@ -104,7 +104,7 @@ public class ProgrammingBoard extends VirtualBot {
         imu = (BNO055IMUImpl) hardwareMap.get(BNO055IMU.class, "imu");
         imuNew = hardwareMap.get(BNO055IMUNew.class, "imu");
         colorSensor = (PassiveColorSensorImpl)hardwareMap.colorSensor.get("sensor_color_distance");
-        servo = (ServoImpl)hardwareMap.servo.get("servo");
+        servo = (ServoImplEx)hardwareMap.servo.get("servo");
         digitalChannel = (DigitalChannelImpl) hardwareMap.get(DigitalChannel.class, "touch_sensor");
         analogInput = hardwareMap.get(AnalogInput.class, "pot");
         distanceSensor = (PassiveDistanceSensorImpl)hardwareMap.get(PassiveDistanceSensorImpl.class, "sensor_color_distance");
@@ -129,7 +129,7 @@ public class ProgrammingBoard extends VirtualBot {
         hardwareMap.put("imu", new BNO055IMUImpl(this, 10));
         hardwareMap.put("imu", new BNO055IMUNew(this, 10));
         hardwareMap.put("sensor_color_distance", new PassiveColorSensorImpl());
-        hardwareMap.put("servo", new ServoImpl());
+        hardwareMap.put("servo", new ServoImplEx());
         hardwareMap.put("touch_sensor", new DigitalChannelImpl());
         hardwareMap.put("pot", new AnalogInput(5.0));
         hardwareMap.put("sensor_color_distance", new PassiveDistanceSensorImpl(50, 250,

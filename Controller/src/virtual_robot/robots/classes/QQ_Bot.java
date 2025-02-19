@@ -3,7 +3,7 @@ package virtual_robot.robots.classes;
 import com.qualcomm.robotcore.hardware.DcMotorExImpl;
 import com.qualcomm.robotcore.hardware.DeadWheelEncoder;
 import com.qualcomm.robotcore.hardware.DigitalChannelImpl;
-import com.qualcomm.robotcore.hardware.ServoImpl;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.hardware.configuration.MotorType;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -63,8 +63,8 @@ public class QQ_Bot extends MecanumPhysicsBase {
     protected void createHardwareMap() {
         super.createHardwareMap();
         hardwareMap.put("Webcam", new WebcamName());
-        hardwareMap.put("claw", new ServoImpl());
-        hardwareMap.put("horizontal", new ServoImpl());
+        hardwareMap.put("claw", new ServoImplEx());
+        hardwareMap.put("horizontal", new ServoImplEx());
 
         hardwareMap.put("right_lift_motor", new DcMotorExImpl(MotorType.Gobilda137, motorController1, 3));
         hardwareMap.put("left_lift_motor", new DcMotorExImpl(MotorType.Gobilda137, motorController1, 4));

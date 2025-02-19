@@ -1,14 +1,11 @@
 package virtual_robot.robots.classes;
 
-import com.qualcomm.hardware.bosch.BNO055IMUImpl;
 import com.qualcomm.robotcore.hardware.*;
 import com.qualcomm.robotcore.hardware.configuration.MotorType;
 import javafx.fxml.FXML;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Rotate;
 import virtual_robot.controller.BotConfig;
-import virtual_robot.controller.VirtualBot;
-import virtual_robot.controller.VirtualRobotController;
 import virtual_robot.util.AngleUtils;
 
 /**
@@ -21,7 +18,7 @@ import virtual_robot.util.AngleUtils;
 @BotConfig(name = "Mecanum Bot", filename = "mecanum_bot")
 public class MecanumBot extends MecanumPhysicsBase {
 
-    private ServoImpl servo = null;
+    private ServoImplEx servo = null;
 
     private MotorType encoderMotorType;
     private DeadWheelEncoder rightEncoder = null;
@@ -54,7 +51,7 @@ public class MecanumBot extends MecanumPhysicsBase {
     public void initialize(){
         super.initialize();
         hardwareMap.setActive(true);
-        servo = (ServoImpl)hardwareMap.servo.get("back_servo");
+        servo = (ServoImplEx)hardwareMap.servo.get("back_servo");
         leftEncoder = hardwareMap.get(DeadWheelEncoder.class, "enc_left");
         rightEncoder = hardwareMap.get(DeadWheelEncoder.class, "enc_right");
         xEncoder = hardwareMap.get(DeadWheelEncoder.class, "enc_x");
@@ -76,7 +73,7 @@ public class MecanumBot extends MecanumPhysicsBase {
     protected void createHardwareMap(){
         super.createHardwareMap();
         encoderMotorType = MotorType.Neverest40;
-        hardwareMap.put("back_servo", new ServoImpl());
+        hardwareMap.put("back_servo", new ServoImplEx());
         String[] encoderNames = new String[] {"enc_right", "enc_left", "enc_x"};
         for (int i=0; i<3; i++){
             hardwareMap.put(encoderNames[i], new DeadWheelEncoder(MOTOR_TYPE, motorController1, i));

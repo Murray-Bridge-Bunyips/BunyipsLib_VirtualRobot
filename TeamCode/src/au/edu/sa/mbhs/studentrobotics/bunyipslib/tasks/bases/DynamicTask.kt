@@ -75,8 +75,8 @@ class DynamicTask() : Task() {
     infix fun onReset(onReset: Consumer<Task>) = apply { reset = { onReset.accept(this) } }
 
     /**
-    * Adds additional [init] to run after the current [init] code.
-    */
+     * Adds additional [init] to run after the current [init] code.
+     */
     infix fun addInit(onInitialise: Consumer<Task>) =
         apply { val f = init; init = { f.invoke(); onInitialise.accept(this) } }
 

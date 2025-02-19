@@ -2,14 +2,13 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks
 
 import android.content.Context
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsOpMode
-//import au.edu.sa.mbhs.studentrobotics.bunyipslib.BuildConfig
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.Exceptions
 import au.edu.sa.mbhs.studentrobotics.deps.BuildConfig
-import com.qualcomm.ftccommon.FtcEventLoop
 import com.acmerobotics.dashboard.FtcDashboard
 import com.acmerobotics.dashboard.config.Config
-//import com.acmerobotics.dashboard.config.reflection.ReflectionConfig
+import com.acmerobotics.dashboard.config.reflection.ReflectionConfig
+import com.qualcomm.ftccommon.FtcEventLoop
 import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerImpl
@@ -95,11 +94,10 @@ object BunyipsLib {
             }
             // Manual reload all FtcDashboard entries, this makes it so Restart Robot will also refresh dashboard
             for (clazz in DashFilter.loaded) {
-                Dbg.warn("attempted to load @Config for FtcDashboard on class: %, this is unsupported", clazz.simpleName)
-//                FtcDashboard.getInstance()?.withConfigRoot {
-//                    val name = clazz.getAnnotation(Config::class.java)!!.value.ifEmpty { clazz.simpleName }
-//                    it.putVariable(name, ReflectionConfig.createVariableFromClass(clazz))
-//                }
+                FtcDashboard.getInstance()?.withConfigRoot {
+                    val name = clazz.getAnnotation(Config::class.java)!!.value.ifEmpty { clazz.simpleName }
+                    it.putVariable(name, ReflectionConfig.createVariableFromClass(clazz))
+                }
             }
         }
     }

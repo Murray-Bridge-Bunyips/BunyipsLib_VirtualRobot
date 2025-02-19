@@ -11,7 +11,7 @@ import com.acmerobotics.roadrunner.Twist2dDual;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.Vector2dDual;
 import com.acmerobotics.roadrunner.ftc.Encoder;
-//import com.acmerobotics.roadrunner.ftc.FlightRecorder;
+import com.acmerobotics.roadrunner.ftc.FlightRecorder;
 import com.acmerobotics.roadrunner.ftc.OverflowEncoder;
 import com.acmerobotics.roadrunner.ftc.PositionVelocityPair;
 import com.acmerobotics.roadrunner.ftc.RawEncoder;
@@ -22,7 +22,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
-//import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.MecanumLocalizerInputsMessage;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.MecanumLocalizerInputsMessage;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.DriveModel;
 
 /**
@@ -75,7 +75,7 @@ public class MecanumLocalizer implements Localizer {
         this.rightBack = rightBack != null ? new OverflowEncoder(new RawEncoder((DcMotorEx) rightBack)) : null;
         this.rightFront = rightFront != null ? new OverflowEncoder(new RawEncoder((DcMotorEx) rightFront)) : null;
         this.imu = imu;
-        // Wake up the IMU if it's a DynIMU
+        // Wake up the IMU if it's a IMUEx
         if (imu != null)
             imu.getRobotOrientationAsQuaternion();
     }
@@ -93,11 +93,15 @@ public class MecanumLocalizer implements Localizer {
         PositionVelocityPair leftBackPosVel = leftBack.getPositionAndVelocity();
         PositionVelocityPair rightBackPosVel = rightBack.getPositionAndVelocity();
         PositionVelocityPair rightFrontPosVel = rightFront.getPositionAndVelocity();
+        assert leftFrontPosVel.velocity != null;
+        assert leftBackPosVel.velocity != null;
+        assert rightBackPosVel.velocity != null;
+        assert rightFrontPosVel.velocity != null;
 
         YawPitchRollAngles angles = imu.getRobotYawPitchRollAngles();
 
-//        FlightRecorder.write("MECANUM_LOCALIZER_INPUTS", new MecanumLocalizerInputsMessage(
-//                leftFrontPosVel, leftBackPosVel, rightBackPosVel, rightFrontPosVel, angles));
+        FlightRecorder.write("MECANUM_LOCALIZER_INPUTS", new MecanumLocalizerInputsMessage(
+                leftFrontPosVel, leftBackPosVel, rightBackPosVel, rightFrontPosVel, angles));
 
         Rotation2d heading = Rotation2d.exp(angles.getYaw(AngleUnit.RADIANS));
 

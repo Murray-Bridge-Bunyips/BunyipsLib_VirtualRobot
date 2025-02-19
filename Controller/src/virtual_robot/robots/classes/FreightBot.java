@@ -58,7 +58,7 @@ public class FreightBot extends MecanumPhysicsBase implements ControlsElements {
     private DcMotorExImpl rotorMotor = null;
 
     //Servo to control the hand at the end of the arm. Note use of ServoImpl class rather than Servo interface.
-    private ServoImpl handServo = null;
+    private ServoImplEx handServo = null;
 
     /*
     Variables representing graphical UI nodes that we will need to manipulate. The @FXML annotation will
@@ -151,7 +151,7 @@ public class FreightBot extends MecanumPhysicsBase implements ControlsElements {
         rotorMotor = hardwareMap.get(DcMotorExImpl.class, "rotor_motor");
 
         //Instantiate the hand servo. Note the cast to ServoImpl.
-        handServo = (ServoImpl)hardwareMap.servo.get("hand_servo");
+        handServo = (ServoImplEx)hardwareMap.servo.get("hand_servo");
 
         //Deactivate the hardwaremap to prevent users from accessing hardware until after INIT is pressed
         hardwareMap.setActive(false);
@@ -245,7 +245,7 @@ public class FreightBot extends MecanumPhysicsBase implements ControlsElements {
         hardwareMap.put("arm_motor", new DcMotorExImpl(MotorType.Neverest40, motorController1, 0));
 
         //Add the ServoImpl object
-        hardwareMap.put("hand_servo", new ServoImpl());
+        hardwareMap.put("hand_servo", new ServoImplEx());
 
         //Add the Rotor motor
         hardwareMap.put("rotor_motor", new DcMotorExImpl(MotorType.Neverest40, motorController1, 1));

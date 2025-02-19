@@ -70,13 +70,14 @@ public interface SystemController {
      * Composes this controller with another controller, returning a new controller that is the composition of the two.
      * <p>
      * The specified BiConsumer that returns a Double is expected to be a function that indicates how the two controllers
-     * should be combined. (e.g. addition, multiplication, etc).
+     * should be combined. (e.g. addition, multiplication, etc.).
      *
      * @param other    the other controller to compose with
      * @param combiner the function that combines the two controllers
      * @return a new controller that is the composition of the two
      */
-    default CompositeController compose(SystemController other, DoubleBinaryOperator combiner) {
+    @NonNull
+    default CompositeController compose(@NonNull SystemController other, @NonNull DoubleBinaryOperator combiner) {
         return new CompositeController(this, other, combiner);
     }
 
@@ -93,6 +94,7 @@ public interface SystemController {
      *
      * @return the PIDF controller associated with this controller, if applicable
      */
+    @NonNull
     default Optional<PIDFController> pidf() {
         // Default impl, no PIDF controller
         return Optional.empty();

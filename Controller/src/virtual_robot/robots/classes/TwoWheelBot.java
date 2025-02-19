@@ -1,7 +1,6 @@
 package virtual_robot.robots.classes;
 
 import com.qualcomm.robotcore.hardware.*;
-import com.qualcomm.robotcore.hardware.configuration.MotorType;
 import javafx.fxml.FXML;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Rotate;
@@ -11,7 +10,6 @@ import virtual_robot.controller.*;
 import virtual_robot.dyn4j.Dyn4jUtil;
 import virtual_robot.dyn4j.FixtureData;
 import virtual_robot.dyn4j.Hinge;
-import virtual_robot.util.AngleUtils;
 
 /**
  * For internal use only. Represents a robot with two standard wheels, color sensor, four distance sensors,
@@ -22,7 +20,7 @@ import virtual_robot.util.AngleUtils;
 @BotConfig(name = "Two Wheel Bot", filename = "two_wheel_bot")
 public class TwoWheelBot extends TwoWheelPhysicsBase {
 
-    private ServoImpl servo = null;
+    private ServoImplEx servo = null;
 
     // The backServoArm object is instantiated during loading via a fx:id property.
     @FXML Rectangle backServoArm;
@@ -43,7 +41,7 @@ public class TwoWheelBot extends TwoWheelPhysicsBase {
     public void initialize(){
         super.initialize();
         hardwareMap.setActive(true);
-        servo = (ServoImpl)hardwareMap.servo.get("back_servo");
+        servo = (ServoImplEx)hardwareMap.servo.get("back_servo");
         hardwareMap.setActive(false);
 
         backServoArm.getTransforms().add(new Rotate(0, 37.5, 67.5));
@@ -57,7 +55,7 @@ public class TwoWheelBot extends TwoWheelPhysicsBase {
 
     protected void createHardwareMap(){
         super.createHardwareMap();
-        hardwareMap.put("back_servo", new ServoImpl());
+        hardwareMap.put("back_servo", new ServoImplEx());
     }
 
     public synchronized void updateStateAndSensors(double millis){

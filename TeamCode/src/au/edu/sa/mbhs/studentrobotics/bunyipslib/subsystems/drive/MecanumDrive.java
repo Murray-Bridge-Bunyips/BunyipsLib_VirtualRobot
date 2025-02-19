@@ -33,8 +33,8 @@ import com.acmerobotics.roadrunner.TrajectoryBuilderParams;
 import com.acmerobotics.roadrunner.TurnConstraints;
 import com.acmerobotics.roadrunner.Vector2dDual;
 import com.acmerobotics.roadrunner.VelConstraint;
-//import com.acmerobotics.roadrunner.ftc.DownsampledWriter;
-//import com.acmerobotics.roadrunner.ftc.FlightRecorder;
+import com.acmerobotics.roadrunner.ftc.DownsampledWriter;
+import com.acmerobotics.roadrunner.ftc.FlightRecorder;
 import com.acmerobotics.roadrunner.ftc.LazyImu;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -55,6 +55,9 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.Localizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.MecanumLocalizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.accumulators.Accumulator;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.RoadRunnerDrive;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.DriveCommandMessage;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.MecanumCommandMessage;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.PoseMessage;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.Constants;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.DriveModel;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.ErrorThresholds;
@@ -97,9 +100,9 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
     private final DcMotorEx rightFront;
     private final DriveModel model;
     private final MotionProfile profile;
-//    private final DownsampledWriter targetPoseWriter = new DownsampledWriter("TARGET_POSE", 50_000_000);
-//    private final DownsampledWriter driveCommandWriter = new DownsampledWriter("DRIVE_COMMAND", 50_000_000);
-//    private final DownsampledWriter mecanumCommandWriter = new DownsampledWriter("MECANUM_COMMAND", 50_000_000);
+    private final DownsampledWriter targetPoseWriter = new DownsampledWriter("TARGET_POSE", 50_000_000);
+    private final DownsampledWriter driveCommandWriter = new DownsampledWriter("DRIVE_COMMAND", 50_000_000);
+    private final DownsampledWriter mecanumCommandWriter = new DownsampledWriter("MECANUM_COMMAND", 50_000_000);
     /**
      * Gains used for holonomic drive control.
      */
@@ -145,9 +148,8 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 
         voltageSensor = voltageSensorMapping.iterator().next();
 
-//        FlightRecorder.write("MECANUM_GAINS", mecanumGains);
-//        FlightRecorder.write("MECANUM_DRIVE_MODEL", driveModel);
-//        FlightRecorder.write("MECANUM_PROFILE", motionProfile);
+        FlightRecorder.write("MECANUM_GAINS", mecanumGains);
+        FlightRecorder.write("MECANUM_PROFILE", motionProfile);
 
         if (assertParamsNotNull(driveModel, motionProfile, mecanumGains, leftFront, leftBack, rightBack, rightFront, lazyImu, voltageSensorMapping, startPose)) {
             assert leftFront != null && leftBack != null && rightBack != null && rightFront != null;
@@ -199,7 +201,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
     public MecanumDrive withLocalizer(@NonNull Localizer localizer) {
         // Reassign kinematics as it may have been updated
         kinematics = new MecanumKinematics(model.inPerTick * model.trackWidthTicks, model.inPerTick / model.lateralInPerTick);
-//        FlightRecorder.write("MECANUM_DRIVE_MODEL", model);
+        FlightRecorder.write("MECANUM_DRIVE_MODEL", model);
         this.localizer = localizer;
         return this;
     }
@@ -404,7 +406,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 
         @Override
         protected void periodic() {
-//            targetPoseWriter.write(new PoseMessage(hold));
+            targetPoseWriter.write(new PoseMessage(hold));
 
             Pose2d robotPose = accumulator.getPose();
             PoseVelocity2d robotVel = accumulator.getVelocity();
@@ -419,7 +421,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
                     gains.axialVelGain, gains.lateralVelGain, gains.headingVelGain
             )
                     .compute(txWorldTarget, robotPose, robotVel);
-//            driveCommandWriter.write(new DriveCommandMessage(feedback));
+            driveCommandWriter.write(new DriveCommandMessage(feedback));
 
             MecanumKinematics.WheelVelocities<Time> wheelVels = kinematics.inverse(feedback);
             double voltage = voltageSensor.getVoltage();
@@ -430,9 +432,9 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
             leftBackPower = feedforward.compute(wheelVels.leftBack) / voltage;
             rightBackPower = feedforward.compute(wheelVels.rightBack) / voltage;
             rightFrontPower = feedforward.compute(wheelVels.rightFront) / voltage;
-//            mecanumCommandWriter.write(new MecanumCommandMessage(
-//                    voltage, leftFrontPower, leftBackPower, rightBackPower, rightFrontPower
-//            ));
+            mecanumCommandWriter.write(new MecanumCommandMessage(
+                    voltage, leftFrontPower, leftBackPower, rightBackPower, rightFrontPower
+            ));
 
             Pose2d error = hold.minusExp(robotPose);
             dashboard.put("xError", error.position.x);
@@ -495,14 +497,14 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
             // Internally reparameterises from respect to displacement to respect to time
             // Future: currently using a static lookahead, should be improved in the future to something more dynamic
             Pose2dDual<Time> txWorldTarget = displacementTrajectory.get(s + PATH_FOLLOWER_PROJECTION_LOOKAHEAD_INCHES);
-//            targetPoseWriter.write(new PoseMessage(txWorldTarget.value()));
+            targetPoseWriter.write(new PoseMessage(txWorldTarget.value()));
 
             PoseVelocity2dDual<Time> feedback = new HolonomicController(
                     gains.axialGain, gains.lateralGain, gains.headingGain,
                     gains.axialVelGain, gains.lateralVelGain, gains.headingVelGain
             )
                     .compute(txWorldTarget, actualPose, robotVelRobot);
-//            driveCommandWriter.write(new DriveCommandMessage(feedback));
+            driveCommandWriter.write(new DriveCommandMessage(feedback));
 
             double voltage = voltageSensor.getVoltage();
 
@@ -516,9 +518,9 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
             leftBackPower = feedforward.compute(wheelVels.leftBack) / voltage;
             rightBackPower = feedforward.compute(wheelVels.rightBack) / voltage;
             rightFrontPower = feedforward.compute(wheelVels.rightFront) / voltage;
-//            mecanumCommandWriter.write(new MecanumCommandMessage(
-//                    voltage, leftFrontPower, leftBackPower, rightBackPower, rightFrontPower
-//            ));
+            mecanumCommandWriter.write(new MecanumCommandMessage(
+                    voltage, leftFrontPower, leftBackPower, rightBackPower, rightFrontPower
+            ));
 
             error = txWorldTarget.value().minusExp(actualPose);
             dashboard.put("xError", error.position.x);
@@ -610,7 +612,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 
             Pose2d robotPose = accumulator.getPose();
             Pose2dDual<Time> txWorldTarget = timeTrajectory.get(t);
-//            targetPoseWriter.write(new PoseMessage(txWorldTarget.value()));
+            targetPoseWriter.write(new PoseMessage(txWorldTarget.value()));
 
             robotVelRobot = accumulator.getVelocity();
 
@@ -619,7 +621,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
                     gains.axialVelGain, gains.lateralVelGain, gains.headingVelGain
             )
                     .compute(txWorldTarget, robotPose, robotVelRobot);
-//            driveCommandWriter.write(new DriveCommandMessage(feedback));
+            driveCommandWriter.write(new DriveCommandMessage(feedback));
 
             MecanumKinematics.WheelVelocities<Time> wheelVels = kinematics.inverse(feedback);
             double voltage = voltageSensor.getVoltage();
@@ -630,9 +632,9 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
             leftBackPower = feedforward.compute(wheelVels.leftBack) / voltage;
             rightBackPower = feedforward.compute(wheelVels.rightBack) / voltage;
             rightFrontPower = feedforward.compute(wheelVels.rightFront) / voltage;
-//            mecanumCommandWriter.write(new MecanumCommandMessage(
-//                    voltage, leftFrontPower, leftBackPower, rightBackPower, rightFrontPower
-//            ));
+            mecanumCommandWriter.write(new MecanumCommandMessage(
+                    voltage, leftFrontPower, leftBackPower, rightBackPower, rightFrontPower
+            ));
 
             error = txWorldTarget.value().minusExp(robotPose);
             dashboard.put("xError", error.position.x);
@@ -702,7 +704,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
             }
 
             Pose2dDual<Time> txWorldTarget = turn.get(t);
-//            targetPoseWriter.write(new PoseMessage(txWorldTarget.value()));
+            targetPoseWriter.write(new PoseMessage(txWorldTarget.value()));
 
             robotVelRobot = accumulator.getVelocity();
 
@@ -711,7 +713,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
                     gains.axialVelGain, gains.lateralVelGain, gains.headingVelGain
             )
                     .compute(txWorldTarget, accumulator.getPose(), robotVelRobot);
-//            driveCommandWriter.write(new DriveCommandMessage(feedback));
+            driveCommandWriter.write(new DriveCommandMessage(feedback));
 
             MecanumKinematics.WheelVelocities<Time> wheelVels = kinematics.inverse(feedback);
             double voltage = voltageSensor.getVoltage();
@@ -721,9 +723,9 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
             leftBackPower = feedforward.compute(wheelVels.leftBack) / voltage;
             rightBackPower = feedforward.compute(wheelVels.rightBack) / voltage;
             rightFrontPower = feedforward.compute(wheelVels.rightFront) / voltage;
-//            mecanumCommandWriter.write(new MecanumCommandMessage(
-//                    voltage, leftFrontPower, leftBackPower, rightBackPower, rightFrontPower
-//            ));
+            mecanumCommandWriter.write(new MecanumCommandMessage(
+                    voltage, leftFrontPower, leftBackPower, rightBackPower, rightFrontPower
+            ));
 
             error = txWorldTarget.value().minusExp(accumulator.getPose());
             dashboard.put("headingError (deg)", Math.toDegrees(error.heading.toDouble()));

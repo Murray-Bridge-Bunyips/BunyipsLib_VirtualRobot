@@ -2,7 +2,7 @@ package virtual_robot.robots.classes;
 
 import com.qualcomm.robotcore.hardware.DcMotorExImpl;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.ServoImpl;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.hardware.configuration.MotorType;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import javafx.fxml.FXML;
@@ -51,7 +51,7 @@ public class UltiBot extends MecanumPhysicsBase implements ControlsElements {
     // States of the system that pushes loaded rings into the shooter mechanism
     enum KickerState {COCKING, COCKED, SHOOTING, SHOOT, SHOT_DONE}
 
-    private ServoImpl kickerServo;
+    private ServoImplEx kickerServo;
     ElapsedTime kickerTimer = new ElapsedTime();
     private KickerState kickerState = KickerState.COCKED;
 
@@ -74,7 +74,7 @@ public class UltiBot extends MecanumPhysicsBase implements ControlsElements {
     public void initialize() {
         super.initialize();
         hardwareMap.setActive(true);
-        kickerServo = hardwareMap.get(ServoImpl.class, "kicker_servo");
+        kickerServo = hardwareMap.get(ServoImplEx.class, "kicker_servo");
         intakeMotor = hardwareMap.get(DcMotorExImpl.class, "intake_motor");
         shooterMotor = hardwareMap.get(DcMotorExImpl.class, "shooter_motor");
         scoopMotor = hardwareMap.get(DcMotorExImpl.class, "scoop_motor");
@@ -156,7 +156,7 @@ public class UltiBot extends MecanumPhysicsBase implements ControlsElements {
 
     protected void createHardwareMap(){
         super.createHardwareMap();
-        hardwareMap.put("kicker_servo", new ServoImpl());
+        hardwareMap.put("kicker_servo", new ServoImplEx());
         hardwareMap.put("intake_motor", new DcMotorExImpl(MotorType.Neverest40, motorController1, 0));
         hardwareMap.put("shooter_motor", new DcMotorExImpl(MotorType.Neverest40, motorController1, 1));
         hardwareMap.put("scoop_motor", new DcMotorExImpl(MotorType.Neverest40, motorController1, 2));

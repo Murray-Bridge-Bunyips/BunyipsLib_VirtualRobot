@@ -9,10 +9,10 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds
 import com.acmerobotics.roadrunner.Vector2d
 import dev.frozenmilk.util.cell.Cell
 import org.opencv.core.Point
+import java.lang.Math.PI
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
-import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
@@ -422,7 +422,7 @@ object Mathf {
      */
     @JvmStatic
     fun Measure<Angle>.moveTowards(target: Measure<Angle>, maxDelta: Measure<Angle>): Measure<Angle> {
-        val delta = this wrapDelta target
+        val delta = this diff target
         if (maxDelta.negate().lt(delta) && delta.lt(maxDelta)) return target
         return Degrees.of((this to Degrees).moveTowards((this + delta) to Degrees, maxDelta to Degrees))
     }
@@ -546,7 +546,7 @@ object Mathf {
         deltaTime: Measure<Time>
     ): Measure<Angle> {
         val res = (this to Degrees).smoothDamp(
-            (this + this wrapDelta target) to Degrees,
+            (this + this diff target) to Degrees,
             currentVelocity, smoothTime, maxVelocity, deltaTime
         )
         return Degrees.of(res)
@@ -585,7 +585,7 @@ object Mathf {
      * @return The shortest difference between the two angles.
      */
     @JvmStatic
-    infix fun Measure<Angle>.wrapDelta(target: Measure<Angle>): Measure<Angle> {
+    infix fun Measure<Angle>.diff(target: Measure<Angle>): Measure<Angle> {
         var delta = ((target - this) to Degrees) repeat 360
         if (delta > 180.0f) delta -= 360.0
         return Degrees.of(delta)
@@ -896,7 +896,7 @@ object Mathf {
      *
      * @param expected  The expected value
      * @param tolerance The allowed difference between the actual and the expected value
-     * @return Whether or not the actual value is within the allowed tolerance
+     * @return Whether the actual value is within the allowed tolerance
      */
     @JvmStatic
     fun Number.isNear(expected: Number, tolerance: Number): Boolean {
@@ -909,10 +909,9 @@ object Mathf {
      * Checks if the given value matches an expected value within a certain tolerance. Supports
      * continuous input for cases like absolute encoders.
      *
-     *
      * Continuous input means that the min and max value are considered to be the same point, and
      * tolerances can be checked across them. A common example would be for absolute encoders: calling
-     * isNear(2, 359, 5, 0, 360) returns true because 359 is 1 away from 360 (which is treated as the
+     * `isNear(2, 359, 5, 0, 360)` returns `true` because 359 is 1 away from 360 (which is treated as the
      * same as 0) and 2 is 2 away from 0, adding up to an error of 3 degrees, which is within the
      * given tolerance of 5.
      *
@@ -920,7 +919,7 @@ object Mathf {
      * @param tolerance The allowed difference between the actual and the expected value
      * @param min       Smallest value before wrapping around to the largest value
      * @param max       Largest value before wrapping around to the smallest value
-     * @return Whether or not the actual value is within the allowed tolerance
+     * @return Whether the actual value is within the allowed tolerance
      */
     @JvmStatic
     fun Number.isNear(expected: Number, tolerance: Number, min: Number, max: Number): Boolean {

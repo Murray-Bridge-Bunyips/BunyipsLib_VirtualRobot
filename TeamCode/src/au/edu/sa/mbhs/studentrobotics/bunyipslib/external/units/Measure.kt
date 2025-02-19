@@ -37,7 +37,7 @@ interface Measure<U : Unit<U>> : Comparable<Measure<U>> {
     fun unit(): U
 
     /**
-     * Converts this measure to a measure with a different unit of the same type, eg minutes to
+     * Converts this measure to a measure with a different unit of the same type, e.g. minutes to
      * seconds. Converting to the same unit is equivalent to calling [magnitude].
      *
      * For Kotlin users, calling this method can be done with the notation &#96;in&#96;
@@ -59,7 +59,7 @@ interface Measure<U : Unit<U>> : Comparable<Measure<U>> {
     }
 
     /**
-     * Converts this measure to a measure with a different unit of the same type, eg minutes to
+     * Converts this measure to a measure with a different unit of the same type, e.g. minutes to
      * seconds. Converting to the same unit is equivalent to calling [magnitude].
      *
      * ```
@@ -105,7 +105,7 @@ interface Measure<U : Unit<U>> : Comparable<Measure<U>> {
             val numerator = (unit() as Per<*, *>).numerator()
             return numerator.ofBaseUnits(baseUnitMagnitude() * other.baseUnitMagnitude())
         } else if (unit() is Velocity<*> && other.unit().baseUnit == Units.Seconds) {
-            // Multiplying a velocity by a time, return the scalar unit (eg Distance)
+            // Multiplying a velocity by a time, return the scalar unit (e.g. Distance)
             val numerator = (unit() as Velocity<*>).unit
             return numerator.ofBaseUnits(baseUnitMagnitude() * other.baseUnitMagnitude())
         } else if (other.unit() is Per<*, *>
@@ -123,7 +123,7 @@ interface Measure<U : Unit<U>> : Comparable<Measure<U>> {
                 .baseUnit
                     == (other.unit() as Per<*, *>).denominator().baseUnit)
         ) {
-            // multiplying eg meters per second * milliseconds per foot
+            // multiplying e.g. meters per second * milliseconds per foot
             // return a scalar
             return Units.Value.of(baseUnitMagnitude() * other.baseUnitMagnitude())
         }

@@ -4,7 +4,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Storage;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /**
  * Reset OpMode to clear static memory fields for last known position/alliance.
@@ -12,7 +11,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  * @author Lucas Bubner, 2024
  * @since 4.0.0
  */
-@TeleOp(name = "Reset Last Known Positions", group = "BunyipsLib Integrated")
 public final class ResetLastKnowns extends LinearOpMode {
     @Override
     public void runOpMode() {

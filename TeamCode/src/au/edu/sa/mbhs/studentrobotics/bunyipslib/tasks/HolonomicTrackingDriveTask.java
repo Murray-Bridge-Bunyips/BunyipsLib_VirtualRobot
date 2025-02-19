@@ -57,14 +57,17 @@ public class HolonomicTrackingDriveTask extends FieldOrientableDriveTask {
     /**
      * Default controller to use for the x (forward) axis.
      */
+    @NonNull
     public static SystemController DEFAULT_X_CONTROLLER = new PController(0.1);
     /**
      * Default controller to use for the y (strafe) axis.
      */
+    @NonNull
     public static SystemController DEFAULT_Y_CONTROLLER = new PController(0.1);
     /**
      * Default controller to use for the r (rotation) axis.
      */
+    @NonNull
     public static SystemController DEFAULT_R_CONTROLLER = new PDController(1, 0.0001);
 
     private final Supplier<PoseVelocity2d> vel;
@@ -153,7 +156,7 @@ public class HolonomicTrackingDriveTask extends FieldOrientableDriveTask {
     /**
      * Set the minimum pose error when in self-holding mode to activate correction for.
      *
-     * @param inchRad a pose in inches and radians that represents the admissible error for robot auto-correction
+     * @param inchRad a pose in inches and radians that represents the admissible error for robot autocorrection
      * @return this
      */
     @NonNull
@@ -194,7 +197,7 @@ public class HolonomicTrackingDriveTask extends FieldOrientableDriveTask {
      * and is to try and hold rotation. Note that user input will override this lock, this
      * simply tells the task to respect this value as the locking value.
      *
-     * @param heading the angle to rotate to, will be wrapped from [0, 2π] radians
+     * @param heading the angle to rotate to, will be wrapped from [0, 2pi] radians
      */
     public void setHeadingTarget(@NonNull Measure<Angle> heading) {
         headingLock = Rotation2d.exp(Mathf.wrap(heading).in(Radians));
@@ -209,27 +212,6 @@ public class HolonomicTrackingDriveTask extends FieldOrientableDriveTask {
      */
     public void setVectorTarget(@NonNull Vector2d vectorInches) {
         vectorLock = vectorInches;
-    }
-
-    /**
-     * Sets an angle to use as the origin for Field-Centric driving.
-     * If this mode is not enabled on the drive task, this value won't be used for anything meaningful.
-     *
-     * @param fcOffset the offset angle (usually the current robot heading) to add to the vector heading rotation
-     */
-    public void setFieldCentricOffset(Measure<Angle> fcOffset) {
-        this.fcOffset = Rotation2d.exp(fcOffset.in(Radians));
-    }
-
-    /**
-     * Sets the origin angle for Field-Centric driving to the drive pose of the robot (effectively resetting the offset).
-     * This is the most common use case for resetting the offset of FC operations.
-     * If this mode is not enabled on the drive task, this value won't be used for anything meaningful.
-     *
-     * @param drivePose the current pose of the drive that will be used to zero out the field centric origin
-     */
-    public void resetFieldCentricOrigin(Pose2d drivePose) {
-        this.fcOffset = drivePose.heading;
     }
 
     @Override

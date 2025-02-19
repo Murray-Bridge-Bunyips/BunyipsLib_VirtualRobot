@@ -3,6 +3,8 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.vision;
 
 import androidx.annotation.NonNull;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+
 import org.firstinspires.ftc.robotcore.external.stream.CameraStreamServer;
 
 import java.util.ArrayList;
@@ -65,7 +67,7 @@ public class SwitchableVisionSender implements Runnable {
         instances.add(firstInstance);
 
         // CameraStreamServer will be supplying a raw feed to the DS without this thread
-//        FtcDashboard.getInstance().stopCameraStream();
+        FtcDashboard.getInstance().stopCameraStream();
 
         List<Processor> processors = firstInstance.getAttachedProcessors();
         if (processors.isEmpty())
@@ -132,7 +134,7 @@ public class SwitchableVisionSender implements Runnable {
 
         if (CURRENT_PREVIEWING_VISION_INSTANCE_INDEX < 0 || CURRENT_PREVIEWING_VISION_INSTANCE_INDEX >= instances.size()) {
             Dbg.error(getClass(), "Current vision index is out of bounds, FtcDashboard sending cancelled.");
-//            FtcDashboard.getInstance().stopCameraStream();
+            FtcDashboard.getInstance().stopCameraStream();
             CameraStreamServer.getInstance().setSource(null);
             return;
         }
@@ -148,12 +150,12 @@ public class SwitchableVisionSender implements Runnable {
 
         if (currentProcessor == null) {
             Dbg.error(getClass(), "Unable to find a processor '%' to attached to the #% Vision instance, FtcDashboard sending cancelled.", CURRENT_PROCESSOR_NAME, CURRENT_PREVIEWING_VISION_INSTANCE_INDEX);
-//            FtcDashboard.getInstance().stopCameraStream();
+            FtcDashboard.getInstance().stopCameraStream();
             CameraStreamServer.getInstance().setSource(null);
             return;
         }
 
-//        FtcDashboard.getInstance().startCameraStream(currentProcessor, MAX_FPS);
+        FtcDashboard.getInstance().startCameraStream(currentProcessor, MAX_FPS);
         CameraStreamServer.getInstance().setSource(currentProcessor);
     }
 }

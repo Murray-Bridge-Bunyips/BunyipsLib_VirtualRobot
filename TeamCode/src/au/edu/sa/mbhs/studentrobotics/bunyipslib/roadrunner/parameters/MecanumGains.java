@@ -135,7 +135,7 @@ public class MecanumGains {
 
         /**
          * Enabling this option is a convenience configuration option to schedule the default task of {@link MecanumDrive}
-         * to be a {@link MecanumDrive.HoldLastPoseTask} task. This task will continue to run the RoadRunner feedback loops
+         * to be a {@link MecanumDrive.HoldLastPoseTask}. This task will continue to run the RoadRunner feedback loops
          * even when no trajectory is running, ensuring the robot corrects for disturbances despite the fact a trajectory
          * is not active.
          * <p>

@@ -36,16 +36,35 @@ Modified by FTC Team Beta 8397 for use in Virtual_Robot project
  */
 package com.qualcomm.hardware.bosch;
 
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Temperature;
 import com.qualcomm.robotcore.hardware.HardwareDevice;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.*;
 
 /**
  * interface to simulate the FTC BNO055IMU interface.
  */
 public interface BNO055IMU extends HardwareDevice {
 
+    String getSystemStatus();
+    String getCalibrationStatus();
+    String getSystemError();
+    String isSystemCalibrated();
+    String isGyroCalibrated();
+    String isAccelerometerCalibrated();
+    String isMagnetometerCalibrated();
+    Position getPosition();
+    Velocity getVelocity();
+    String getAcceleration();
+    String getOverallAcceleration();
+    String getLinearAcceleration();
+    String getGravity();
+    String getAngularVelocity();
+    Tempa getTemperature();
+    String getMagneticFieldStrength();
+    class Tempa {
+        public int temperature;    
+    }
+    void startAccelerationIntegration(Position a, Velocity b, int g);
 
     boolean initialize(Parameters parameters);
 

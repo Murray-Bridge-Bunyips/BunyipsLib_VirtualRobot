@@ -3,8 +3,6 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-//import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -22,6 +20,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PDControll
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PIDFController;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive.Moveable;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dashboard;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.vision.data.AprilTagData;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.vision.processors.AprilTag;
@@ -44,6 +43,7 @@ public class AlignToAprilTagTask extends FieldOrientableDriveTask {
     /**
      * Default controller to use for the rotation axis.
      */
+    @NonNull
     public static PIDFController DEFAULT_CONTROLLER = new PDController(0.1, 0.0001);
 
     private final AprilTag at;
@@ -80,8 +80,7 @@ public class AlignToAprilTagTask extends FieldOrientableDriveTask {
         vel = passthrough;
         controller = DEFAULT_CONTROLLER;
         named("Align To AprilTag");
-//        FtcDashboard.getInstance().withConfigRoot(c ->
-//                c.putVariable(getClass().getSimpleName(), ReflectionConfig.createVariableFromClass(getClass())));
+        Dashboard.enableConfig(getClass());
     }
 
     /**
@@ -125,7 +124,7 @@ public class AlignToAprilTagTask extends FieldOrientableDriveTask {
 
         Optional<AprilTagData> target = data.stream().filter(t -> TARGET_TAG == -1 || t.getId() == TARGET_TAG).findFirst();
 
-        if (!target.isPresent() || !target.get().isInLibrary()) {
+        if (target.isEmpty() || !target.get().isInLibrary()) {
             drive.setPower(vel);
             return;
         }

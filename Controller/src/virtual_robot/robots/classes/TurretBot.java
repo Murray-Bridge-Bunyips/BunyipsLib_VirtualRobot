@@ -1,6 +1,6 @@
 package virtual_robot.robots.classes;
 
-import com.qualcomm.robotcore.hardware.ServoImpl;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.hardware.configuration.MotorType;
 
 import javafx.fxml.FXML;
@@ -30,8 +30,8 @@ public class TurretBot extends MechanumBase {
 
 
     //Servo to control the hand at the end of the arm. Note use of ServoImpl class rather than Servo interface.
-    private ServoImpl elevationServo = null;
-    private ServoImpl turretServo = null;
+    private ServoImplEx elevationServo = null;
+    private ServoImplEx turretServo = null;
 
     private Rotate turretRotate = new Rotate(0, TURRET_PIVOT_X, TURRET_PIVOT_Y);
 
@@ -72,8 +72,8 @@ public class TurretBot extends MechanumBase {
         hardwareMap.setActive(true);
 
         //Instantiate the turret servos. Note the cast to ServoImpl.
-        elevationServo = (ServoImpl) hardwareMap.servo.get("elevation_servo");
-        turretServo = (ServoImpl) hardwareMap.servo.get("turret_servo");
+        elevationServo = (ServoImplEx) hardwareMap.servo.get("elevation_servo");
+        turretServo = (ServoImplEx) hardwareMap.servo.get("turret_servo");
 
         //Deactivate the hardwaremap to prevent users from accessing hardware until after INIT is pressed
         hardwareMap.setActive(false);
@@ -87,8 +87,8 @@ public class TurretBot extends MechanumBase {
     protected void createHardwareMap() {
         super.createHardwareMap();
 
-        hardwareMap.put("elevation_servo", new ServoImpl());
-        hardwareMap.put("turret_servo", new ServoImpl());
+        hardwareMap.put("elevation_servo", new ServoImplEx());
+        hardwareMap.put("turret_servo", new ServoImplEx());
     }
 
     /**

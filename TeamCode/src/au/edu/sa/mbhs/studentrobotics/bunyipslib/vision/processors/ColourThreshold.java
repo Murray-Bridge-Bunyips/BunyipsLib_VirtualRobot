@@ -70,7 +70,7 @@ public abstract class ColourThreshold extends Processor<ContourData> {
     private static final Paint borderPaint = new Paint() {{
         setColor(Color.WHITE);
         setAntiAlias(true);
-        setStrokeCap(Paint.Cap.BUTT);
+        setStrokeCap(Cap.BUTT);
         setStrokeWidth(1);
     }};
 
@@ -113,14 +113,17 @@ public abstract class ColourThreshold extends Processor<ContourData> {
     /**
      * The currently used Colour Space to use for lower and upper thresholds.
      */
+    @Nullable
     public Supplier<ColourSpace> colourSpace;
     /**
      * The currently used lower threshold to apply to filter out contours.
      */
+    @Nullable
     public Supplier<Scalar> lowerThreshold;
     /**
      * The currently used upper threshold to apply to filter out contours.
      */
+    @Nullable
     public Supplier<Scalar> upperThreshold;
 
     // Optional preferences
@@ -282,7 +285,7 @@ public abstract class ColourThreshold extends Processor<ContourData> {
     }
 
     /**
-     * Set the lower percentage that will be used as a mininum.
+     * Set the lower percentage that will be used as a minimum.
      * This is an optional method.
      *
      * @param percent the minimum percentage of the screen the contour should be to register, default 1.2%
@@ -292,7 +295,7 @@ public abstract class ColourThreshold extends Processor<ContourData> {
     }
 
     /**
-     * Set the lower percentage that will be used as a mininum.
+     * Set the lower percentage that will be used as a minimum.
      * This is an optional method.
      *
      * @param staticPercent the static minimum percentage of the screen the contour should be to register, default 1.2%
@@ -403,7 +406,7 @@ public abstract class ColourThreshold extends Processor<ContourData> {
 
     /**
      * Sets the size of the eroding element to use during thresholding.
-     * Erosion eats away at the mask, reducing noise by eliminating super small areas, but also reduces the
+     * Erosion eats away at the mask, reducing noise by eliminating tiny areas, but also reduces the
      * contour areas of everything a little bit.
      * This is an optional method.
      *
@@ -415,7 +418,7 @@ public abstract class ColourThreshold extends Processor<ContourData> {
 
     /**
      * Sets the size of the eroding element to use during thresholding.
-     * Erosion eats away at the mask, reducing noise by eliminating super small areas, but also reduces the
+     * Erosion eats away at the mask, reducing noise by eliminating tiny areas, but also reduces the
      * contour areas of everything a little bit.
      * This is an optional method.
      *
@@ -479,7 +482,7 @@ public abstract class ColourThreshold extends Processor<ContourData> {
      * @param realWorldObjectWidth  the real world width of the object
      * @param realWorldObjectHeight the real world height of the object
      */
-    public void setPnP(Measure<Distance> realWorldObjectWidth, Measure<Distance> realWorldObjectHeight) {
+    public void setPnP(@NonNull Measure<Distance> realWorldObjectWidth, @NonNull Measure<Distance> realWorldObjectHeight) {
         double objectWidthCm = realWorldObjectWidth.in(Centimeters);
         double objectHeightCm = realWorldObjectHeight.in(Centimeters);
         objectPoints = new MatOfPoint3f(
@@ -803,7 +806,7 @@ public abstract class ColourThreshold extends Processor<ContourData> {
                 canvas.drawPath(path, borderPaint);
             }
 
-            // Draw angle on the top left corner of the contour
+            // Draw angle in the top left corner of the contour
             canvas.drawText(
                     String.format(Locale.getDefault(), "%.1f°", contour.getAngle().in(Degrees)),
                     (float) rotRectPts[1].x,
@@ -894,18 +897,12 @@ public abstract class ColourThreshold extends Processor<ContourData> {
          */
         @NonNull
         public final String getChannelName(int idx) {
-            switch (this) {
-                case RGB:
-                    return new String[]{"Red", "Green", "Blue"}[idx];
-                case HSV:
-                    return new String[]{"Hue", "Saturation", "Value"}[idx];
-                case YCrCb:
-                    return new String[]{"Luminance", "Chrominance Red", "Chrominance Blue"}[idx];
-                case Lab:
-                    return new String[]{"Lightness", "A", "B"}[idx];
-                default:
-                    return "Unknown";
-            }
+            return switch (this) {
+                case RGB -> new String[]{"Red", "Green", "Blue"}[idx];
+                case HSV -> new String[]{"Hue", "Saturation", "Value"}[idx];
+                case YCrCb -> new String[]{"Luminance", "Chrominance Red", "Chrominance Blue"}[idx];
+                case Lab -> new String[]{"Lightness", "A", "B"}[idx];
+            };
         }
     }
 }

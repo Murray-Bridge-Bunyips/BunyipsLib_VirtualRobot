@@ -41,9 +41,41 @@ Caching modes set in this class have NO EFFECT ON SIMULATOR FUNCTION.
 package com.qualcomm.hardware.lynx;
 
 import com.qualcomm.robotcore.hardware.HardwareDevice;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.TempUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit;
 
 public class LynxModule implements HardwareDevice {
     public static BlinkerPolicy blinkerPolicy = new BlinkerPolicy();
+    
+    public String getFirmwareVersionString() {
+        return "v9.9.9";
+    }
+    
+    public double getCurrent(CurrentUnit c) {
+        return -1;
+    }
+    
+    public double getGpioBusCurrent(CurrentUnit c) {
+        return -1;
+    }
+
+    public double getI2cBusCurrent(CurrentUnit c) {
+        return -1;
+    }
+    
+    public double getInputVoltage(VoltageUnit v) {
+        return -1;
+    }
+    
+    public double getAuxiliaryVoltage(VoltageUnit v) {
+        return -1;
+    }
+    
+    public double getTemperature(TempUnit t) {
+        return -1;
+    }
+    
 
     public static class BlinkerPolicy {
         public Object getIdlePattern(LynxModule c) {
@@ -60,6 +92,10 @@ public class LynxModule implements HardwareDevice {
 
     public void setConstant(Object parseColor) {
         
+    }
+    
+    public Object getBulkData() {
+        return null;
     }
 
     /**
