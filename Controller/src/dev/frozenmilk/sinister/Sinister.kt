@@ -2,13 +2,17 @@ package dev.frozenmilk.sinister
 
 import android.content.Context
 import com.qualcomm.ftccommon.FtcEventLoop
+import com.qualcomm.robotcore.eventloop.opmode.AnnotatedOpModeManager
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.util.RobotLog
 import com.qualcomm.robotcore.util.ThreadPool
 import dev.frozenmilk.sinister.Sinister.TAG
 import dev.frozenmilk.sinister.apphooks.*
 import dev.frozenmilk.sinister.targeting.FullSearch
+import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta
 import org.reflections.Reflections
 import org.reflections.scanners.SubTypesScanner
+import virtual_robot.controller.VirtualRobotController
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 
@@ -36,8 +40,30 @@ object Sinister {
 		OnCreateEventLoopFilter.onCreateEventLoop(Context(), FtcEventLoop())
 		OnCreateMenuFilter.onCreateMenu(Context(), null)
 		OnDestroyFilter.onDestroy(Context())
-		OpModeRegistrarFilter.registerOpModes(null)
+		OpModeRegistrarFilter.registerOpModes(ExtraOpModeRegistrar)
 		WebHandlerRegistrarFilter.webHandlerRegistrar(Context(), null)
+	}
+	
+	object ExtraOpModeRegistrar : AnnotatedOpModeManager {
+		override fun register(opModeClass: Class<*>?) {
+			VirtualRobotController.extraOpModes.add(opModeClass)
+		}
+
+		override fun register(name: String?, opModeClass: Class<out OpMode>?) {
+			VirtualRobotController.extraOpModes.add(opModeClass)
+		}
+
+		override fun register(name: OpModeMeta?, opModeClass: Class<out OpMode>?) {
+			VirtualRobotController.extraOpModes.add(opModeClass)
+		}
+
+		override fun register(name: String?, opModeInstance: OpMode?) {
+			VirtualRobotController.extraOpModes.add(opModeInstance!!.javaClass)
+		}
+
+		override fun register(name: OpModeMeta?, opModeInstance: OpMode?) {
+			VirtualRobotController.extraOpModes.add(opModeInstance!!.javaClass)
+		}
 	}
 
 	private fun allClassNames(): List<String> {

@@ -393,11 +393,17 @@ public class VirtualRobotController {
         return group;
     }
 
+    /**
+     * used by opmode manager
+     */
+    public static List<Class<?>> extraOpModes = new ArrayList<>();
+
     private void setupCbxOpModes(){
         Reflections reflections = new Reflections("");
         Set<Class<?>> opModes = new HashSet<>();
         opModes.addAll(reflections.getTypesAnnotatedWith(TeleOp.class));
         opModes.addAll(reflections.getTypesAnnotatedWith(Autonomous.class));//Lists of OpMode classes and OpMode Names
+        opModes.addAll(extraOpModes);
         ObservableList<Class<?>> nonDisabledOpModeClasses = FXCollections.observableArrayList();
         for (Class<?> c : opModes){
             if (c.getAnnotation(Disabled.class) == null && OpMode.class.isAssignableFrom(c)){
@@ -433,7 +439,7 @@ public class VirtualRobotController {
                         String group = getGroupFromAnnotationOrOpmode(cl);
                         String name = getNameFromAnnotationOrOpmode(cl);
 
-                        if(group.isEmpty()) {
+                        if(group == null || group.isEmpty()) {
                             setText(name);
                         }else{
                             setText(group + ": " + name);

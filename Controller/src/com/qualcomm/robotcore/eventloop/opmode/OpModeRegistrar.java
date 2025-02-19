@@ -1,5 +1,7 @@
 package com.qualcomm.robotcore.eventloop.opmode;
 
+import dev.frozenmilk.sinister.Preload;
+
 import java.lang.annotation.*;
 
 /**
