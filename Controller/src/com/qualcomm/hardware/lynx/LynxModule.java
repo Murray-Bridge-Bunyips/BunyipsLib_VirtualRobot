@@ -76,6 +76,14 @@ public class LynxModule implements HardwareDevice {
         return -1;
     }
     
+    public Object getPattern() {
+        return new Object() {
+            public String toString() {
+                return "pattern";
+            }
+        };
+    }
+    
 
     public static class BlinkerPolicy {
         public Object getIdlePattern(LynxModule c) {
