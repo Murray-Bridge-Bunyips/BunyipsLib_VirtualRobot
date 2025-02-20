@@ -23,6 +23,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Polyline;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Callback;
+import kotlin.Pair;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.BodyFixture;
 import org.dyn4j.dynamics.ContinuousDetectionMode;
@@ -362,7 +363,7 @@ public class VirtualRobotController {
     }
 
 
-    private String getNameFromAnnotationOrOpmode(Class c){
+    private String getNameFromAnnotationOrOpmode(Class c, String defaultt){
         String name = "";
         Annotation a1 = c.getAnnotation(TeleOp.class);
         if(a1 != null){
@@ -374,12 +375,12 @@ public class VirtualRobotController {
             }
         }
         if(name.isEmpty()){
-            name = c.getSimpleName();
+            name = defaultt;
         }
         return name;
     }
 
-    private String getGroupFromAnnotationOrOpmode(Class c){
+    private String getGroupFromAnnotationOrOpmode(Class c, String defaultt){
         String group = null;
         Annotation a1 = c.getAnnotation(TeleOp.class);
         if(a1 != null){
@@ -390,20 +391,25 @@ public class VirtualRobotController {
                 group = ((Autonomous)a1).group();
             }
         }
+        if (group == null)
+            group = defaultt;
+        // bunyipslib
+        if ("dash".equals(group))
+            group = "BunyipsLib";
         return group;
     }
 
     /**
      * used by opmode manager
      */
-    public static List<Class<?>> extraOpModes = new ArrayList<>();
+    public static HashMap<Class<?>, Pair<String,String>> extraOpModes = new HashMap<>();
 
     private void setupCbxOpModes(){
         Reflections reflections = new Reflections("");
         Set<Class<?>> opModes = new HashSet<>();
         opModes.addAll(reflections.getTypesAnnotatedWith(TeleOp.class));
         opModes.addAll(reflections.getTypesAnnotatedWith(Autonomous.class));//Lists of OpMode classes and OpMode Names
-        opModes.addAll(extraOpModes);
+        opModes.addAll(extraOpModes.keySet());
         ObservableList<Class<?>> nonDisabledOpModeClasses = FXCollections.observableArrayList();
         for (Class<?> c : opModes){
             if (c.getAnnotation(Disabled.class) == null && OpMode.class.isAssignableFrom(c)){
@@ -414,8 +420,8 @@ public class VirtualRobotController {
         nonDisabledOpModeClasses.sort(new Comparator<Class<?>>() {
             @Override
             public int compare(Class<?> o1, Class<?> o2) {
-                String group1 = getGroupFromAnnotationOrOpmode(o1);
-                String group2 = getGroupFromAnnotationOrOpmode(o2);
+                String group1 = getGroupFromAnnotationOrOpmode(o1, extraOpModes.getOrDefault(o1, new Pair<>(null, null)).getSecond());
+                String group2 = getGroupFromAnnotationOrOpmode(o2, extraOpModes.getOrDefault(o2, new Pair<>(null, null)).getSecond());
 
                 if (group1 == null) return -1;
                 else if (group2 == null) return 1;
@@ -436,8 +442,8 @@ public class VirtualRobotController {
                             setText(null);
                             return;
                         }
-                        String group = getGroupFromAnnotationOrOpmode(cl);
-                        String name = getNameFromAnnotationOrOpmode(cl);
+                        String group = getGroupFromAnnotationOrOpmode(cl, extraOpModes.getOrDefault(cl, new Pair<>(null, null)).getSecond());
+                        String name = getNameFromAnnotationOrOpmode(cl, extraOpModes.getOrDefault(cl, new Pair<>(cl.getSimpleName(), null)).getFirst());
 
                         if(group == null || group.isEmpty()) {
                             setText(name);
@@ -458,7 +464,7 @@ public class VirtualRobotController {
                     setText(null);
                     return;
                 }
-                setText(getNameFromAnnotationOrOpmode(cl));
+                setText(getNameFromAnnotationOrOpmode(cl, extraOpModes.getOrDefault(cl, new Pair<>(cl.getSimpleName(), null)).getFirst()));
             }
         });
 

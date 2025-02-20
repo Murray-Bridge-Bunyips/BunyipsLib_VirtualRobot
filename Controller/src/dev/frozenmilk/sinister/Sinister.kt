@@ -43,26 +43,26 @@ object Sinister {
 		OpModeRegistrarFilter.registerOpModes(ExtraOpModeRegistrar)
 		WebHandlerRegistrarFilter.webHandlerRegistrar(Context(), null)
 	}
-	
+
 	object ExtraOpModeRegistrar : AnnotatedOpModeManager {
 		override fun register(opModeClass: Class<*>?) {
-			VirtualRobotController.extraOpModes.add(opModeClass)
+			VirtualRobotController.extraOpModes[opModeClass] = opModeClass?.simpleName to null
 		}
 
 		override fun register(name: String?, opModeClass: Class<out OpMode>?) {
-			VirtualRobotController.extraOpModes.add(opModeClass)
+			VirtualRobotController.extraOpModes[opModeClass] = name to null
 		}
 
 		override fun register(name: OpModeMeta?, opModeClass: Class<out OpMode>?) {
-			VirtualRobotController.extraOpModes.add(opModeClass)
+			VirtualRobotController.extraOpModes[opModeClass] = name?.displayName to name?.group
 		}
 
 		override fun register(name: String?, opModeInstance: OpMode?) {
-			VirtualRobotController.extraOpModes.add(opModeInstance!!.javaClass)
+			VirtualRobotController.extraOpModes[opModeInstance?.javaClass] = name to null
 		}
 
 		override fun register(name: OpModeMeta?, opModeInstance: OpMode?) {
-			VirtualRobotController.extraOpModes.add(opModeInstance!!.javaClass)
+			VirtualRobotController.extraOpModes[opModeInstance?.javaClass] = name?.displayName to name?.group
 		}
 	}
 
