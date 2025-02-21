@@ -3,6 +3,7 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.localization;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive.Moveable;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
@@ -55,10 +56,13 @@ public interface Localizable {
     /**
      * Calculate the first derivative of the accumulated pose from an internal localizer.
      * <p>
+     * This velocity is robot-relative. Note for telemetry outputs in the four main {@link Moveable} classes,
+     * the velocity is rotated to be field-relative.
+     * <p>
      * Units should be in inches/sec and radians/sec.
      *
      * @return the current pose velocity of the drive, may be nullable if this drive does not support localization or
-     * does not supply velocity
+     *         does not supply velocity
      */
     @Nullable
     PoseVelocity2d getVelocity();

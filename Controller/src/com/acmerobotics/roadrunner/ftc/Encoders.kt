@@ -75,13 +75,15 @@ private const val CPS_STEP = 0x10000
 
 private fun inverseOverflow(input: Int, estimate: Double): Int {
     // convert to uint16
-    var real = input and 0xFFFF
-    // initial, modulo-based correction: it can recover the remainder of 5 of the upper 16 bits
-    // because the velocity is always a multiple of 20 cps due to Expansion Hub's 50ms measurement window
-    real += real % 20 / 4 * CPS_STEP
-    // estimate-based correction: it finds the nearest multiple of 5 to correct the upper bits by
-    real += round((estimate - real) / (5 * CPS_STEP)).toInt() * 5 * CPS_STEP
-    return real
+//    var real = input and 0xFFFF
+//    // initial, modulo-based correction: it can recover the remainder of 5 of the upper 16 bits
+//    // because the velocity is always a multiple of 20 cps due to Expansion Hub's 50ms measurement window
+//    real += real % 20 / 4 * CPS_STEP
+//    // estimate-based correction: it finds the nearest multiple of 5 to correct the upper bits by
+//    real += round((estimate - real) / (5 * CPS_STEP)).toInt() * 5 * CPS_STEP
+    
+    // virtual robot REQUIRES we dont inverse overflow, since its physically impossible to do so in the sim
+    return input
 }
 
 class OverflowEncoder(@JvmField val encoder: RawEncoder) : Encoder {

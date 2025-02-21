@@ -1,17 +1,7 @@
 package com.acmerobotics.roadrunner.ftc
 
 import android.annotation.SuppressLint
-import android.content.Context
-import com.qualcomm.robotcore.eventloop.opmode.OpMode
-import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerImpl
-import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerNotifier
-import com.qualcomm.robotcore.util.RobotLog
-import com.qualcomm.robotcore.util.WebHandlerManager
 //import org.firstinspires.ftc.ftccommon.external.WebHandlerRegistrar
-import org.firstinspires.ftc.ftccommon.internal.manualcontrol.ManualControlOpMode
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil
-import java.io.File
-import java.io.OutputStream
 import java.text.SimpleDateFormat
 
 // there may be legacy logs here, but we should be robust to that
