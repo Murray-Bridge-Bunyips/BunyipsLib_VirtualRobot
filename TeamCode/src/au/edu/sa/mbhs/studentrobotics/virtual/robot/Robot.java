@@ -55,13 +55,12 @@ public class Robot extends RobotConfig {
         hw.otos = getHardware("sensor_otos", SparkFunOTOS.class);
 
         // https://github.com/Beta8397/virtual_robot_RR1/blob/03e5d30b30558c1e67ee2478d45de3d136798074/TeamCode/src/org/firstinspires/ftc/teamcode/MecanumDrive.java
-        double inPerTick = 1.0 / 89.1;
         DriveModel driveModel = new DriveModel.Builder()
-                .setInPerTick(inPerTick)
-                .setTrackWidthTicks(17.9 / inPerTick)
+                .setInPerTick(1) // using otos
+                .setTrackWidthTicks(17.9) // is now in inches
                 .build();
         MotionProfile motionProfile = new MotionProfile.Builder()
-                .setKv(0.0056)
+                .setKv(0.8)
                 .setMaxWheelVel(25)
                 .setMinProfileAccel(-30)
                 .setMaxProfileAccel(50)
