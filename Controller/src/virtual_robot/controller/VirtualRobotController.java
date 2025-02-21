@@ -978,6 +978,8 @@ public class VirtualRobotController {
         public Gamepad gamepad1;
         public Gamepad gamepad2;
         public Telemetry telemetry;
+        
+        protected volatile boolean isStarted; // elevated here as we try to inject enable it
 
         public OpModeBase() {
             hardwareMap = VirtualRobotController.this.hardwareMap;

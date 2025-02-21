@@ -9,7 +9,6 @@ import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl;
  * "loop", "init", "init_loop", "start", or "stop".
  */
 public abstract class LinearOpMode extends OpMode {
-    private volatile boolean isStarted = false;
     private volatile boolean stopRequested = false;
     private LinearOpModeHelper helper = null;
     private Thread runOpModeThread = null;
@@ -187,7 +186,6 @@ public abstract class LinearOpMode extends OpMode {
     }
 
     protected void handleLoop() {
-
         //If runOpMode has exited, check for exceptions, shut down the executorService, then interrupt the opMode thread (currentThread)
         if (helper.isFinished()) {
             if (helper.hasException()){
