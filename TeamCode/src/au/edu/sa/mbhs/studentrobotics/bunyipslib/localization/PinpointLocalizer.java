@@ -46,7 +46,7 @@ public class PinpointLocalizer implements Localizer {
      */
     public PinpointLocalizer(@NonNull DriveModel driveModel, @NonNull TwoWheelLocalizer.Params params, @Nullable GoBildaPinpointDriver pinpoint) {
         this.pinpoint = pinpoint;
-        
+
         FlightRecorder.write("TWO_DEAD_WHEEL_PARAMS", params);
         if (pinpoint == null)
             return;
@@ -73,7 +73,10 @@ public class PinpointLocalizer implements Localizer {
                 pinpoint.getHeading()
         );
         PoseVelocity2d vel = new PoseVelocity2d(
-                new Vector2d(pinpoint.getVelX() / INCH_MM_CONVERSION_FACTOR, pinpoint.getVelY() / INCH_MM_CONVERSION_FACTOR),
+                // Note: Pinpoint velocity is in the global reference frame
+                Rotation2d.exp(pinpoint.getHeading())
+                        .inverse()
+                        .times(new Vector2d(pinpoint.getVelX() / INCH_MM_CONVERSION_FACTOR, pinpoint.getVelY() / INCH_MM_CONVERSION_FACTOR)),
                 pinpoint.getHeadingVelocity()
         );
 
