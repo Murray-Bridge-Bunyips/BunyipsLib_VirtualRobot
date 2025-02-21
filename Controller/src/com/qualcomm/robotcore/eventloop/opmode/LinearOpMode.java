@@ -12,6 +12,7 @@ public abstract class LinearOpMode extends OpMode {
     private volatile boolean stopRequested = false;
     private LinearOpModeHelper helper = null;
     private Thread runOpModeThread = null;
+    private final Object runningNotifier = new Object();
 
     /**
      * OpModes must override the abstract runOpMode() method.
@@ -25,12 +26,14 @@ public abstract class LinearOpMode extends OpMode {
      */
     public synchronized void waitForStart() {
         while (!isStarted()) {
+            synchronized (runningNotifier) {
                 try {
-                    this.wait();
+                    runningNotifier.wait();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     return;
                 }
+            }
         }
     }
 
@@ -139,8 +142,8 @@ public abstract class LinearOpMode extends OpMode {
     final public void start() {
         stopRequested = false;
         isStarted = true;
-        synchronized (this) {
-            this.notifyAll();
+        synchronized (runningNotifier) {
+            runningNotifier.notifyAll();
         }
     }
 
