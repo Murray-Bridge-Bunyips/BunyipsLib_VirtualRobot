@@ -73,9 +73,7 @@ public class PinpointLocalizer implements Localizer {
                 pinpoint.getHeading()
         );
         PoseVelocity2d vel = new PoseVelocity2d(
-                Rotation2d.exp(pinpoint.getHeading()) // TODO: test
-                        .inverse()
-                        .times(new Vector2d(pinpoint.getVelX() / INCH_MM_CONVERSION_FACTOR, pinpoint.getVelY() / INCH_MM_CONVERSION_FACTOR)),
+                new Vector2d(pinpoint.getVelX() / INCH_MM_CONVERSION_FACTOR, pinpoint.getVelY() / INCH_MM_CONVERSION_FACTOR),
                 pinpoint.getHeadingVelocity()
         );
 
