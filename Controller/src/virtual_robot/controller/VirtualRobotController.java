@@ -136,6 +136,7 @@ public class VirtualRobotController {
         @Override
         public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
             for (DcMotor motor: hardwareMap.dcMotor) {
+                // TODO: this is probably broken after bunyipslib messed with motors
                 if (!(motor instanceof DcMotorImpl)) continue;      //Now that DeadWheelEncoder has been added, not all "DcMotor" are "DcMotorImpl"
                 ((DcMotorImpl)motor).setRandomErrorFrac(sldRandomMotorError.getValue());
                 ((DcMotorImpl)motor).setSystematicErrorFrac(sldSystematicMotorError.getValue() * 2.0 * (0.5 - random.nextDouble()));

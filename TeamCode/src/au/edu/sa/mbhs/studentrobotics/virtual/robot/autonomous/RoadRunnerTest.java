@@ -19,15 +19,16 @@ public class RoadRunnerTest extends OpMode {
     public void init() {
         Task t = Robot.instance.drive.makeTrajectory()
                 .splineTo(new Vector2d(30, 30), Inches, 90, Degrees)
-                .turn(90, Degrees)
-                .lineToX(50)
-                .build().mutate().addPeriodic(() -> telemetry.addData("", "no way we are at %s", Geometry.toUserString(Robot.instance.drive.getPose())));
+                .splineTo(new Vector2d(0, 60), Inches, 0, Degrees)
+                .splineTo(new Vector2d(-30, -30), Inches, -90, Degrees)
+                .splineTo(new Vector2d(0, 0), Inches, 0, Degrees)
+                .build().mutate().addPeriodic(() -> telemetry.addData("", "%s", Geometry.toUserString(Robot.instance.drive.getPose())));
         Tasks.register(t);
     }
 
     @Override
     public void loop() {
-        Tasks.run(0);
+        Tasks.runRepeatedly(0);
         BunyipsSubsystem.updateAll();
     }
 }

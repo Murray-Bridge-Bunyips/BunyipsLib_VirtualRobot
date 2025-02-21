@@ -41,12 +41,13 @@ public class SparkFunOTOS implements HardwareDevice {
      * degrees when the user requests values.
      */
 
+    // nb: bunyipslib sneakily made this open so we can yoink the physics speed for the pinpoint
     // Raw pose in Meters, Radians
-    protected Pose2D rawPoseMR = new Pose2D(0,0,0);
+    public static Pose2D rawPoseMR = new Pose2D(0,0,0);
     // Raw velocity in Meters/sec, Radians/sec
-    protected Pose2D rawVelMR = new Pose2D(0,0,0);
+    public static Pose2D rawVelMR = new Pose2D(0,0,0);
     // Raw accelearation in Meters/sec2, Radians/sec2
-    protected Pose2D rawAccelMR = new Pose2D(0,0,0);
+    public static Pose2D rawAccelMR = new Pose2D(0,0,0);
 
     /*
      * The Base Pose is the pose of the User Coordinate System relative to the
