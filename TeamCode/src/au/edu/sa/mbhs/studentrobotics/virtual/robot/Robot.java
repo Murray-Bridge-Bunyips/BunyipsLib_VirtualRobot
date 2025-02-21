@@ -70,14 +70,14 @@ public class Robot extends RobotConfig {
                 .setHeadingGain(20)
                 .build();
 
-        hw.lazyImu = getHardware("imu", IMUEx.class, d -> {
+        hw.imu = getHardware("imu", IMUEx.class, d -> {
             d.lazyInitialize(new IMU.Parameters(new RevHubOrientationOnRobot(
                     RevHubOrientationOnRobot.LogoFacingDirection.UP, 
                     RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
             )));
         });
 
-        drive = new MecanumDrive(driveModel, motionProfile, mecanumGains, hw.front_left_motor, hw.back_left_motor, hw.back_right_motor, hw.front_right_motor, hw.lazyImu, hardwareMap.voltageSensor);
+        drive = new MecanumDrive(driveModel, motionProfile, mecanumGains, hw.front_left_motor, hw.back_left_motor, hw.back_right_motor, hw.front_right_motor, hw.imu, hardwareMap.voltageSensor);
         MecanumLocalizer l = (MecanumLocalizer) drive.getLocalizer();
         l.leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         l.leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -88,7 +88,7 @@ public class Robot extends RobotConfig {
         public Motor back_left_motor;
         public Motor front_right_motor;
         public Motor front_left_motor;
-        public LazyImu lazyImu;
+        public IMUEx imu;
         public Servo back_servo;
     }
 }
