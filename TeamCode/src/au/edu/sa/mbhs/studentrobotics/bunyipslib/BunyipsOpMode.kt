@@ -93,7 +93,7 @@ abstract class BunyipsOpMode : BOMInternal() {
             // Warn the user if their target loop speed cannot be achieved
             telemetry.loopSpeedSlowAlert = field
             field = value
-            Dbg.warn("BunyipsOpMode: Loop speed set to % ms", value to Milliseconds)
+            Dbg.warn("BunyipsOpMode: active loop speed set to % ms!", value to Milliseconds)
         }
 
     /**
@@ -163,7 +163,7 @@ abstract class BunyipsOpMode : BOMInternal() {
         @Hook(on = Hook.Target.PRE_INIT, priority = 6)
         private fun configureObjects() {
             val bom = _instance ?: return
-            Dbg.logv("BunyipsOpMode: setting up...")
+            Dbg.logv("BunyipsOpMode: setting up ...")
             bom.let {
                 it.timer = MovingAverageTimer()
                 it.telemetry = DualTelemetry(it.sdkTelemetry, it.timer)
@@ -292,7 +292,7 @@ abstract class BunyipsOpMode : BOMInternal() {
 
             telemetry.opModeStatus = "<b><font color='yellow'>static_init</font></b>"
             telemetry.logBracketColor = "gray"
-            Dbg.logv("BunyipsOpMode: firing onInit()...")
+            Dbg.logv("BunyipsOpMode: firing onInit() ...")
             // Store telemetry objects raised by onInit() by turning off auto-clear
             telemetry.isAutoClear = false
             telemetry.update()
@@ -315,7 +315,7 @@ abstract class BunyipsOpMode : BOMInternal() {
 
             telemetry.opModeStatus = "<font color='aqua'>dynamic_init</font>"
             telemetry.update()
-            Dbg.logv("BunyipsOpMode: starting onInitLoop()...")
+            Dbg.logv("BunyipsOpMode: starting onInitLoop() ...")
             if (initTask != null) {
                 Dbg.logd(
                     "BunyipsOpMode: running initTask -> % ...",
@@ -371,7 +371,7 @@ abstract class BunyipsOpMode : BOMInternal() {
                 Exceptions.handle(e, telemetry::log)
             }
             telemetry.update()
-            Dbg.logv("BunyipsOpMode: firing onInitDone()...")
+            Dbg.logv("BunyipsOpMode: firing onInitDone() ...")
             // Run user-defined final initialisation
             try {
                 onInitDone()
@@ -398,7 +398,7 @@ abstract class BunyipsOpMode : BOMInternal() {
             // Ready to go.
             telemetry.opModeStatus = "<font color='green'>ready</font>"
             timer.update()
-            Dbg.logd("BunyipsOpMode: init cycle completed in ${timer.elapsedTime() to Seconds} secs")
+            Dbg.logd("BunyipsOpMode: init cycle completed in ${timer.elapsedTime() to Seconds} secs.")
             telemetry.addDS("<b>Init <font color='green'>complete</font>. Press play to start.</b>")
             Dbg.logd("BunyipsOpMode: ready.")
 
@@ -417,7 +417,7 @@ abstract class BunyipsOpMode : BOMInternal() {
             telemetry.opModeStatus = "<font color='yellow'>starting</font>"
             telemetry.isAutoClear = true
             telemetry.clear()
-            Dbg.logv("BunyipsOpMode: firing onStart()...")
+            Dbg.logv("BunyipsOpMode: firing onStart() ...")
             try {
                 // Run user-defined start operations
                 onStart()
@@ -442,7 +442,7 @@ abstract class BunyipsOpMode : BOMInternal() {
             }
 
             telemetry.opModeStatus = "<font color='green'><b>running</b></font>"
-            Dbg.logv("BunyipsOpMode: starting activeLoop()...")
+            Dbg.logv("BunyipsOpMode: starting activeLoop() ...")
             while (!isStopRequested && isStarted && !operationsCompleted) {
                 if (operationsPaused) {
                     // If the OpMode is paused, skip the loop and wait for the next hardware cycle
@@ -507,7 +507,7 @@ abstract class BunyipsOpMode : BOMInternal() {
             // exit immediately as something has gone very wrong
             throw t
         } finally {
-            Dbg.logd("BunyipsOpMode: opmode stop requested. cleaning up...")
+            Dbg.logd("BunyipsOpMode: opmode stop requested. cleaning up ...")
             // Ensure all threads have been told to stop, even if there is a post-stop hook
             Threads.stopAll()
             SoundPlayer.getInstance().stopPlayingAll()
@@ -522,9 +522,9 @@ abstract class BunyipsOpMode : BOMInternal() {
             // Telemetry may be not in a nice state, so we will call our stateful functions
             // such as thread stops and cleanup in onStop() first before updating the status
             telemetry.opModeStatus = "<font color='red'>terminating</font>"
-            Dbg.logd("BunyipsOpMode: active cycle completed in ${timer.elapsedTime() to Seconds} secs")
+            Dbg.logd("BunyipsOpMode: active cycle completed in ${timer.elapsedTime() to Seconds} secs.")
             telemetry.update()
-            Dbg.logv("BunyipsOpMode: exiting...")
+            Dbg.logv("BunyipsOpMode: exiting ...")
         }
     }
 
