@@ -8,6 +8,11 @@ import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Rad
 
 import androidx.annotation.NonNull;
 
+import androidx.annotation.Nullable;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.ff.SimpleMotorFeedforward;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PDController;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PIDFController;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.DriveModel;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
@@ -49,19 +54,25 @@ import kotlin.NotImplementedError;
 public class HolonomicPrecisionDriveTask extends FieldOrientableDriveTask {
     /**
      * Default controller to use for the x (forward) velocity axis.
+     * <p>
+     * Note: Default is assigned on construction.
      */
-    @NonNull
-    public static SystemController DEFAULT_X_CONTROLLER = new PController(8);
+    @Nullable
+    public static SystemController DEFAULT_X_CONTROLLER;
     /**
      * Default controller to use for the y (strafe) velocity axis.
+     * <p>
+     * Note: Default is assigned on construction.
      */
-    @NonNull
-    public static SystemController DEFAULT_Y_CONTROLLER = new PController(8);
+    @Nullable
+    public static SystemController DEFAULT_Y_CONTROLLER;
     /**
      * Default controller to use for the r (rotation) velocity axis.
+     * <p>
+     * Note: Default is assigned on construction.
      */
-    @NonNull
-    public static SystemController DEFAULT_R_CONTROLLER = new PController(12);
+    @Nullable
+    public static SystemController DEFAULT_R_CONTROLLER;
 
     private final Supplier<PoseVelocity2d> vel;
     private SystemController xController;
@@ -85,15 +96,23 @@ public class HolonomicPrecisionDriveTask extends FieldOrientableDriveTask {
      */
     public HolonomicPrecisionDriveTask(@NonNull Supplier<PoseVelocity2d> targetVecNormalised, @NonNull Moveable drive) {
         super.drive = drive;
+        
+        Supplier<PoseVelocity2d> velocity = () -> Objects.requireNonNull(drive.getVelocity());
+        // Parameters will be set shortly
+        DEFAULT_X_CONTROLLER = new PIDFController(0.0, 0.0, 0.0, 0.0)
+                .compose(new SimpleMotorFeedforward(0.0, 0.0, 0.0, () -> velocity.get().linearVel.x, () -> 0), Double::sum);
+        
         if (drive instanceof BunyipsSubsystem s)
             on(s, false);
         if (drive instanceof RoadRunnerDrive rrd) {
             MotionProfile mp = rrd.getConstants().getMotionProfile();
+            DriveModel dm = rrd.getConstants().getDriveModel();
             // Only extract velocity, if the user wants acceleration also we leave it to them
             maxVel = InchesPerSecond.of(mp.maxWheelVel);
             maxAngVel = RadiansPerSecond.of(mp.maxAngVel);
         }
         vel = targetVecNormalised;
+        
 
         withXController(DEFAULT_X_CONTROLLER);
         withYController(DEFAULT_Y_CONTROLLER);
@@ -210,14 +229,13 @@ public class HolonomicPrecisionDriveTask extends FieldOrientableDriveTask {
     @Override
     protected void periodic() {
         PoseVelocity2d input = applyOrientation(vel.get());
-        PoseVelocity2d currentVelocity = Objects.requireNonNull(drive.getVelocity(), "A drive localizer able to supply velocity information is required to use the HolonomicPrecisionDriveTask!");
+        PoseVelocity2d robotVel = Objects.requireNonNull(drive.getVelocity(), "A drive localizer able to supply velocity information is required to use the HolonomicPrecisionDriveTask!");
         // TODO: do we need to implement a circular scaling to ensure the maxVel is followed for 2d motion?
-        double xVel = xController.calculate(currentVelocity.linearVel.x, maxVel.in(InchesPerSecond) * input.linearVel.x);
-        double yVel = yController.calculate(currentVelocity.linearVel.y, maxVel.in(InchesPerSecond) * input.linearVel.y);
-        double rVel = rController.calculate(currentVelocity.angVel, maxAngVel.in(RadiansPerSecond) * input.angVel);
+        double xVel = xController.calculate(robotVel.linearVel.x, maxVel.in(InchesPerSecond) * input.linearVel.x);
+//        double yVel = yController.calculate(robotVel.linearVel.y, maxVel.in(InchesPerSecond) * input.linearVel.y);
+//        double rVel = rController.calculate(robotVel.angVel, maxAngVel.in(RadiansPerSecond) * input.angVel);
         // TODO: this approach is unstable, need to think of a better way to do this
-        drive.setPower(Geometry.vel(xVel, yVel, rVel));
-        throw new NotImplementedError("hpdt not implemented yet!");
+        drive.setPower(Geometry.vel(xVel, 0, 0));
     }
 
     @Override
