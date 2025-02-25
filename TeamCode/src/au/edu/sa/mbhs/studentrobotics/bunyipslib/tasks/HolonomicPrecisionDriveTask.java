@@ -9,9 +9,10 @@ import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Rad
 import androidx.annotation.NonNull;
 
 import androidx.annotation.Nullable;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.Diff;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.ff.SimpleMotorFeedforward;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PDController;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PIDFController;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.Constants;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.DriveModel;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -21,7 +22,6 @@ import java.util.function.Supplier;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsSubsystem;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.SystemController;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PController;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Angle;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Distance;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Measure;
@@ -31,7 +31,6 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.MotionPro
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive.Moveable;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry;
-import kotlin.NotImplementedError;
 
 /**
  * Gamepad drive for all holonomic drivetrains which will use a velocity vector to control the robot.
@@ -55,31 +54,37 @@ public class HolonomicPrecisionDriveTask extends FieldOrientableDriveTask {
     /**
      * Default controller to use for the x (forward) velocity axis.
      * <p>
-     * Note: Default is assigned on construction.
+     * Note: Default is assigned on construction, which is a composite controller composing a PIDF and SimpleMotorFeedforward.
+     * It is recommended to use the default and simply modify the coefficients, since velocity and acceleration suppliers are auto-generated.
      */
     @Nullable
     public static SystemController DEFAULT_X_CONTROLLER;
     /**
      * Default controller to use for the y (strafe) velocity axis.
      * <p>
-     * Note: Default is assigned on construction.
+     * Note: Default is assigned on construction, which is a composite controller composing a PIDF and SimpleMotorFeedforward.
+     * It is recommended to use the default and simply modify the coefficients, since velocity and acceleration suppliers are auto-generated.
      */
     @Nullable
     public static SystemController DEFAULT_Y_CONTROLLER;
     /**
      * Default controller to use for the r (rotation) velocity axis.
      * <p>
-     * Note: Default is assigned on construction.
+     * Note: Default is assigned on construction, which is a composite controller composing a PIDF and SimpleMotorFeedforward.
+     * It is recommended to use the default and simply modify the coefficients, since velocity and acceleration suppliers are auto-generated.
      */
     @Nullable
     public static SystemController DEFAULT_R_CONTROLLER;
 
+    private final Diff xAccel = new Diff();
+    private final Diff yAccel = new Diff();
+    private final Diff rAccel = new Diff();
     private final Supplier<PoseVelocity2d> vel;
     private SystemController xController;
     private SystemController yController;
     private SystemController rController;
     // Sane defaults with unbounded acceleration
-    private Measure<Velocity<Distance>> maxVel = InchesPerSecond.of(40);
+    private Measure<Velocity<Distance>> maxVel = InchesPerSecond.of(20);//TODO this was 40
     private Measure<Velocity<Velocity<Distance>>> maxAccel = InchesPerSecondPerSecond.of(Double.MAX_VALUE);
     private Measure<Velocity<Angle>> maxAngVel = DegreesPerSecond.of(180);
     private Measure<Velocity<Velocity<Angle>>> maxAngAccel = DegreesPerSecondPerSecond.of(Double.MAX_VALUE);
@@ -98,21 +103,29 @@ public class HolonomicPrecisionDriveTask extends FieldOrientableDriveTask {
         super.drive = drive;
         
         Supplier<PoseVelocity2d> velocity = () -> Objects.requireNonNull(drive.getVelocity());
-        // Parameters will be set shortly
+        // Parameters will be set again shortly by if we have a RoadRunnerDrive
         DEFAULT_X_CONTROLLER = new PIDFController(0.0, 0.0, 0.0, 0.0)
-                .compose(new SimpleMotorFeedforward(0.0, 0.0, 0.0, () -> velocity.get().linearVel.x, () -> 0), Double::sum);
+                .compose(new SimpleMotorFeedforward(0.0, 0.0, 0.0, () -> velocity.get().linearVel.x, () -> xAccel.apply(velocity.get().linearVel.x)), Double::sum);
+        DEFAULT_Y_CONTROLLER = new PIDFController(0.0, 0.0, 0.0, 0.0)
+                .compose(new SimpleMotorFeedforward(0.0, 0.0, 0.0, () -> velocity.get().linearVel.y, () -> yAccel.apply(velocity.get().linearVel.y)), Double::sum);
+        DEFAULT_R_CONTROLLER = new PIDFController(0.0, 0.0, 0.0, 0.0)
+                .compose(new SimpleMotorFeedforward(0.0, 0.0, 0.0, () -> velocity.get().angVel, () -> rAccel.apply(velocity.get().angVel)), Double::sum);
         
         if (drive instanceof BunyipsSubsystem s)
             on(s, false);
         if (drive instanceof RoadRunnerDrive rrd) {
-            MotionProfile mp = rrd.getConstants().getMotionProfile();
-            DriveModel dm = rrd.getConstants().getDriveModel();
-            // Only extract velocity, if the user wants acceleration also we leave it to them
+            Constants constants = rrd.getConstants();
+            DriveModel dm = constants.getDriveModel();
+            MotionProfile mp = constants.getMotionProfile();
+            // Only extract velocity constraints, if the user wants acceleration also we leave it to them
             maxVel = InchesPerSecond.of(mp.maxWheelVel);
             maxAngVel = RadiansPerSecond.of(mp.maxAngVel);
+            // Default parameters
+            DEFAULT_X_CONTROLLER.setCoefficients(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+            DEFAULT_Y_CONTROLLER.setCoefficients(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+            DEFAULT_R_CONTROLLER.setCoefficients(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
         }
         vel = targetVecNormalised;
-        
 
         withXController(DEFAULT_X_CONTROLLER);
         withYController(DEFAULT_Y_CONTROLLER);
@@ -231,11 +244,11 @@ public class HolonomicPrecisionDriveTask extends FieldOrientableDriveTask {
         PoseVelocity2d input = applyOrientation(vel.get());
         PoseVelocity2d robotVel = Objects.requireNonNull(drive.getVelocity(), "A drive localizer able to supply velocity information is required to use the HolonomicPrecisionDriveTask!");
         // TODO: do we need to implement a circular scaling to ensure the maxVel is followed for 2d motion?
-        double xVel = xController.calculate(robotVel.linearVel.x, maxVel.in(InchesPerSecond) * input.linearVel.x);
-//        double yVel = yController.calculate(robotVel.linearVel.y, maxVel.in(InchesPerSecond) * input.linearVel.y);
-//        double rVel = rController.calculate(robotVel.angVel, maxAngVel.in(RadiansPerSecond) * input.angVel);
-        // TODO: this approach is unstable, need to think of a better way to do this
-        drive.setPower(Geometry.vel(xVel, 0, 0));
+        drive.setPower(Geometry.vel(
+                xController.calculate(robotVel.linearVel.x, maxVel.in(InchesPerSecond) * input.linearVel.x),
+                yController.calculate(robotVel.linearVel.y, maxVel.in(InchesPerSecond) * input.linearVel.y),
+                rController.calculate(robotVel.angVel, maxAngVel.in(RadiansPerSecond) * input.angVel)
+        ));
     }
 
     @Override
