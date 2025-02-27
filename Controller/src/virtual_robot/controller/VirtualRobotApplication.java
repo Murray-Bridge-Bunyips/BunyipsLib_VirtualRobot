@@ -1,5 +1,8 @@
 package virtual_robot.controller;
 
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Threads;
+import com.qualcomm.robotcore.util.ThreadPool;
 import dev.frozenmilk.sinister.Sinister;
 import javafx.application.Application;
 import javafx.event.EventHandler;
@@ -10,12 +13,15 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
+import java.util.concurrent.Future;
+
 /**
  * For internal use only. Main class for the JavaFX application.
  */
 public class VirtualRobotApplication extends Application {
 
     private static VirtualRobotController controllerHandle;
+    public static Future<?> sinisterOperation;
 
     @Override
     public void start(Stage primaryStage) throws Exception{
@@ -30,6 +36,11 @@ public class VirtualRobotApplication extends Application {
             public void handle(WindowEvent event) {
                 controllerHandle.setConfig(null);
             }
+        });
+        primaryStage.setOnCloseRequest((v) -> {
+            Threads.stopAll();
+            ThreadPool.getDefault().shutdownNow();
+            System.exit(0);
         });
         primaryStage.show();
     }
@@ -49,7 +60,7 @@ public class VirtualRobotApplication extends Application {
 
 
     public static void main(String[] args) {
-        Sinister.doSinisterThings(); // hacky classpath scanning
+        sinisterOperation = ThreadPool.getDefault().submit(Sinister::doSinisterThings); // hacky classpath scanning
         launch(args);
     }
 }

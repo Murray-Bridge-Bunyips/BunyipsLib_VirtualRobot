@@ -3,6 +3,7 @@ package virtual_robot.controller;
 import com.qualcomm.robotcore.eventloop.opmode.*;
 import com.qualcomm.robotcore.hardware.*;
 import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.util.ThreadPool;
 import com.studiohartman.jamepad.ControllerIndex;
 import com.studiohartman.jamepad.ControllerManager;
 import com.studiohartman.jamepad.ControllerState;
@@ -54,6 +55,7 @@ import virtual_robot.keyboard.KeyState;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -410,6 +412,11 @@ public class VirtualRobotController {
         Set<Class<?>> opModes = new HashSet<>();
         opModes.addAll(reflections.getTypesAnnotatedWith(TeleOp.class));
         opModes.addAll(reflections.getTypesAnnotatedWith(Autonomous.class));//Lists of OpMode classes and OpMode Names
+        try {
+            VirtualRobotApplication.sinisterOperation.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
         opModes.addAll(extraOpModes.keySet());
         ObservableList<Class<?>> nonDisabledOpModeClasses = FXCollections.observableArrayList();
         for (Class<?> c : opModes){
