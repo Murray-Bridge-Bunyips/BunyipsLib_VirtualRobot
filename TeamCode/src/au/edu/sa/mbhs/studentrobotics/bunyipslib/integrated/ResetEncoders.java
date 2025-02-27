@@ -28,11 +28,13 @@ public final class ResetEncoders extends LinearOpMode {
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new EmergencyStop("Failed to access HardwareMap fields!");
         }
-        for (Map.Entry<String, DcMotor> motor : map.entrySet()) {
-            DcMotor m = motor.getValue();
-            Dbg.log(getClass(), "Resetting encoder on %(%) from % ticks ...", motor.getKey(), m.getConnectionInfo(), m.getCurrentPosition());
-            m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            m.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        if (map != null) {
+            for (Map.Entry<String, DcMotor> motor : map.entrySet()) {
+                DcMotor m = motor.getValue();
+                Dbg.log(getClass(), "Resetting encoder on %(%) from % ticks ...", motor.getKey(), m.getConnectionInfo(), m.getCurrentPosition());
+                m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                m.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            }
         }
         terminateOpModeNow();
     }
