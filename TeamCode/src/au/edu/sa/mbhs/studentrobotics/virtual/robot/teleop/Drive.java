@@ -14,6 +14,7 @@ public class Drive extends CommandBasedBunyipsOpMode {
     @Override
     protected void onInitialise() {
         robot.init();
+        setInitTask(robot.drive.makeTrajectory().lineToX(30).build().mutate().addPeriodic(() -> robot.drive.update()));
     }
 
     @Override
