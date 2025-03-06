@@ -239,6 +239,7 @@ public class RobotLog {
     }
 
     public static void internalLog(int priority, String tag, String message) {
+        if (tag.contains("Scanner")) return; // real cursed
         if (msTimeOffset == 0) {
             char symbol = 'U';
             switch (priority) {

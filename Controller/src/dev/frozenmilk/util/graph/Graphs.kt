@@ -21,8 +21,9 @@ fun <CTX: Any, NODE: Any> Set<NODE>.reduceByContext(
 	return copy
 }
 
+//
 @JvmOverloads
-fun <NODE: Any> Set<NODE>.emitGraph(graphImpl: GraphImpl<NODE> = GraphImpl(), adjacencyRuleSelector: Function<NODE, AdjacencyRule<NODE, in Graph<NODE>>>): GraphImpl<NODE> {
+fun <NODE: Any> Set<NODE>.emitGraph(graphImpl: GraphImpl<NODE> = GraphImpl(), adjacencyRuleSelector: Function<NODE, AdjacencyRule<NODE, in Graph<NODE>>>): GraphImpl<NODE> {//////////
 	graphImpl.initForSet(this)
 	forEach { adjacencyRuleSelector.apply(it)(graphImpl) }
 	return graphImpl

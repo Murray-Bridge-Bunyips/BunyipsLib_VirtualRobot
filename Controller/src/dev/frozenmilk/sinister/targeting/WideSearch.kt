@@ -1,5 +1,8 @@
 package dev.frozenmilk.sinister.targeting
 
+/**
+ * Searches all classes, but auto excludes standard exclusions from the sdk's class searcher
+ */
 open class WideSearch : FullSearch() {
 	init {
 		exclude("com.google")

@@ -33,8 +33,8 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.qualcomm.robotcore.eventloop.opmode;
 
 import com.qualcomm.robotcore.hardware.HardwareDevice;
-import dev.frozenmilk.sinister.Preload;
-import dev.frozenmilk.sinister.SinisterFilter;
+import dev.frozenmilk.sinister.loading.Pinned;
+import dev.frozenmilk.sinister.loading.Preload;
 
 /**
  * {@link OpModeManagerNotifier.Notifications} is an interface by which interested
@@ -52,6 +52,7 @@ public interface OpModeManagerNotifier
      * that register themselves with the OpMode manager.
      */
     @Preload // we hack into our hacked version of sinister to supply Notifications
+    @Pinned
     interface Notifications
         {
         /** The indicated OpMode is just about to be initialized. */

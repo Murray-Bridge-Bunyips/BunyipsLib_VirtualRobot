@@ -4,6 +4,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Threads;
 import com.qualcomm.robotcore.util.ThreadPool;
 import dev.frozenmilk.sinister.Sinister;
+import dev.frozenmilk.sinister.SinisterImpl;
 import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
@@ -60,7 +61,7 @@ public class VirtualRobotApplication extends Application {
 
 
     public static void main(String[] args) {
-        sinisterOperation = ThreadPool.getDefault().submit(Sinister::doSinisterThings); // hacky classpath scanning
+        sinisterOperation = ThreadPool.getDefault().submit(SinisterImpl::doSinisterThings); // hacky classpath scanning
         launch(args);
     }
 }

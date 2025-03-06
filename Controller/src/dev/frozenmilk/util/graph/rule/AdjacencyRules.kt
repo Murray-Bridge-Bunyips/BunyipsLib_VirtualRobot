@@ -9,14 +9,14 @@ import java.util.function.Supplier
 /**
  * no-op
  */
-fun <NODE: Any, GRAPH: Graph<NODE>> independent() = AdjacencyRule<NODE, GRAPH> {}
+fun <NODE: Any, GRAPH: Graph<NODE>> independent() = AdjacencyRule<NODE, GRAPH> {}//////
 
 /**
  * [this] depends on [dependency]
  *
  * will crash if [dependency] doesn't exist in the graph
  */
-fun <NODE: Any, GRAPH: Graph<NODE>> NODE.dependsOn(dependency: NODE) = AdjacencyRule<NODE, GRAPH> { graph ->
+fun <NODE: Any, GRAPH: Graph<NODE>> NODE.dependsOn(dependency: NODE) = AdjacencyRule<NODE, GRAPH> { graph ->//
 	checkNotNull(graph[dependency]) { "$dependency was not in graph" }
 	requireNotNull(graph[this]) { "$this was not in graph" }.plus(dependency)
 }

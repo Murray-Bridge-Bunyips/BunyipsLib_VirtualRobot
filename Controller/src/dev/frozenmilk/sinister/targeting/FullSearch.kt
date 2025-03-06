@@ -1,5 +1,8 @@
 package dev.frozenmilk.sinister.targeting
 
+/**
+ * Searches ALL classes (other than those that cannot be found in the compiled app), this is not recommend, and usually a [WideSearch] should be used
+ */
 open class FullSearch : SearchTarget(Inclusion.INCLUDE) {
 	init {
 		exclude("java")
