@@ -1,5 +1,6 @@
 package dev.frozenmilk.sinister.sdk.apphooks
 
+//import org.firstinspires.ftc.ftccommon.internal.AnnotatedHooksClassFilter
 import android.content.Context
 import com.qualcomm.ftccommon.FtcEventLoop
 import com.qualcomm.robotcore.util.RobotLog
@@ -7,14 +8,13 @@ import dev.frozenmilk.sinister.isPublic
 import dev.frozenmilk.sinister.isStatic
 import dev.frozenmilk.sinister.loading.Pinned
 import dev.frozenmilk.sinister.loading.Preload
-import dev.frozenmilk.sinister.sdk.FalseSingletonSet
+import dev.frozenmilk.sinister.sdk.apphooks.OnCreateEventLoopScanner.CALLSITE.onCreateEventLoop
 import dev.frozenmilk.sinister.staticInstancesOf
 import dev.frozenmilk.util.graph.Graph
 import dev.frozenmilk.util.graph.emitGraph
 import dev.frozenmilk.util.graph.rule.AdjacencyRule
 import dev.frozenmilk.util.graph.rule.independent
 import dev.frozenmilk.util.graph.sort
-//import org.firstinspires.ftc.ftccommon.internal.AnnotatedHooksClassFilter
 import java.lang.reflect.Method
 
 /**

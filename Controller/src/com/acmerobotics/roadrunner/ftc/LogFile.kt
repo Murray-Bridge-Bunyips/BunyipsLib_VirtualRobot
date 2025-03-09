@@ -5,7 +5,7 @@ package com.acmerobotics.roadrunner.ftc
 import java.io.OutputStream
 import java.lang.reflect.Modifier
 import java.nio.ByteBuffer
-import java.util.TreeMap
+import java.util.*
 
 sealed interface MessageSchema {
     // schema encoding

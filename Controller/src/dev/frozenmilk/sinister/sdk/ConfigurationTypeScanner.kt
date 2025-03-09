@@ -1,8 +1,6 @@
 @file:Suppress("Deprecation")
 package dev.frozenmilk.sinister.sdk
 
-import android.content.Context
-import com.qualcomm.ftccommon.FtcEventLoop
 //import com.qualcomm.ftccommon.FtcEventLoopBase
 //import com.qualcomm.ftccommon.FtcEventLoopHandler
 //import com.qualcomm.ftccommon.configuration.RobotConfigFile
@@ -28,22 +26,17 @@ import com.qualcomm.ftccommon.FtcEventLoop
 //import com.qualcomm.robotcore.hardware.configuration.typecontainers.DigitalIoDeviceConfigurationType
 //import com.qualcomm.robotcore.hardware.configuration.typecontainers.I2cDeviceConfigurationType
 //import com.qualcomm.robotcore.hardware.configuration.typecontainers.InstantiableUserConfigurationType
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType
 //import com.qualcomm.robotcore.hardware.configuration.typecontainers.ServoConfigurationType
 //import com.qualcomm.robotcore.hardware.configuration.typecontainers.UserConfigurationType
 //import com.qualcomm.robotcore.util.ClassUtil
-import com.qualcomm.robotcore.util.RobotLog
 //import com.qualcomm.robotcore.util.Util
+//import org.firstinspires.ftc.robotcore.internal.opmode.OnBotJavaDeterminer
+//import org.xmlpull.v1.XmlPullParserException
+import android.content.Context
+import com.qualcomm.ftccommon.FtcEventLoop
 import dev.frozenmilk.sinister.Scanner
 import dev.frozenmilk.sinister.sdk.apphooks.OnCreateEventLoop
 import dev.frozenmilk.sinister.targeting.WideSearch
-import dev.frozenmilk.sinister.util.log.Logger
-import dev.frozenmilk.util.cell.MirroredCell
-//import org.firstinspires.ftc.robotcore.internal.opmode.OnBotJavaDeterminer
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil
-//import org.xmlpull.v1.XmlPullParserException
-import java.io.FileNotFoundException
-import java.lang.reflect.Modifier
 
 /**
  * performs [ConfigurationTypeManager]'s scanning for it

@@ -33,22 +33,13 @@
 
 package org.firstinspires.ftc.vision;
 
-import android.graphics.Canvas;
 import android.util.Size;
-
 import com.qualcomm.robotcore.util.RobotLog;
-
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.opencv.core.Mat;
-import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvInternalCamera;
-import org.openftc.easyopencv.OpenCvSwitchableWebcam;
-import org.openftc.easyopencv.OpenCvWebcam;
-import org.openftc.easyopencv.TimestampedOpenCvPipeline;
+import org.openftc.easyopencv.*;
 
 public class VisionPortalImpl extends VisionPortal
 {

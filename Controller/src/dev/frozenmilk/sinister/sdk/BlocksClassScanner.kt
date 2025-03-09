@@ -1,12 +1,7 @@
 package dev.frozenmilk.sinister.sdk
 
-import com.qualcomm.robotcore.hardware.HardwareDevice
-import com.qualcomm.robotcore.util.RobotLog
 import dev.frozenmilk.sinister.Scanner
 import dev.frozenmilk.sinister.targeting.WideSearch
-import dev.frozenmilk.util.cell.LateInitCell
-import dev.frozenmilk.util.cell.MirroredCell
-import java.lang.reflect.Method
 
 @Suppress("unused")
 object BlocksClassScanner : Scanner {

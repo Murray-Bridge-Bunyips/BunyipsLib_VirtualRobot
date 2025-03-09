@@ -34,11 +34,7 @@ package com.qualcomm.robotcore.hardware.configuration.annotations;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Rotation;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * {@link MotorType} is an annotation with which a class or interface can be decorated in

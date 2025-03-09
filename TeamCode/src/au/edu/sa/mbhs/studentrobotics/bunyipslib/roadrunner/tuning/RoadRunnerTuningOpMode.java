@@ -546,7 +546,7 @@ public abstract class RoadRunnerTuningOpMode extends LinearOpMode {
 
             FtcDashboard.getInstance().withConfigRoot(configRoot ->
                     configRoot.putVariable("[RR] Tuning Parameters", ReflectionConfig.createVariableFromClass(getClass())));
-            
+
             Threads.start("wait for start", () -> {
                 // We wait for the OpMode to become a ready state then force the internal OpMode to begin
                 while (opModeInInit()) {

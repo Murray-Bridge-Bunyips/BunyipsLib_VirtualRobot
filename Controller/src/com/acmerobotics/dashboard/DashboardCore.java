@@ -2,18 +2,13 @@ package com.acmerobotics.dashboard;
 
 import com.acmerobotics.dashboard.config.ValueProvider;
 import com.acmerobotics.dashboard.config.variable.BasicVariable;
-import com.acmerobotics.dashboard.config.variable.ConfigVariableDeserializer;
-import com.acmerobotics.dashboard.config.variable.ConfigVariableSerializer;
 import com.acmerobotics.dashboard.config.variable.CustomVariable;
 import com.acmerobotics.dashboard.message.Message;
-import com.acmerobotics.dashboard.message.MessageDeserializer;
 import com.acmerobotics.dashboard.message.MessageType;
 import com.acmerobotics.dashboard.message.redux.ReceiveConfig;
 import com.acmerobotics.dashboard.message.redux.ReceiveTelemetry;
 import com.acmerobotics.dashboard.message.redux.SaveConfig;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-//import com.google.gson.Gson;
-//import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
 import java.util.Collections;

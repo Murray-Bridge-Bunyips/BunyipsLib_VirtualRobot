@@ -1,13 +1,6 @@
 package dev.frozenmilk.sinister
 
-import com.qualcomm.robotcore.util.RobotLog
-import dev.frozenmilk.sinister.loaders.SlothClassLoader
-import dev.frozenmilk.sinister.loading.LoadEvent
 import dev.frozenmilk.sinister.loading.Preload
-import dev.frozenmilk.sinister.util.log.Logger
-import dev.frozenmilk.sinister.util.notify.Notifier
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil
-import java.io.File
 
 @Preload
 @Suppress("unused")

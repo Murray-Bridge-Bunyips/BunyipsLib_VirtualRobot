@@ -2,7 +2,6 @@
 @file:JvmName("ContextRules")
 package dev.frozenmilk.util.graph.rule
 
-import java.lang.Class
 import java.lang.reflect.AnnotatedElement
 
 /**

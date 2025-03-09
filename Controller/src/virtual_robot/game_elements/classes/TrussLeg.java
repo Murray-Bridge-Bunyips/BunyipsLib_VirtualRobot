@@ -10,7 +10,6 @@ import virtual_robot.controller.VirtualGameElement;
 import virtual_robot.dyn4j.Dyn4jUtil;
 import virtual_robot.dyn4j.FixtureData;
 import virtual_robot.games.CenterStage;
-import virtual_robot.games.FreightFrenzy;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -33,12 +33,8 @@
 
 package org.firstinspires.ftc.vision.opencv;
 
-import android.graphics.Color;
-
 import androidx.annotation.ColorInt;
-
 import com.qualcomm.robotcore.util.SortOrder;
-
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;

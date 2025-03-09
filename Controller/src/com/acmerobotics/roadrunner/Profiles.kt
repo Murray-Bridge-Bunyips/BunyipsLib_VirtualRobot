@@ -2,12 +2,7 @@
 
 package com.acmerobotics.roadrunner
 
-import kotlin.math.abs
-import kotlin.math.ceil
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.sqrt
-import kotlin.math.withSign
+import kotlin.math.*
 
 /**
  * Time parameter for [DualNum].

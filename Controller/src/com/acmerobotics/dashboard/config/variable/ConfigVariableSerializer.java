@@ -2,8 +2,6 @@ package com.acmerobotics.dashboard.config.variable;
 
 //import com.google.gson.*;
 
-import java.lang.reflect.Type;
-
 public class ConfigVariableSerializer /*implements JsonSerializer<ConfigVariable<?>>*/ {
 //    @Override
 //    public JsonElement serialize(ConfigVariable<?> configVariable, Type type,

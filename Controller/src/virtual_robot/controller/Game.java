@@ -1,11 +1,5 @@
 package virtual_robot.controller;
 
-import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
 import javafx.scene.layout.Pane;
@@ -13,6 +7,12 @@ import org.dyn4j.dynamics.Body;
 import org.dyn4j.world.World;
 import org.reflections.Reflections;
 import virtual_robot.config.Config;
+
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public abstract class Game {
 

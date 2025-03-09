@@ -1,4 +1,4 @@
-package au.edu.sa.mbhs.studentrobotics.deps;
+package au.edu.sa.mbhs.studentrobotics.bunyipslib;
 
 /**
  * Virtual Robot dependency for BunyipsLib support to replicate the Gradle BuildConfig.

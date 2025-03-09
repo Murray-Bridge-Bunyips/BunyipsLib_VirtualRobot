@@ -1,6 +1,5 @@
 package virtual_robot.game_elements.classes;
 
-import javafx.scene.Group;
 import org.dyn4j.collision.CategoryFilter;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.geometry.MassType;

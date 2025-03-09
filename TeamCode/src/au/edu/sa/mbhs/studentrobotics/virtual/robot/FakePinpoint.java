@@ -1,19 +1,15 @@
 package au.edu.sa.mbhs.studentrobotics.virtual.robot;
 
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.GoBildaPinpointDriver;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks.BunyipsLib;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks.Hook;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsLib;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.Hook;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchSimple;
-import virtual_robot.controller.VirtualRobotController;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-
-import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Degrees;
 
 public class FakePinpoint implements I2cDeviceSynchSimple {
     @Hook(on = Hook.Target.PRE_INIT, priority = 3)

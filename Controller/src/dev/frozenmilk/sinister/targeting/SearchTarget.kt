@@ -1,5 +1,6 @@
 package dev.frozenmilk.sinister.targeting
 
+import dev.frozenmilk.sinister.targeting.SearchTarget.Inclusion
 import dev.frozenmilk.util.tree.Tree
 
 /**

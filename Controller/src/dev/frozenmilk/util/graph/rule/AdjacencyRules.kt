@@ -3,7 +3,6 @@
 package dev.frozenmilk.util.graph.rule
 
 import dev.frozenmilk.util.graph.Graph
-import java.lang.Class
 import java.util.function.Supplier
 
 /**

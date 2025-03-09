@@ -7,8 +7,8 @@ import java.util.Collections;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsOpMode;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.CommandBasedBunyipsOpMode;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.Hook;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.Scheduler;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.hooks.Hook;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.RepeatTask;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
 
@@ -98,7 +98,7 @@ public final class Tasks {
 
     /**
      * Gets a registered task that may have been registered through {@link #register(Task...)}.
-     * 
+     *
      * @param idx the index of the registered task
      * @return the task
      */

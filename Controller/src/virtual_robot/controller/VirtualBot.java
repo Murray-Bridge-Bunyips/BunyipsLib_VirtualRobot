@@ -1,17 +1,14 @@
 package virtual_robot.controller;
 
 import com.qualcomm.robotcore.hardware.DcMotorControllerImpl;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import javafx.scene.Group;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Scale;
 import javafx.scene.transform.Translate;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.BodyFixture;
 import org.dyn4j.geometry.Transform;

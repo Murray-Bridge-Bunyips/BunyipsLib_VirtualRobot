@@ -1,10 +1,8 @@
 package virtual_robot.controller;
 
 import javafx.application.Platform;
-import javafx.geometry.Bounds;
 import javafx.scene.Group;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Scale;
 import javafx.scene.transform.Translate;

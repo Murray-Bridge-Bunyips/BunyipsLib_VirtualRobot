@@ -1,7 +1,5 @@
 package com.qualcomm.robotcore.eventloop.opmode;
 
-import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl;
-
 /**
  * Virtual Robot's implementation of LinearOpMode
  *

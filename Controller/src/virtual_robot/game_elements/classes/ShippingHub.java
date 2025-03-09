@@ -3,7 +3,6 @@ package virtual_robot.game_elements.classes;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.shape.Circle;
-import javafx.scene.shape.Shape;
 import org.dyn4j.collision.CategoryFilter;
 import org.dyn4j.dynamics.Body;
 import virtual_robot.controller.Filters;
@@ -13,10 +12,8 @@ import virtual_robot.controller.VirtualGameElement;
 import virtual_robot.dyn4j.Dyn4jUtil;
 import virtual_robot.dyn4j.FixtureData;
 import virtual_robot.games.FreightFrenzy;
-import virtual_robot.games.UltimateGoal;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 @GameElementConfig(name = "Shipping Hub", filename = "shipping_hub", forGame = FreightFrenzy.class, numInstances = 3)

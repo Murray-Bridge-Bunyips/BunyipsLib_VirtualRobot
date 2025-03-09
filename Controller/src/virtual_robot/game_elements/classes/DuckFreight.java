@@ -1,9 +1,6 @@
 package virtual_robot.game_elements.classes;
 
-import org.dyn4j.collision.CategoryFilter;
 import virtual_robot.controller.GameElementConfig;
-import virtual_robot.controller.VirtualField;
-import virtual_robot.controller.VirtualGameElement;
 import virtual_robot.games.FreightFrenzy;
 
 import java.util.ArrayList;

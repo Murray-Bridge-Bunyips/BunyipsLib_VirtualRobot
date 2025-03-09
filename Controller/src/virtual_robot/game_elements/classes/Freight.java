@@ -1,7 +1,6 @@
 package virtual_robot.game_elements.classes;
 
 import org.dyn4j.collision.CategoryFilter;
-import org.dyn4j.collision.Fixture;
 import org.dyn4j.dynamics.BodyFixture;
 import org.dyn4j.dynamics.joint.WeldJoint;
 import virtual_robot.controller.Filters;

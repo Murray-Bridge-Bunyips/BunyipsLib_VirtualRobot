@@ -1,8 +1,6 @@
 package dev.frozenmilk.util.graph.rule
 
 import dev.frozenmilk.util.Box
-import java.lang.FunctionalInterface
-import java.lang.Runnable
 import java.util.function.Consumer
 
 @FunctionalInterface

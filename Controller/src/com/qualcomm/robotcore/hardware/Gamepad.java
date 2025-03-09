@@ -36,15 +36,13 @@ package com.qualcomm.robotcore.hardware;
 
 import com.qualcomm.robotcore.util.Range;
 import com.studiohartman.jamepad.ControllerState;
-
 import org.firstinspires.ftc.robotcore.internal.collections.EvictingBlockingQueue;
+import org.firstinspires.ftc.robotcore.internal.ui.GamepadUser;
+import virtual_robot.controller.VirtualGamePadController;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
-
-import org.firstinspires.ftc.robotcore.internal.ui.GamepadUser;
-import virtual_robot.controller.VirtualGamePadController;
 
 /**
  * Represents the GamePad.

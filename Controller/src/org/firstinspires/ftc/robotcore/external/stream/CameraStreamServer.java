@@ -35,13 +35,6 @@ package org.firstinspires.ftc.robotcore.external.stream;
 import android.graphics.Bitmap;
 import androidx.annotation.Nullable;
 
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-
-import org.firstinspires.ftc.robotcore.external.function.Consumer;
-import org.firstinspires.ftc.robotcore.external.function.Continuation;
-
-import java.io.ByteArrayOutputStream;
-
 public class CameraStreamServer {
 
     private static final CameraStreamServer INSTANCE = new CameraStreamServer();

@@ -1,9 +1,7 @@
 package virtual_robot.controller;
 
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Threads;
 import com.qualcomm.robotcore.util.ThreadPool;
-import dev.frozenmilk.sinister.Sinister;
 import dev.frozenmilk.sinister.SinisterImpl;
 import javafx.application.Application;
 import javafx.event.EventHandler;

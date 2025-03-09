@@ -1,7 +1,5 @@
 package virtual_robot.games;
 
-import java.util.*;
-
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.BodyFixture;
 import org.dyn4j.geometry.Vector2;
@@ -11,6 +9,8 @@ import virtual_robot.controller.Game;
 import virtual_robot.controller.VirtualGameElement;
 import virtual_robot.game_elements.classes.Ring;
 import virtual_robot.game_elements.classes.WobbleGoal;
+
+import java.util.Random;
 
 public class UltimateGoal extends Game {
 

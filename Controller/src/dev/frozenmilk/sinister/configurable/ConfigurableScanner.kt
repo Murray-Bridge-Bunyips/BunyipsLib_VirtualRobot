@@ -1,12 +1,12 @@
 package dev.frozenmilk.sinister.configurable
 
 import dev.frozenmilk.sinister.Scanner
-import dev.frozenmilk.sinister.util.warn.Warn
-import dev.frozenmilk.sinister.util.warn.WarnSource
-import dev.frozenmilk.sinister.util.log.Logger
 import dev.frozenmilk.sinister.staticInstancesOf
 import dev.frozenmilk.sinister.targeting.EmptySearch
 import dev.frozenmilk.sinister.targeting.WideSearch
+import dev.frozenmilk.sinister.util.log.Logger
+import dev.frozenmilk.sinister.util.warn.Warn
+import dev.frozenmilk.sinister.util.warn.WarnSource
 import dev.frozenmilk.util.graph.GraphImpl
 import dev.frozenmilk.util.graph.emitGraph
 

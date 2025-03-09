@@ -1,4 +1,4 @@
-package au.edu.sa.mbhs.studentrobotics.bunyipslib;
+package au.edu.sa.mbhs.studentrobotics.bunyipslib.logic;
 
 import androidx.annotation.NonNull;
 
@@ -22,9 +22,9 @@ public class Encoder {
     private static final int CPS_STEP = 0x10000;
     private final Supplier<Integer> position;
     private final Supplier<Double> velocity;
+    private final Diff acceleration = new Diff();
     private int resetVal, lastPosition;
     private DcMotorSimple.Direction direction;
-    private final Diff acceleration = new Diff();
     private double lastTimestamp, veloEstimate;
     private boolean overflowCorrection;
     private Supplier<DcMotorSimple.Direction> directionSupplier;

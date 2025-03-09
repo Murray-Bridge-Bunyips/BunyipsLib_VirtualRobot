@@ -2,11 +2,9 @@ package dev.frozenmilk.sinister.sdk.opmodes
 
 import com.qualcomm.robotcore.eventloop.opmode.AnnotatedOpModeManager
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
-import com.qualcomm.robotcore.util.RobotLog
 import dev.frozenmilk.sinister.Scanner
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta
 import virtual_robot.controller.VirtualRobotController
-import java.util.function.Supplier
 
 /**
  * this is a utility class for a Scanner that registers opmodes in some fashion

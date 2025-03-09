@@ -1,12 +1,14 @@
 package virtual_robot.robots.classes;
 
-import com.qualcomm.robotcore.hardware.*;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
 import javafx.fxml.FXML;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Rotate;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.geometry.Vector2;
-import virtual_robot.controller.*;
+import virtual_robot.controller.BotConfig;
+import virtual_robot.controller.Filters;
+import virtual_robot.controller.VirtualField;
 import virtual_robot.dyn4j.Dyn4jUtil;
 import virtual_robot.dyn4j.FixtureData;
 import virtual_robot.dyn4j.Hinge;

@@ -558,7 +558,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
             rightBackPower = 0;
             rightFrontPower = 0;
         }
-        
+
         @Override
         protected void onReset() {
             s = 0;
@@ -663,7 +663,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
             rightBackPower = 0;
             rightFrontPower = 0;
         }
-        
+
         @Override
         protected void onReset() {
             error = Geometry.zeroPose();
@@ -746,7 +746,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
             rightBackPower = 0;
             rightFrontPower = 0;
         }
-        
+
         @Override
         protected void onReset() {
             error = Geometry.zeroPose();

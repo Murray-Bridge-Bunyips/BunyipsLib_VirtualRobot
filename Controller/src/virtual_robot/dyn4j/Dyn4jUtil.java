@@ -8,9 +8,11 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.BodyFixture;
-import org.dyn4j.geometry.*;
+import org.dyn4j.geometry.Convex;
+import org.dyn4j.geometry.MassType;
+import org.dyn4j.geometry.Transform;
+import org.dyn4j.geometry.Vector2;
 import virtual_robot.controller.VirtualField;
-import virtual_robot.util.AngleUtils;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -34,7 +34,6 @@ package com.qualcomm.robotcore.hardware;
 
 import android.graphics.Color;
 import androidx.annotation.ColorInt;
-
 import com.qualcomm.robotcore.util.Range;
 
 /**

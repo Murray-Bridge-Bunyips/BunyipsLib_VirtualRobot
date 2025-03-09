@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.Group?><?import javafx.scene.paint.RadialGradient?><?import javafx.scene.paint.Stop?><?import javafx.scene.shape.Circle?><?import javafx.scene.shape.Rectangle?><?import javafx.scene.control.Label?>
-
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.Group?>
+<?import javafx.scene.paint.*?>
+<?import javafx.scene.shape.*?>
 <Group xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1"
-    fx:controller="virtual_robot.robots.classes.TurretBot">
+       fx:controller="virtual_robot.robots.classes.TurretBot">
     <children>
 
         <!--The lowest child objecet is a yellow rectangle measuring 75x75-->

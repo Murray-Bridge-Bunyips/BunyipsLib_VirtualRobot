@@ -37,7 +37,6 @@ Modified by FTC Team Beta 8397 for use in the Virtual_Robot Simulator
 
 package com.qualcomm.robotcore.hardware;
 
-import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 /**

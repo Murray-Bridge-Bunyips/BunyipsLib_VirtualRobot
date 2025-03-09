@@ -35,7 +35,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.qualcomm.robotcore.hardware.configuration.typecontainers;
 
-import com.qualcomm.robotcore.hardware.configuration.DistributorInfo;
 import com.qualcomm.robotcore.hardware.configuration.MotorType;
 import org.firstinspires.ftc.robotcore.external.navigation.Rotation;
 

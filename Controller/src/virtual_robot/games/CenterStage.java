@@ -1,9 +1,5 @@
 package virtual_robot.games;
 
-import javafx.scene.paint.Color;
-import javafx.scene.paint.CycleMethod;
-import javafx.scene.paint.LinearGradient;
-import javafx.scene.paint.Stop;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.BodyFixture;
 import org.dyn4j.geometry.Vector2;
@@ -12,7 +8,8 @@ import org.dyn4j.world.listener.CollisionListenerAdapter;
 import virtual_robot.controller.Game;
 import virtual_robot.controller.VirtualField;
 import virtual_robot.controller.VirtualGameElement;
-import virtual_robot.game_elements.classes.*;
+import virtual_robot.game_elements.classes.Backdrop;
+import virtual_robot.game_elements.classes.TrussLeg;
 
 public class CenterStage extends Game {
 

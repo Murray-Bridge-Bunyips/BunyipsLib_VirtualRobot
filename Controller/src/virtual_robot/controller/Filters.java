@@ -1,7 +1,6 @@
 package virtual_robot.controller;
 
 import org.dyn4j.collision.CategoryFilter;
-import org.dyn4j.collision.Filter;
 
 public class Filters {
 

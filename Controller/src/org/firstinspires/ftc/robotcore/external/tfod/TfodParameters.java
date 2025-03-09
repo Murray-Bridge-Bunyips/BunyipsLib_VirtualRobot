@@ -17,10 +17,9 @@
 package org.firstinspires.ftc.robotcore.external.tfod;
 
 import androidx.annotation.Nullable;
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 

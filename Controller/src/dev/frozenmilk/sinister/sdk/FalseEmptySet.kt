@@ -1,6 +1,6 @@
 package dev.frozenmilk.sinister.sdk
 
-import java.util.Collections
+import java.util.*
 
 internal class FalseEmptySet<E> : MutableSet<E> by Collections.emptySet() {
 	override fun add(element: E) = false

@@ -2,11 +2,9 @@
 
 package com.acmerobotics.roadrunner
 
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
-import kotlin.math.tan
+import com.acmerobotics.roadrunner.Pose2d.Companion.exp
+import com.acmerobotics.roadrunner.Rotation2d.Companion.exp
+import kotlin.math.*
 
 /**
  * @usesMathJax

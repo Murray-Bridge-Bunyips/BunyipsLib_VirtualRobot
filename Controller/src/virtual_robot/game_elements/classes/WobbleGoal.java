@@ -6,10 +6,13 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Shape;
 import org.dyn4j.collision.CategoryFilter;
 import org.dyn4j.dynamics.Body;
-import virtual_robot.games.UltimateGoal;
-import virtual_robot.controller.*;
+import virtual_robot.controller.Filters;
+import virtual_robot.controller.GameElementConfig;
+import virtual_robot.controller.VirtualField;
+import virtual_robot.controller.VirtualGameElement;
 import virtual_robot.dyn4j.Dyn4jUtil;
 import virtual_robot.dyn4j.FixtureData;
+import virtual_robot.games.UltimateGoal;
 
 import java.util.ArrayList;
 import java.util.HashMap;

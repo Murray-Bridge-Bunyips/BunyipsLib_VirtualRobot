@@ -32,9 +32,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.qualcomm.robotcore.hardware.configuration;
 
-import android.os.Build;
 import androidx.annotation.Nullable;
-
 import com.qualcomm.robotcore.hardware.DcMotor;
 //import com.qualcomm.robotcore.util.Device;
 //import com.qualcomm.robotcore.util.SerialNumber;

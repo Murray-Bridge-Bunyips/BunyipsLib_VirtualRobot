@@ -2,32 +2,21 @@
 package dev.frozenmilk.sinister
 
 import android.content.Context
-import android.view.Menu
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg
 import com.qualcomm.ftccommon.FtcEventLoop
-import com.qualcomm.robotcore.eventloop.opmode.AnnotatedOpModeManager
-import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.util.ThreadPool
-import dev.frozenmilk.sinister.Sinister.Companion.TAG
 import dev.frozenmilk.sinister.loaders.RootClassLoader
 import dev.frozenmilk.sinister.loading.LoadEvent
 import dev.frozenmilk.sinister.loading.LoadEventHandler
 import dev.frozenmilk.sinister.loading.Pinned
 import dev.frozenmilk.sinister.loading.Preload
-import dev.frozenmilk.sinister.sdk.apphooks.*
+import dev.frozenmilk.sinister.sdk.apphooks.OnCreateEventLoopScanner
+import dev.frozenmilk.sinister.sdk.apphooks.OnCreateScanner
 import dev.frozenmilk.sinister.targeting.FullSearch
-import dev.frozenmilk.sinister.targeting.SearchTarget
 import dev.frozenmilk.util.graph.emitGraph
-import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta
 import org.reflections.Reflections
 import org.reflections.scanners.SubTypesScanner
-import virtual_robot.OpModeNotificationsFilter
-import virtual_robot.controller.VirtualRobotController
-import java.io.File
-import java.lang.reflect.UndeclaredThrowableException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 
 // shimmed for virtual robot

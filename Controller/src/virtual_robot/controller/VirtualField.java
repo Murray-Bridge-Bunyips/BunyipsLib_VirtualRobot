@@ -1,7 +1,5 @@
 package virtual_robot.controller;
 
-import javafx.scene.layout.StackPane;
-import org.dyn4j.geometry.Vector2;
 import virtual_robot.config.Config;
 
 /**

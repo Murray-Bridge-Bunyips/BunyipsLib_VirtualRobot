@@ -3,8 +3,6 @@ package com.acmerobotics.dashboard.message;
 //import com.google.gson.*;
 //import com.google.gson.reflect.TypeToken;
 
-import java.lang.reflect.Type;
-
 /**
  * Custom deserializer for dashboard messages.
  */

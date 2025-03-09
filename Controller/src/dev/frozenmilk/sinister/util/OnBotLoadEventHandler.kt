@@ -7,7 +7,6 @@ import dev.frozenmilk.sinister.loading.LoadEventHandler
 import dev.frozenmilk.sinister.sdk.apphooks.OnCreateEventLoop
 import dev.frozenmilk.sinister.sdk.apphooks.SinisterOpModeRegistrar
 import dev.frozenmilk.sinister.sdk.opmodes.OpModeScanner
-import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta
 
 @Suppress("unused")
 object OnBotLoadEventHandler : OnBotLoadEventHandlerImpl(), Configuration<LoadEventHandler> {

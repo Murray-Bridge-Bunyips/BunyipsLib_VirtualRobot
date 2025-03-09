@@ -1,4 +1,4 @@
-package au.edu.sa.mbhs.studentrobotics.bunyipslib;
+package au.edu.sa.mbhs.studentrobotics.bunyipslib.logic;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.UnaryFunction;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Filter;
@@ -6,7 +6,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Filter;
 /**
  * Performs numerical differentiation of a value with respect to time (sec).
  * Supports a low-pass filter which can be used to smoothen out results from the derivative.
- * 
+ *
  * @author Lucas Bubner, 2025
  * @since 7.0.0
  */
@@ -15,7 +15,7 @@ public class Diff implements UnaryFunction {
      * Default low-pass gain to use when applying the derivative.
      */
     public static double DEFAULT_LOW_PASS_GAIN = 0.95;
-    
+
     private Filter.LowPass filter = new Filter.LowPass(DEFAULT_LOW_PASS_GAIN);
     private double lastTimestamp = -1;
     private double lastInput, derivative;
@@ -29,7 +29,7 @@ public class Diff implements UnaryFunction {
         if (gain == filter.gain) return;
         filter = new Filter.LowPass(gain);
     }
-    
+
     @Override
     public double apply(double input) {
         double timestamp = System.nanoTime() / 1.0E9;

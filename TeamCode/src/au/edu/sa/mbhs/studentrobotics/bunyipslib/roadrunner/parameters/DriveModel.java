@@ -174,7 +174,7 @@ public class DriveModel {
         /**
          * Set the track width in encoder ticks.
          * <p>
-         * Note: If using an OTOS, this will be in inches since inPerTick will be 1.
+         * If using an OTOS, this will be in inches since {@code inPerTick} will be 1.
          * <p>
          * Multiple calls of this function will not take an average between the previous calls
          * (as the track width tuning relies on accurate values of kS and kV, rather than observed push tests)

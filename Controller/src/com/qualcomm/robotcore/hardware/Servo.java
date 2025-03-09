@@ -37,8 +37,6 @@ Modified by FTC Team Beta 8397 for use in the Virtual_Robot Simulator
 
 package com.qualcomm.robotcore.hardware;
 
-import com.qualcomm.robotcore.hardware.HardwareDevice;
-
 /**
  * Provides an subset of the functionality of the Servo interface in the FTC SDK.
  */

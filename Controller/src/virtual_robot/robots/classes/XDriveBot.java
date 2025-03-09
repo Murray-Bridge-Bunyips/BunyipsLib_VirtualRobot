@@ -1,14 +1,12 @@
 package virtual_robot.robots.classes;
 
-import com.qualcomm.robotcore.hardware.*;
+import com.qualcomm.robotcore.hardware.CRServoImpl;
+import com.qualcomm.robotcore.hardware.DeadWheelEncoder;
 import com.qualcomm.robotcore.hardware.configuration.MotorType;
 import javafx.fxml.FXML;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Rotate;
-import com.qualcomm.hardware.bosch.BNO055IMUImpl;
 import virtual_robot.controller.BotConfig;
-import virtual_robot.controller.VirtualBot;
-import virtual_robot.controller.VirtualRobotController;
 import virtual_robot.util.AngleUtils;
 
 /**

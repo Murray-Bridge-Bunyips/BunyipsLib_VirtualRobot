@@ -2,7 +2,7 @@ package au.edu.sa.mbhs.studentrobotics.virtual.robot.autonomous;
 
 import androidx.annotation.Nullable;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.AutonomousBunyipsOpMode;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.Dbg;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dbg;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Ref;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import dev.frozenmilk.util.cell.RefCell;

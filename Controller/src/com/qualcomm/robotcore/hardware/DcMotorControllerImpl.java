@@ -3,9 +3,6 @@ package com.qualcomm.robotcore.hardware;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-import virtual_robot.controller.VirtualBot;
-
-import java.util.Arrays;
 
 public class DcMotorControllerImpl implements DcMotorControllerEx{
 

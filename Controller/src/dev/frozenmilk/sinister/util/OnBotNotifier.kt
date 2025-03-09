@@ -3,7 +3,7 @@ package dev.frozenmilk.sinister.util
 import dev.frozenmilk.sinister.configurable.Configuration
 import dev.frozenmilk.sinister.util.notify.Notifier
 import dev.frozenmilk.sinister.util.notify.NotifierInterface
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil
+
 //import org.firstinspires.ftc.robotcore.internal.ui.UILocation
 
 // displays the notification in toast message

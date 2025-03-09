@@ -8,9 +8,8 @@ and may cause null exceptions if used. This includes all the Vision systems (Vis
 
 ### Porting BunyipsLib
 When copying BunyipsLib to org.murraybridgebunyips, you will need to do the following:
-1. Copy the `bunyipslib` folder to `TeamCode/src/org/murraybridgebunyips/`
-2. Import `deps/BuildConfig` in `BunyipsOpMode.kt`, `Exceptions.kt` and `Scheduler.kt`
-3. Remove import from `BunyipsLib.kt` for `BuildConfig` and replace it with the one from `deps/BuildConfig`
+1. Replace the `bunyipslib` directory in `TeamCode/src/au/edu/sa/mbhs/studentrobotics`
+2. Copy and paste `deps/BuildConfig` into the pasted `bunyipslib` directory
 
 BunyipsLib will now compile, although missing some features and stubbing others.
-An alternative & faster method of converting changes can be accomplished via the Patch system via JetBrains IDEs.
+Alternatively, porting diff changes can be accomplished via the Patch system in JetBrains IDEs.

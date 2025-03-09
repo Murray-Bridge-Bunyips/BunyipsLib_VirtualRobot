@@ -37,12 +37,7 @@ import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.internal.system.Assert;
 
-import static java.lang.Math.sin;
-import static java.lang.Math.cos;
-import static java.lang.Math.asin;
-import static java.lang.Math.acos;
-import static java.lang.Math.atan2;
-import static java.lang.Math.PI;
+import static java.lang.Math.*;
 
 /**
  * Instances of {@link Orientation} represent a rotated stance in three-dimensional space

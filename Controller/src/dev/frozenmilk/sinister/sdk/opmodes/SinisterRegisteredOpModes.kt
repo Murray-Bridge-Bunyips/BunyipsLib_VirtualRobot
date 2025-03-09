@@ -1,24 +1,16 @@
 package dev.frozenmilk.sinister.sdk.opmodes
 
 //import com.qualcomm.ftccommon.CommandList
-import com.qualcomm.robotcore.eventloop.opmode.OpMode
-import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerImpl
 //import com.qualcomm.robotcore.eventloop.opmode.OpModeRegister
 //import com.qualcomm.robotcore.exception.DuplicateNameException
 //import com.qualcomm.robotcore.robocol.Command
-import com.qualcomm.robotcore.util.RobotLog
-import dev.frozenmilk.sinister.ExternalLibrariesLoader
-import dev.frozenmilk.sinister.OnBotJavaLoader
-import dev.frozenmilk.sinister.loading.Preload
 //import org.firstinspires.ftc.robotcore.internal.collections.SimpleGson
 //import org.firstinspires.ftc.robotcore.internal.network.NetworkConnectionHandler
 //import org.firstinspires.ftc.robotcore.internal.opmode.InstanceOpModeRegistrar
-import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta
 //import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMetaAndClass
 //import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMetaAndInstance
 //import org.firstinspires.ftc.robotcore.internal.opmode.RegisteredOpModes
-import org.firstinspires.ftc.robotcore.internal.system.Assert
-import java.util.function.Supplier
+import dev.frozenmilk.sinister.loading.Preload
 
 /**
  * shims [RegisteredOpModes.getInstance] to be this, and exposes the underlying data structures and methods for more customisation

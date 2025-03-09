@@ -1,6 +1,5 @@
 package dev.frozenmilk.sinister.util
 
-import com.qualcomm.robotcore.util.RobotLog
 import dev.frozenmilk.sinister.loading.Preload
 
 @Preload

@@ -1,6 +1,6 @@
 package dev.frozenmilk.sinister.sdk
 
-import java.util.Collections
+import java.util.*
 
 class FalseSingletonSet<T>(member: T) : MutableSet<T> by Collections.singleton(member) {
     override fun add(element: T) = false

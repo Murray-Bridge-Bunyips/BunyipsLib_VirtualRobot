@@ -12,7 +12,10 @@ import org.dyn4j.geometry.MassType;
 import org.dyn4j.geometry.Vector2;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import virtual_robot.config.Config;
-import virtual_robot.controller.*;
+import virtual_robot.controller.Filters;
+import virtual_robot.controller.VirtualBot;
+import virtual_robot.controller.VirtualField;
+import virtual_robot.controller.VirtualRobotController;
 import virtual_robot.util.AngleUtils;
 
 /**

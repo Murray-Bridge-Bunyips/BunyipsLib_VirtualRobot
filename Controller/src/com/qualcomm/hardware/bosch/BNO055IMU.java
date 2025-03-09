@@ -36,7 +36,6 @@ Modified by FTC Team Beta 8397 for use in Virtual_Robot project
  */
 package com.qualcomm.hardware.bosch;
 
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Temperature;
 import com.qualcomm.robotcore.hardware.HardwareDevice;
 import org.firstinspires.ftc.robotcore.external.navigation.*;
 

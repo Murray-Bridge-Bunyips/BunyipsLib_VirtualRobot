@@ -3,13 +3,13 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.localization;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive.Moveable;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Angle;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Distance;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive.Moveable;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry;
 
 /**
@@ -62,7 +62,7 @@ public interface Localizable {
      * Units should be in inches/sec and radians/sec.
      *
      * @return the current pose velocity of the drive, may be nullable if this drive does not support localization or
-     *         does not supply velocity
+     * does not supply velocity
      */
     @Nullable
     PoseVelocity2d getVelocity();

@@ -34,7 +34,6 @@
 package org.firstinspires.ftc.vision;
 
 import android.graphics.Canvas;
-
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.opencv.core.Mat;
 

@@ -1,7 +1,6 @@
 package virtual_robot.controller;
 
 import com.qualcomm.robotcore.hardware.Gamepad;
-
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -9,16 +8,12 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Slider;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Circle;
-import javafx.scene.shape.Rectangle;
 import virtual_robot.config.Config;
 
-import java.security.Key;
 import java.util.ListIterator;
 
 public class VirtualGamePadController {

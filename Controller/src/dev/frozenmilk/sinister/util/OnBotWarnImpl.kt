@@ -1,7 +1,6 @@
 package dev.frozenmilk.sinister.util
 
 //import com.qualcomm.robotcore.util.GlobalWarningSource
-import com.qualcomm.robotcore.util.RobotLog
 import dev.frozenmilk.sinister.util.warn.WarnImpl
 
 open class OnBotWarnImpl : WarnImpl() {

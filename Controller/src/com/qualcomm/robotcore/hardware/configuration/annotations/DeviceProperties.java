@@ -35,11 +35,7 @@ package com.qualcomm.robotcore.hardware.configuration.annotations;
 
 import com.qualcomm.robotcore.hardware.ControlSystem;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 import static com.qualcomm.robotcore.hardware.ControlSystem.MODERN_ROBOTICS;
 import static com.qualcomm.robotcore.hardware.ControlSystem.REV_HUB;

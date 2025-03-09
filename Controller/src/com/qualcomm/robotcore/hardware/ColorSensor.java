@@ -35,8 +35,6 @@ Modified by FTC Team Beta 8397 for use in the Virtual_Robot Simulator
 
 package com.qualcomm.robotcore.hardware;
 
-import com.qualcomm.robotcore.hardware.HardwareDevice;
-
 /**
  * An abridged version of the FTC ColorSensor interface.
  */

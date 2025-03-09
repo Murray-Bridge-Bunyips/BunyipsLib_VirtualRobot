@@ -6,7 +6,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.util.ElapsedTime
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.round
 
 class PositionVelocityPair(
         @JvmField val position: Int, @JvmField val velocity: Int?,

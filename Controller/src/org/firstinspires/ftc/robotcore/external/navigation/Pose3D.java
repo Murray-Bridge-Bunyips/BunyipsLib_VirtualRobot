@@ -35,10 +35,6 @@ package org.firstinspires.ftc.robotcore.external.navigation;
 
 import androidx.annotation.NonNull;
 
-//import org.firstinspires.ftc.robotcore.external.navigation.Position;
-
-import java.util.Locale;
-
 /**
  * Pose3D represents the position and orientation of an object in 3D space.
  */

@@ -35,9 +35,9 @@ Modified by FTC Team Beta 8397 for use in the Virtual_Robot Simulator
 
 package com.qualcomm.robotcore.hardware;
 
-import java.util.*;
 import android.content.Context;
-import androidx.annotation.NonNull;
+
+import java.util.*;
 
 /**
  * HardwareMap provides access to the virtual robot hardware

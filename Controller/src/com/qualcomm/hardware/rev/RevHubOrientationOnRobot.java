@@ -37,11 +37,7 @@ Modified by Team Beta for use in virtual_robot.
 package com.qualcomm.hardware.rev;
 
 import com.qualcomm.robotcore.hardware.ImuOrientationOnRobot;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.Quaternion;
+import org.firstinspires.ftc.robotcore.external.navigation.*;
 
 /**
  * The orientation at which a given REV Robotics Control Hub or Expansion Hub is mounted to a robot.
