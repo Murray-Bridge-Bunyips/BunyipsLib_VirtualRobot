@@ -39,6 +39,8 @@ abstract class OpModeScanner : Scanner {
         }
 
         override fun register(name: OpModeMeta?, opModeClass: Class<out OpMode>?) {
+            if (name?.flavor == OpModeMeta.Flavor.SYSTEM)
+                return // silent reject
             VirtualRobotController.extraOpModes[opModeClass] = name?.displayName to name?.group
         }
 
@@ -47,6 +49,8 @@ abstract class OpModeScanner : Scanner {
         }
 
         override fun register(name: OpModeMeta?, opModeInstance: OpMode?) {
+            if (name?.flavor == OpModeMeta.Flavor.SYSTEM)
+                return // silent reject
             VirtualRobotController.extraOpModes[opModeInstance?.javaClass] = name?.displayName to name?.group
         }
     }

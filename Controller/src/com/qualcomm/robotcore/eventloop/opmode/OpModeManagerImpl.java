@@ -11,6 +11,10 @@ public class OpModeManagerImpl {
 
     }
     
+    public void initOpMode(String thisIsDefinitelyGoingToInitialiseSomething, boolean boo) {
+        
+    }
+    
     public static OpModeManagerImpl getOpModeManagerOfActivity(Object activity) {
         return new OpModeManagerImpl();
     }
