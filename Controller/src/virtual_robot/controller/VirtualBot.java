@@ -14,6 +14,8 @@ import org.dyn4j.dynamics.BodyFixture;
 import org.dyn4j.geometry.Transform;
 import org.dyn4j.world.World;
 
+import javax.management.InstanceAlreadyExistsException;
+
 /**
  *   For internal use only. Abstract base class for all of the specific robot configurations.
  *
@@ -40,6 +42,7 @@ import org.dyn4j.world.World;
  *
  */
 public abstract class VirtualBot {
+    public static VirtualBot instance = null;
     protected static VirtualRobotController controller;
 
     protected HardwareMap hardwareMap;
@@ -74,8 +77,12 @@ public abstract class VirtualBot {
     public double getX() { return x; }
     public double getY() { return y; }
     public double getHeadingRadians(){ return headingRadians; }
+    public synchronized void setX(double x) { this.x = x; }
+    public synchronized void setY(double y) { this.y = y; }
+    public synchronized void setHeadingRadians(double headingRadians) { this.headingRadians = headingRadians; }
 
     public VirtualBot(){
+        instance = this; // hehehehaw
         fieldPane = controller.getFieldPane();
         botWidth = VirtualField.FIELD_WIDTH / 8.0;
         halfBotWidth = botWidth / 2.0;

@@ -5,14 +5,23 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PControlle
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PIDController;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.IMUEx;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.Motor;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.OTOSLocalizer;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.MecanumLocalizer;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.accumulators.BoundedAccumulator;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.DriveModel;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.MecanumGains;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.MotionProfile;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive.MecanumDrive;
-import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Field;
+import com.acmerobotics.roadrunner.ftc.LazyImu;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
+
+import javax.management.InstanceAlreadyExistsException;
+
+import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Inches;
 
 /**
  * Running under "Mecanum Bot" config
@@ -44,16 +53,15 @@ public class Robot extends RobotConfig {
 
         hw.back_left_motor.setDirection(DcMotorEx.Direction.REVERSE);
         hw.front_left_motor.setDirection(DcMotorEx.Direction.REVERSE);
-        
-        hw.otos = getHardware("sensor_otos", SparkFunOTOS.class);
 
         // https://github.com/Beta8397/virtual_robot_RR1/blob/03e5d30b30558c1e67ee2478d45de3d136798074/TeamCode/src/org/firstinspires/ftc/teamcode/MecanumDrive.java
+        double inPerTick = 1.0 / 89.1;
         DriveModel driveModel = new DriveModel.Builder()
-                .setInPerTick(1) // using otos
-                .setTrackWidthTicks(17.9) // is now in inches
+                .setInPerTick(inPerTick)
+                .setTrackWidthTicks(17.9 / inPerTick)
                 .build();
         MotionProfile motionProfile = new MotionProfile.Builder()
-                .setKv(0.8)
+                .setKv(0.0056)
                 .setMaxWheelVel(25)
                 .setMinProfileAccel(-30)
                 .setMaxProfileAccel(50)
@@ -65,20 +73,27 @@ public class Robot extends RobotConfig {
                 .setLateralGain(20)
                 .setHeadingGain(20)
                 .build();
-        
-        OTOSLocalizer.Params otosParams = new OTOSLocalizer.Params.Builder()
-                .build();
 
-        drive = new MecanumDrive(driveModel, motionProfile, mecanumGains, hw.front_left_motor, hw.back_left_motor, hw.back_right_motor, hw.front_right_motor, IMUEx.none(), hardwareMap.voltageSensor)
-                .withLocalizer(new OTOSLocalizer(otosParams, hw.otos));
+        hw.imu = getHardware("imu", IMUEx.class, d -> {
+            d.lazyInitialize(new IMU.Parameters(new RevHubOrientationOnRobot(
+                    RevHubOrientationOnRobot.LogoFacingDirection.UP, 
+                    RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
+            )));
+        });
+
+        drive = new MecanumDrive(driveModel, motionProfile, mecanumGains, hw.front_left_motor, hw.back_left_motor, hw.back_right_motor, hw.front_right_motor, hw.imu, hardwareMap.voltageSensor)
+                .withAccumulator(new BoundedAccumulator(Inches.of(9)).withRestrictedAreas(Field.Season.INTO_THE_DEEP));
+        MecanumLocalizer l = (MecanumLocalizer) drive.getLocalizer();
+        l.leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        l.leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public static class Hardware {
-        public SparkFunOTOS otos;
         public Motor back_right_motor;
         public Motor back_left_motor;
         public Motor front_right_motor;
         public Motor front_left_motor;
+        public IMUEx imu;
         public Servo back_servo;
     }
 }
