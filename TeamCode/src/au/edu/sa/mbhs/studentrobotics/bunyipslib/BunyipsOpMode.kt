@@ -6,6 +6,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Measure
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Time
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.*
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.Controller
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.integrated.ResetRobotControllerLights
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dashboard
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dbg
@@ -479,7 +480,13 @@ abstract class BunyipsOpMode : BOMInternal() {
             telemetry.update()
             Dbg.logd("BunyipsOpMode: all tasks finished.")
             robotControllers.forEach { module ->
-                module.setConstant(Color.LTGRAY)
+                if (safeHaltHardwareOnStop)
+                    module.setConstant(Color.LTGRAY)
+                else
+                    module.pattern = listOf(
+                        Blinker.Step(Color.LTGRAY, 600, TimeUnit.MILLISECONDS),
+                        Blinker.Step(Color.BLACK, 600, TimeUnit.MILLISECONDS)
+                    )
             }
             // Wait for user to hit stop or for the OpMode to be terminated
             // We will continue running the OpMode as there might be some other user threads
@@ -496,6 +503,7 @@ abstract class BunyipsOpMode : BOMInternal() {
         } catch (t: Throwable) {
             Dbg.error("BunyipsOpMode: unhandled throwable! <${t.message}>")
             Dbg.sendStacktrace(t)
+            ResetRobotControllerLights.inhibitNext = true
             robotControllers.forEach { module ->
                 module.setConstant(Color.RED)
             }
@@ -709,11 +717,6 @@ abstract class BunyipsOpMode : BOMInternal() {
     fun exit() {
         Dbg.logd("BunyipsOpMode: exiting opmode...")
         finish()
-        // This is a rare instance where we know we need to exit the OpMode and we have control over hardware,
-        // so we can try to reset the lights just before we call the stop method.
-        robotControllers.forEach { c ->
-            c.pattern = LynxModule.blinkerPolicy.getIdlePattern(c)
-        }
         requestOpModeStop()
     }
 
