@@ -1,5 +1,6 @@
 package virtual_robot.controller;
 
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.integrated.ResetRobotControllerLights;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.*;
 import com.qualcomm.robotcore.hardware.*;
@@ -51,6 +52,7 @@ import virtual_robot.robots.classes.MecanumBot;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -581,6 +583,14 @@ public class VirtualRobotController {
             cbxConfig.setDisable(false);
             OpModeNotificationsFilter.getPostStop().forEach(o -> o.accept(opMode));
             OpModeManagerImpl.heyThisisTheOpModeThatsRunning = null;
+            // bunyipslib hack
+            try {
+                Field field = ResetRobotControllerLights.class.getDeclaredField("hasInvoked");
+                field.setAccessible(true);
+                field.set(null, true);
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                // we're shutting down anyways
+            }
         }
     }
 
