@@ -7,11 +7,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Time
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Nanoseconds
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.WaitTask
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.groups.DeadlineTaskGroup
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.groups.IncrementingTaskGroup
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.groups.ParallelTaskGroup
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.groups.RaceTaskGroup
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.groups.SequentialTaskGroup
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.groups.*
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dashboard
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dbg
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Exceptions
@@ -20,7 +16,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Text
 import com.acmerobotics.dashboard.canvas.Canvas
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import com.acmerobotics.roadrunner.Action
-import java.util.Optional
+import java.util.*
 import java.util.function.BooleanSupplier
 
 /**
@@ -227,7 +223,11 @@ abstract class Task : Runnable, Action {
      */
     fun execute() {
         if (attached) return
-        dependency.ifPresentOrElse({ attached = it.setCurrentTask(this) }, this::run)
+        dependency.ifPresentOrElse({
+            if (it.isDisabled)
+                finishNow()
+            attached = it.setCurrentTask(this)
+        }, this::run)
     }
 
     /**
@@ -237,7 +237,11 @@ abstract class Task : Runnable, Action {
      * if you wish to respect the [dependency], use the [execute] method.
      */
     final override fun run() {
-        dependency.ifPresentOrElse({ attached = it.currentTask == this }, { attached = false })
+        dependency.ifPresentOrElse({
+            if (it.isDisabled)
+                finishNow()
+            attached = it.currentTask == this
+        }, { attached = false })
         Dashboard.usePacket {
             dashboard = it
             if (startTime == 0L) {
