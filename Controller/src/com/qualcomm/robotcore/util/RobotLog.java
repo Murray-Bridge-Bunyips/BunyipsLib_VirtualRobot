@@ -35,8 +35,12 @@
 package com.qualcomm.robotcore.util;
 
 import android.util.Log;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf;
+import com.acmerobotics.roadrunner.Time;
+import virtual_robot.controller.VirtualRobotController;
 
 import java.util.Calendar;
+import java.util.concurrent.Flow;
 
 /**
  * Allows consistent logging across all RobotCore packages
@@ -237,9 +241,13 @@ public class RobotLog {
     public static void ee(String tag, Throwable throwable, String message) {
         internalLog(Log.ERROR, tag, throwable, message);
     }
+    
+    public static Long firstCall = null;
 
     public static void internalLog(int priority, String tag, String message) {
         if (tag.contains("Scanner")) return; // real cursed
+        if (firstCall == null)
+            firstCall = System.nanoTime();
         if (msTimeOffset == 0) {
             char symbol = 'U';
             switch (priority) {
@@ -262,7 +270,8 @@ public class RobotLog {
                     symbol = 'A';
                     break;
             }
-            System.out.println(symbol + " " + tag + " " + message);
+            double timeSec = Mathf.round((System.nanoTime() - firstCall) / 1.0E9, 2);
+            System.out.println("[" + timeSec + "] " + symbol + " " + tag + " " + message);
         }
     }
 

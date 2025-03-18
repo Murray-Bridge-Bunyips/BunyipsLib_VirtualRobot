@@ -1,5 +1,8 @@
 package com.qualcomm.robotcore.eventloop.opmode;
 
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import virtual_robot.controller.VirtualRobotController;
+
 public class OpModeManagerImpl {
     public static class ForceStopException extends RuntimeException {}
 
@@ -13,6 +16,10 @@ public class OpModeManagerImpl {
     
     public void initOpMode(String thisIsDefinitelyGoingToInitialiseSomething, boolean boo) {
         
+    }
+    
+    public HardwareMap getHardwareMap() {
+        return VirtualRobotController.hardwareMap;
     }
     
     public static OpModeManagerImpl getOpModeManagerOfActivity(Object activity) {

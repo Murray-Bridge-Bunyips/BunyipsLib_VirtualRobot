@@ -12,14 +12,11 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.MecanumGa
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.MotionProfile;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive.MecanumDrive;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Field;
-import com.acmerobotics.roadrunner.ftc.LazyImu;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
-
-import javax.management.InstanceAlreadyExistsException;
 
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Inches;
 
@@ -49,7 +46,7 @@ public class Robot extends RobotConfig {
         hw.front_right_motor.setRunUsingEncoderController(new PController(1));
         hw.front_left_motor.setRunUsingEncoderController(new PController(1));
 
-        hw.back_servo = getHardware("back_servo", Servo.class);
+        hw.arm = getHardware("arm_motor", DcMotorEx.class);
 
         hw.back_left_motor.setDirection(DcMotorEx.Direction.REVERSE);
         hw.front_left_motor.setDirection(DcMotorEx.Direction.REVERSE);
@@ -94,6 +91,6 @@ public class Robot extends RobotConfig {
         public Motor front_right_motor;
         public Motor front_left_motor;
         public IMUEx imu;
-        public Servo back_servo;
+        public DcMotorEx arm;
     }
 }

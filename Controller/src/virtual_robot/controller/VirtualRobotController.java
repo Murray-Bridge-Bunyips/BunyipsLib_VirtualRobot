@@ -1,10 +1,10 @@
 package virtual_robot.controller;
 
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.integrated.ResetRobotControllerLights;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.*;
 import com.qualcomm.robotcore.hardware.*;
 import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.util.RobotLog;
 import com.studiohartman.jamepad.ControllerIndex;
 import com.studiohartman.jamepad.ControllerManager;
 import com.studiohartman.jamepad.ControllerState;
@@ -48,7 +48,7 @@ import virtual_robot.OpModeNotificationsFilter;
 import virtual_robot.config.Config;
 import virtual_robot.keyboard.KeyState;
 import virtual_robot.robots.ControlsElements;
-import virtual_robot.robots.classes.MecanumBot;
+import virtual_robot.robots.classes.ArmBot;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -87,7 +87,7 @@ public class VirtualRobotController {
     World<Body> world = new World<>();
 
     // Virtual Hardware
-    private HardwareMap hardwareMap = null;
+    public static HardwareMap hardwareMap = null;
     private VirtualBot bot = null;
     Gamepad gamePad1 = new Gamepad();
     Gamepad gamePad2 = new Gamepad();
@@ -312,7 +312,7 @@ public class VirtualRobotController {
                 validConfigClasses.add(c);
         }
         cbxConfig.setItems(validConfigClasses);
-        cbxConfig.setValue(MecanumBot.class);
+        cbxConfig.setValue(ArmBot.class); // changed for bunyipslib
 
         cbxConfig.setCellFactory(new Callback<ListView<Class<?>>, ListCell<Class<?>>>() {
             @Override
@@ -551,6 +551,7 @@ public class VirtualRobotController {
             OpModeNotificationsFilter.getPreStart().forEach(o -> o.accept(opMode));
             driverButton.setText("STOP");
             opModeStarted = true;
+            RobotLog.firstCall = null;
         } else{
             /*
              * STOP has been pressed. Note that it is not possible for this to happen before START is pressed.
@@ -583,14 +584,6 @@ public class VirtualRobotController {
             cbxConfig.setDisable(false);
             OpModeNotificationsFilter.getPostStop().forEach(o -> o.accept(opMode));
             OpModeManagerImpl.heyThisisTheOpModeThatsRunning = null;
-            // bunyipslib hack
-            try {
-                Field field = ResetRobotControllerLights.class.getDeclaredField("hasInvoked");
-                field.setAccessible(true);
-                field.set(null, true);
-            } catch (NoSuchFieldException | IllegalAccessException e) {
-                // we're shutting down anyways
-            }
         }
     }
 
