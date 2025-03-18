@@ -110,27 +110,27 @@ public class HoldableActuator extends BunyipsSubsystem {
     }
 
     /**
-     * Set the zero hit threshold to how many greater than or equal to zero velocity hits are required for the Home Task.
-     * If the actuator has a continuous negative velocity of zero for this many hits, the Home Task will complete.
+     * Set the zero/negative velocity duration required for the Home Task to finish automatically.
+     * If the actuator has a continuous negative velocity or zero for this amount of time, the Home Task will complete.
      *
-     * @param threshold the new threshold of continuous hits of zero velocity to complete homing. Default is 30.
+     * @param threshold the new interval of continuous zero velocity to complete homing. Default is 700 milliseconds.
      * @return this
-     * @see #disableHomingZeroHits()
+     * @see #disableHomingZeroVelocityDuration()
      */
     @NonNull
-    public HoldableActuator withHomingZeroHits(int threshold) {
-//        homingParameters.zeroVelocityDuration = threshold;//todo
+    public HoldableActuator withHomingZeroVelocityDuration(Measure<Time> threshold) {
+        homingParameters.zeroVelocityDuration = threshold;
         return this;
     }
 
     /**
-     * Disable the zero hit threshold for the Home Task.
+     * Disable the zero hit duration.
      *
      * @return this
      */
     @NonNull
-    public HoldableActuator disableHomingZeroHits() {
-        return withHomingZeroHits(0);
+    public HoldableActuator disableHomingZeroVelocityDuration() {
+        return withHomingZeroVelocityDuration(Seconds.zero());
     }
 
     /**
@@ -229,7 +229,7 @@ public class HoldableActuator extends BunyipsSubsystem {
      *
      * @param bottomLimitSwitch the limit switch to set as the bottom switch where the arm would be "homed"
      * @return this
-     * @see #disableHomingZeroHits()
+     * @see #disableHomingZeroVelocityDuration()
      * @see #disableOvercurrent()
      */
     @NonNull
@@ -608,10 +608,10 @@ public class HoldableActuator extends BunyipsSubsystem {
      * Available through {@code tasks.home()} and {@code tasks.ceil()}.
      */
     public class BidirectionalHomingTask extends Task {
+        private final ElapsedTime overcurrentTimer = new ElapsedTime();
+        private final ElapsedTime zeroVelocityTimer = new ElapsedTime();
         private final int homingDirection;
         private final TouchSensor targetSwitch;
-        private ElapsedTime overcurrentTimer;
-        private ElapsedTime zeroVelocityTimer;
 
         /**
          * Create a new BidirectionalHomingTask.
@@ -637,8 +637,8 @@ public class HoldableActuator extends BunyipsSubsystem {
                 finishNow();
                 return;
             }
-            zeroVelocityTimer = new ElapsedTime();
-            overcurrentTimer = new ElapsedTime();
+            zeroVelocityTimer.reset();
+            overcurrentTimer.reset();
             motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
 
@@ -664,8 +664,8 @@ public class HoldableActuator extends BunyipsSubsystem {
             boolean hardStop = targetSwitch != null && targetSwitch.isPressed();
             boolean velocityZeroed = homingParameters.zeroVelocityDuration.gt(Seconds.zero())
                     && zeroVelocityTimer.seconds() >= homingParameters.zeroVelocityDuration.in(Seconds);
-//            boolean sustainedOvercurrent = overcurrentTimer. && overcurrentTimer.seconds() >= overcurrentTime.in(Seconds); // todo
-            boolean sustainedOvercurrent = false;
+            boolean sustainedOvercurrent = homingParameters.zeroVelocityDuration.gt(Seconds.zero())
+                    && overcurrentTimer.seconds() >= overcurrentTime.in(Seconds);
             return hardStop || velocityZeroed || sustainedOvercurrent;
         }
 
