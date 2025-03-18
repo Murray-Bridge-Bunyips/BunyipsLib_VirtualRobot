@@ -21,8 +21,11 @@ public class HoldableActuatorTest extends AutonomousBunyipsOpMode {
 
     @Override
     protected void onReady(@Nullable RefCell<?> selectedOpMode) {
+        holdableActuator.tasks.control(() -> gamepad1.lsy * -1).setAsDefaultTask();
         add(holdableActuator.tasks.goTo(1000));
-        wait(2, Seconds);
+        add(holdableActuator.tasks.goTo(0));
+        add(holdableActuator.tasks.goTo(1200));
+        add(holdableActuator.tasks.home());
 //        add(holdableActuator.tasks.home());
     }
 }
