@@ -46,12 +46,12 @@ object Exceptions {
     @JvmStatic
     fun handle(e: Throwable, stderr: Consumer<String>?) {
         var out = stderr
-        Dbg.error("Exception caught! Stacktrace:")
-        Dbg.sendStacktrace(e)
         if (!THROWN_EXCEPTIONS.add(e) || THROWN_EXCEPTIONS.stream().anyMatch { it.toString() == e.toString() }) {
             // Don't log out the same exception twice
             out = null
         }
+        Dbg.error("Exception (#${THROWN_EXCEPTIONS.size}) caught! Stacktrace:")
+        Dbg.sendStacktrace(e)
         val sw = StringWriter()
         e.printStackTrace(PrintWriter(sw))
         var stack = sw.toString()
