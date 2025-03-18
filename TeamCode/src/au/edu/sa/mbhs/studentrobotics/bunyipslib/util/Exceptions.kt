@@ -73,12 +73,12 @@ object Exceptions {
         // We will bother writing out the cause but not bother about suppressed exceptions, since this is user-facing
         // Logcat via sendStacktrace will contain all info if required, so we don't lose info
         if (e is InterruptedException || e is ForceStopException) {
-            Dbg.error("Interrupt exception called, raising to superclass...")
+            Dbg.error("Interrupt exception called, raising to superclass ...")
             // FTC SDK must handle this
             throw e
         }
         if (e is EmergencyStop) {
-            Dbg.error("Emergency stop exception called, raising to superclass...")
+            Dbg.error("Emergency stop exception called, raising to superclass ...")
             // This is a special exception where we shouldn't continue running the OpMode
             // We will let the FTC SDK handle it in terminating the OpMode and displaying the popup
             throw e
