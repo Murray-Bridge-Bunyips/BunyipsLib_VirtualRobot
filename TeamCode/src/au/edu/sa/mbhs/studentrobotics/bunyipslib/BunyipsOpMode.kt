@@ -291,7 +291,6 @@ abstract class BunyipsOpMode : BOMInternal() {
                 gamepad2.update()
             }
             telemetry.init("<small><font color='#e5ffde'>bunyipslib</font> <font color='gray'>v${BuildConfig.SEMVER}-${BuildConfig.GIT_COMMIT}-${BuildConfig.BUILD_TIME}</font></small>")
-            telemetry.msTransmissionInterval = 125
             telemetry.overheadTag = "<b>${javaClass.simpleName}</b>"
             telemetry.update()
 
@@ -497,7 +496,6 @@ abstract class BunyipsOpMode : BOMInternal() {
             // what the FTC SDK does when the OpMode is stopped if they wish.
             // This has been made optional as users may want to hold a position or keep a motor
             // running after the OpMode has finished
-            telemetry.msTransmissionInterval = 2000
             while (opModeIsActive()) {
                 if (safeHaltHardwareOnStop)
                     safeHaltHardware()
@@ -533,7 +531,6 @@ abstract class BunyipsOpMode : BOMInternal() {
             // such as thread stops and cleanup in onStop() first before updating the status
             telemetry.opModeStatus = "<font color='red'>terminating</font>"
             Dbg.logd("BunyipsOpMode: active cycle completed in ${timer.elapsedTime() to Seconds} secs.")
-            telemetry.msTransmissionInterval = 125
             telemetry.update()
             Dbg.logv("BunyipsOpMode: exiting ...")
         }
