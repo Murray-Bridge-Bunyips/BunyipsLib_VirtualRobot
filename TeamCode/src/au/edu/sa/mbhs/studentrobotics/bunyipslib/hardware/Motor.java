@@ -553,9 +553,9 @@ public class Motor extends SimpleRotator implements DcMotorEx {
     }
 
     /**
-     * Retrieves the tolerance in encoder ticks at which this arm uses for {@link DcMotor.RunMode#RUN_TO_POSITION}.
+     * Retrieves the tolerance in encoder ticks at which this arm uses for {@link RunMode#RUN_TO_POSITION}.
      * <p>
-     * Note that this method will try to access the {@link DcMotor.RunMode#RUN_TO_POSITION} controller to access target position
+     * Note that this method will try to access the {@link RunMode#RUN_TO_POSITION} controller to access target position
      * tolerance information.
      *
      * @inheritDoc
@@ -572,9 +572,9 @@ public class Motor extends SimpleRotator implements DcMotorEx {
     }
 
     /**
-     * Sets the tolerance in encoder ticks at which this arm uses for {@link DcMotor.RunMode#RUN_TO_POSITION}.
+     * Sets the tolerance in encoder ticks at which this arm uses for {@link RunMode#RUN_TO_POSITION}.
      * <p>
-     * Note that this method will try to access the {@link DcMotor.RunMode#RUN_TO_POSITION} controller to access target position
+     * Note that this method will try to access the {@link RunMode#RUN_TO_POSITION} controller to access target position
      * tolerance information.
      *
      * @inheritDoc

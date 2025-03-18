@@ -477,7 +477,7 @@ abstract class BunyipsOpMode : BOMInternal() {
                 telemetry.overrideStatus = ERROR
                 Exceptions.handle(e, telemetry::log)
             }
-            // overheadTelemetry will no longer update, will remain frozen on last value
+            // Timer will be frozen from hereon
             timer.update()
             telemetry.update()
             Dbg.logd("BunyipsOpMode: all tasks finished.")
