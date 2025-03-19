@@ -193,7 +193,7 @@ public class HoldableActuator extends BunyipsSubsystem {
     /**
      * Set the timeout for the Home Task.
      *
-     * @param timeout the time to set for the Home Task to complete. Default is 5s.
+     * @param timeout the time to set for the Home Task to complete. Default is 4s.
      * @return this
      */
     @NonNull
