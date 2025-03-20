@@ -671,6 +671,8 @@ public class VirtualRobotController {
         opModeInitialized = false;
         opModeStarted = false;
         gamePadHelper.onOpModeFinished();
+        OpModeNotificationsFilter.getPostStop().forEach(o -> o.accept(opMode));
+        OpModeManagerImpl.heyThisisTheOpModeThatsRunning = null;
         Platform.runLater(new Runnable() {
             public void run() {
                 driverButton.setText("INIT");

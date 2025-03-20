@@ -1,6 +1,7 @@
 package au.edu.sa.mbhs.studentrobotics.virtual.robot.autonomous;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsSubsystem;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Tasks;
@@ -12,16 +13,18 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Degrees;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Inches;
 
-@Autonomous
-public class RoadRunnerTest extends OpMode {
+@Autonomous(name = "Move Continuous Circle")
+public class MoveContinuousCircle extends OpMode {
     @Override
     public void init() {
         Task t = Robot.instance.drive.makeTrajectory()
                 .splineTo(new Vector2d(30, 30), Inches, 90, Degrees)
-                .splineTo(new Vector2d(0, 60), Inches, 0, Degrees)
-                .splineTo(new Vector2d(-30, -30), Inches, -90, Degrees)
+                .splineTo(new Vector2d(0, 60), Inches, 180, Degrees)
+                .splineTo(new Vector2d(-30, 30), Inches, -90, Degrees)
                 .splineTo(new Vector2d(0, 0), Inches, 0, Degrees)
-                .build().mutate().addPeriodic(() -> telemetry.addData("", "%s", Geometry.toUserString(Robot.instance.drive.getPose())));
+                .build()
+                .mutate()
+                .addPeriodic(() -> telemetry.addData("Circle progress", "%.1f%%", Mathf.wrapRadians(Robot.instance.drive.getPose().heading.log()) / Mathf.TWO_PI * 100));
         Tasks.register(t);
     }
 

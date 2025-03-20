@@ -1,27 +1,17 @@
 package au.edu.sa.mbhs.studentrobotics.virtual.robot;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.RobotConfig;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PController;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PIDController;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.IMUEx;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.Motor;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.MecanumLocalizer;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.accumulators.BoundedAccumulator;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.DriveModel;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.MecanumGains;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.MotionProfile;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive.MecanumDrive;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Field;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Scope;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.Servo;
-
-import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Inches;
+import com.qualcomm.robotcore.hardware.*;
 
 /**
- * Running under "Mecanum Bot" config
+ * Running under "Arm Bot" config
  */
 @RobotConfig.AutoInit
 public class Robot extends RobotConfig {
@@ -31,23 +21,11 @@ public class Robot extends RobotConfig {
 
     @Override
     protected void onRuntime() {
-        hw.back_right_motor = getHardware("back_right_motor", Motor.class);
-        hw.back_left_motor = getHardware("back_left_motor", Motor.class);
-        hw.front_right_motor = getHardware("front_right_motor", Motor.class);
-        hw.front_left_motor = getHardware("front_left_motor", Motor.class);
-
-        hw.back_right_motor.setRunToPositionController(new PIDController(0.01, 0, 0));
-        hw.back_left_motor.setRunToPositionController(new PIDController(0, 0, 0));
-        hw.front_left_motor.setRunToPositionController(new PIDController(0.01, 0, 0));
-        hw.front_right_motor.setRunToPositionController(new PIDController(0.01, 0, 0));
-
-        hw.back_right_motor.setRunUsingEncoderController(new PController(1));
-        hw.back_left_motor.setRunUsingEncoderController(new PController(1));
-        hw.front_right_motor.setRunUsingEncoderController(new PController(1));
-        hw.front_left_motor.setRunUsingEncoderController(new PController(1));
-
-        hw.arm = getHardware("arm_motor", DcMotorEx.class);
-
+        hw.back_right_motor = getHardware("back_right_motor", DcMotorEx.class);
+        hw.back_left_motor = getHardware("back_left_motor", DcMotorEx.class);
+        hw.front_right_motor = getHardware("front_right_motor", DcMotorEx.class);
+        hw.front_left_motor = getHardware("front_left_motor", DcMotorEx.class);
+        
         hw.back_left_motor.setDirection(DcMotorEx.Direction.REVERSE);
         hw.front_left_motor.setDirection(DcMotorEx.Direction.REVERSE);
 
@@ -70,27 +48,37 @@ public class Robot extends RobotConfig {
                 .setLateralGain(20)
                 .setHeadingGain(20)
                 .build();
+        
+        hw.arm_motor = getHardware("arm_motor", DcMotorEx.class);
+        hw.hand_servo = getHardware("hand_servo", Servo.class);
 
-        hw.imu = getHardware("imu", IMUEx.class, d -> {
-            d.lazyInitialize(new IMU.Parameters(new RevHubOrientationOnRobot(
-                    RevHubOrientationOnRobot.LogoFacingDirection.UP, 
-                    RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
-            )));
+        hw.imu = getHardware("imu", IMU.class, d ->
+                d.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.FORWARD))));
+        hw.color_sensor = getHardware("color_sensor", ColorSensor.class);
+        hw.left_distance = getHardware("left_distance", DistanceSensor.class);
+        hw.right_distance = getHardware("right_distance", DistanceSensor.class);
+        hw.front_distance = getHardware("front_distance", DistanceSensor.class);
+        hw.back_distance = getHardware("back_distance", DistanceSensor.class);
+
+        drive = Scope.apply(new MecanumDrive(driveModel, motionProfile, mecanumGains, hw.front_left_motor, hw.back_left_motor, hw.back_right_motor, hw.front_right_motor, hw.imu, hardwareMap.voltageSensor), it -> {
+            MecanumLocalizer l = (MecanumLocalizer) it.getLocalizer();
+            l.leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+            l.leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
         });
-
-        drive = new MecanumDrive(driveModel, motionProfile, mecanumGains, hw.front_left_motor, hw.back_left_motor, hw.back_right_motor, hw.front_right_motor, hw.imu, hardwareMap.voltageSensor)
-                .withAccumulator(new BoundedAccumulator(Inches.of(9)).withRestrictedAreas(Field.Season.INTO_THE_DEEP));
-        MecanumLocalizer l = (MecanumLocalizer) drive.getLocalizer();
-        l.leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        l.leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public static class Hardware {
-        public Motor back_right_motor;
-        public Motor back_left_motor;
-        public Motor front_right_motor;
-        public Motor front_left_motor;
-        public IMUEx imu;
-        public DcMotorEx arm;
+        public DcMotorEx back_right_motor;
+        public DcMotorEx back_left_motor;
+        public DcMotorEx front_right_motor;
+        public DcMotorEx front_left_motor;
+        public IMU imu;
+        public DcMotorEx arm_motor;
+        public Servo hand_servo;
+        public ColorSensor color_sensor;
+        public DistanceSensor left_distance;
+        public DistanceSensor right_distance;
+        public DistanceSensor front_distance;
+        public DistanceSensor back_distance;
     }
 }

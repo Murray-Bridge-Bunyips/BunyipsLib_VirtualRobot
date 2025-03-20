@@ -1,21 +1,21 @@
-package au.edu.sa.mbhs.studentrobotics.virtual.robot.teleop;
+package au.edu.sa.mbhs.studentrobotics.virtual.robot.archived;
 
 import androidx.annotation.Nullable;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.AutonomousBunyipsOpMode;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.HoldableActuator;
 import au.edu.sa.mbhs.studentrobotics.virtual.robot.Robot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import dev.frozenmilk.util.cell.RefCell;
 
-import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds;
-
 @TeleOp
+@Disabled
 public class HoldableActuatorTest extends AutonomousBunyipsOpMode {
     private HoldableActuator holdableActuator;
-    
+
     @Override
     protected void onInitialise() {
-        holdableActuator = new HoldableActuator(Robot.instance.hw.arm)
+        holdableActuator = new HoldableActuator(Robot.instance.hw.arm_motor)
                 .withName("ha");
     }
 

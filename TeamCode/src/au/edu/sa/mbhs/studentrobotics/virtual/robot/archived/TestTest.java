@@ -1,12 +1,14 @@
-package au.edu.sa.mbhs.studentrobotics.virtual.robot.teleop;
+package au.edu.sa.mbhs.studentrobotics.virtual.robot.archived;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsOpMode;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.RobotConfig;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.Motor;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 @TeleOp
+@Disabled
 @RobotConfig.InhibitAutoInit
 public class TestTest extends BunyipsOpMode {
     private Motor motor;

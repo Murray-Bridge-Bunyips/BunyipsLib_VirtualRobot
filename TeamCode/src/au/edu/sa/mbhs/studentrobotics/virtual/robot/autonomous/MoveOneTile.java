@@ -5,17 +5,17 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.AutonomousBunyipsOpMode;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.TaskBuilder;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry;
 import au.edu.sa.mbhs.studentrobotics.virtual.robot.Robot;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import dev.frozenmilk.util.cell.RefCell;
 
-@TeleOp
-public class MoveSomewhere extends AutonomousBunyipsOpMode {
+@Autonomous(name = "Move One Tile")
+public class MoveOneTile extends AutonomousBunyipsOpMode {
     @Override
     protected void onInitialise() {
         setOpModes("forward", "backward", "left", "right");
         Robot.instance.drive.setPose(Geometry.zeroPose());
     }
-    
+
     @Override
     protected void onReady(@Nullable RefCell<?> selectedOpMode) {
         if (selectedOpMode == null) return;

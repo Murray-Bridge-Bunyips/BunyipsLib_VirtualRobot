@@ -1,4 +1,4 @@
-package au.edu.sa.mbhs.studentrobotics.virtual.robot.teleop;
+package au.edu.sa.mbhs.studentrobotics.virtual.robot.archived;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.CommandBasedBunyipsOpMode;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.RobotConfig;
@@ -6,9 +6,11 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dbg;
 import au.edu.sa.mbhs.studentrobotics.virtual.robot.Robot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp
+@Disabled
 @RobotConfig.InhibitAutoInit
 public class GrandTests extends CommandBasedBunyipsOpMode {
     private final Robot robot = new Robot();
