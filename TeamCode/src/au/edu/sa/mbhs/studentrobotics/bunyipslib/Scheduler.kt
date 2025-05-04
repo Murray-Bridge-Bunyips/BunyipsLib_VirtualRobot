@@ -145,6 +145,8 @@ class Scheduler {
                     task.taskToRun.poll()
                 }
             } else if (task.taskToRun.isFinished && !task.debouncing) {
+                // Smart button toggles will need to reset the debounce to function if the task is finished early
+                task.useSmartRetrigger?.let { (c, b) -> c.resetDebounce(b) }
                 // For tasks that are not debouncing and their conditions are met again, we restart them
                 task.taskToRun.reset()
             }
@@ -436,7 +438,8 @@ class Scheduler {
         internal val runCondition: () -> Boolean
         internal var debouncing: Boolean = false
         internal var stopCondition: (() -> Boolean)? = null
-        internal var muted = false
+        internal var useSmartRetrigger: Pair<Controller, Controls>? = null
+        internal var muted: Boolean = false
 
         private val and = ArrayList<BooleanSupplier>()
         private val or = ArrayList<BooleanSupplier>()
@@ -630,6 +633,30 @@ class Scheduler {
             } else {
                 { prev.invoke() || condition.asBoolean }
             }
+        }
+
+        /**
+         * Automagic finish condition that will run the task assigned in [run] until the button used to trigger
+         * this execution is retriggered. This is effectively a [finishIf] convenience method for an edge detector applied
+         * to the button you used to declare this task binding.
+         * 
+         * **WARNING:** This method will only work if you have used a [ControllerButtonBind] (such as through `whenPressed`, etc.)
+         * AND you used a [Controller] instance to create the bind (such as by a [BunyipsOpMode]).
+         * 
+         * This method will also take efforts to manage the [Controller] debounce resets in the event your task is
+         * finished, which cannot be replicated through a simple [finishIf]. Without proper debounce resets,
+         * your task may require two triggers to restart if it is stopped early or automatically, since `getDebounced`
+         * is a stateful function unaware of your task's running state by default.
+         * 
+         * @since 7.2.1
+         */
+        fun finishIfButtonRetriggered() = apply {
+            if (originalRunCondition !is ControllerButtonBind)
+                throw Exceptions.EmergencyStop("finishIfButtonRetriggered() called when bind was not created through a ControllerButtonBind.")
+            if (originalRunCondition.controller !is Controller)
+                throw Exceptions.EmergencyStop("finishIfButtonRetriggered() called when underlying controller used for bind is not a Controller instance.")
+            useSmartRetrigger = originalRunCondition.controller to originalRunCondition.button
+            finishIf { originalRunCondition.controller.getDebounced(originalRunCondition.button) }
         }
 
         override fun toString(): String {
