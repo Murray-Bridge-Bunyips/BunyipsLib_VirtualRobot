@@ -58,20 +58,20 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Text;
  */
 @SuppressWarnings("deprecation")
 public class Motor extends SimpleRotator implements DcMotorEx {
+    protected final DcMotorControllerEx controller;
+    protected final int port;
+    private final ArrayList<InterpolatedLookupTable> rtpGains = new ArrayList<>();
+    private final ArrayList<InterpolatedLookupTable> rueGains = new ArrayList<>();
     /**
      * The encoder object that is used for position and velocity readings on this motor.
      * <p>
      * To reverse the directionality of the encoder, but not the output power, you can access this object
      * and call the {@code setDirection} method on it. Updating the general direction of the motor will update both.
+     * <p>
+     * This encoder object is mutable. Reassigning this object will use a different {@link Encoder} instance to
+     * regulate all encoder operations. Use with caution.
      */
-    public final Encoder encoder;
-
-    protected final DcMotorControllerEx controller;
-    protected final int port;
-
-    private final ArrayList<InterpolatedLookupTable> rtpGains = new ArrayList<>();
-    private final ArrayList<InterpolatedLookupTable> rueGains = new ArrayList<>();
-
+    public Encoder encoder;
     private RunMode mode = RunMode.RUN_WITHOUT_ENCODER;
     private SystemController rtpController;
     private SystemController rueController;
