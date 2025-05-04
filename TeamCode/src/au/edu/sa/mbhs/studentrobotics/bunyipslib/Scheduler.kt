@@ -638,16 +638,24 @@ class Scheduler {
         /**
          * Automagic finish condition that will run the task assigned in [run] until the button used to trigger
          * this execution is retriggered. This is effectively a [finishIf] convenience method for an edge detector applied
-         * to the button you used to declare this task binding.
-         * 
+         * to the button you used to declare this task binding, creating a task toggle.
+         *
+         * This method is equivalent to writing:
+         * ```java
+         * gp1().whenPressed(Controls.A)
+         *      .run(/* ... */)
+         *     .finishIf(() -> gamepad1.getDebounced(Controls.A)) // Common pattern to implement toggles
+         * ```
+         *
+         * However, this method will also take efforts to manage the [Controller] debounce resets (through `resetDebounce`)
+         * in the event your task finishes, which cannot be replicated through a simple [finishIf]. Without proper debounce resets,
+         * your task may require two triggers to restart if it is stopped early or automatically, since `getDebounced`
+         * is a stateful function unaware of your task's running state by default. This method also reduces repetition
+         * that can introduce typo bugs.
+         *
          * **WARNING:** This method will only work if you have used a [ControllerButtonBind] (such as through `whenPressed`, etc.)
          * AND you used a [Controller] instance to create the bind (such as by a [BunyipsOpMode]).
-         * 
-         * This method will also take efforts to manage the [Controller] debounce resets in the event your task is
-         * finished, which cannot be replicated through a simple [finishIf]. Without proper debounce resets,
-         * your task may require two triggers to restart if it is stopped early or automatically, since `getDebounced`
-         * is a stateful function unaware of your task's running state by default.
-         * 
+         *
          * @since 7.2.1
          */
         fun finishIfButtonRetriggered() = apply {
