@@ -1,6 +1,7 @@
 package virtual_robot.controller;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.robotcore.eventloop.EventLoopManager;
 import com.qualcomm.robotcore.eventloop.opmode.*;
 import com.qualcomm.robotcore.hardware.*;
 import com.qualcomm.robotcore.util.Range;
@@ -89,8 +90,6 @@ public class VirtualRobotController {
     // Virtual Hardware
     public static HardwareMap hardwareMap = null;
     private VirtualBot bot = null;
-    Gamepad gamePad1 = new Gamepad();
-    Gamepad gamePad2 = new Gamepad();
     GamePadHelper gamePadHelper = null;
     ScheduledExecutorService gamePadExecutorService = Executors.newSingleThreadScheduledExecutor();
 
@@ -993,6 +992,8 @@ public class VirtualRobotController {
 
         public OpModeBase() {
             hardwareMap = VirtualRobotController.this.hardwareMap;
+            Gamepad gamePad1 = EventLoopManager.getInstance().opModeGamepads[0];
+            Gamepad gamePad2 = EventLoopManager.getInstance().opModeGamepads[1];
             gamepad1 = gamePad1;
             this.gamepad2 = gamePad2;
             telemetry = new TelemetryImpl(VirtualRobotController.this);
@@ -1008,6 +1009,8 @@ public class VirtualRobotController {
     public class VirtualGamePadHelper implements GamePadHelper {
 
         public void run() {
+            Gamepad gamePad1 = EventLoopManager.getInstance().opModeGamepads[0];
+            Gamepad gamePad2 = EventLoopManager.getInstance().opModeGamepads[1];
             VirtualGamePadController.ControllerState state = virtualGamePadController.getState();
             gamePad1.update(state);
             virtualGamePadController.setOutputs(gamePad1);
@@ -1098,6 +1101,8 @@ public class VirtualRobotController {
             }
 
 
+            Gamepad gamePad1 = EventLoopManager.getInstance().opModeGamepads[0];
+            Gamepad gamePad2 = EventLoopManager.getInstance().opModeGamepads[1];
             if (gamePad1Index == 0) gamePad1.update(state0);
             else if (gamePad1Index == 1) gamePad1.update(state1);
             else gamePad1.resetValues();

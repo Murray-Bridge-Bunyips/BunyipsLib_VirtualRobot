@@ -28,72 +28,259 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
-Modified by Virtual_Robot contributors
- */
-
 package com.qualcomm.robotcore.hardware;
 
 import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.util.RobotLog;
+
 import com.studiohartman.jamepad.ControllerState;
 import org.firstinspires.ftc.robotcore.internal.collections.EvictingBlockingQueue;
 import org.firstinspires.ftc.robotcore.internal.ui.GamepadUser;
 import virtual_robot.controller.VirtualGamePadController;
 
+import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
- * Represents the GamePad.
- *
- * Note: the fields in the class are all public, but they should not be changed from the OpMode code.
+ * Monitor a hardware gamepad.
+ * <p>
+ * The buttons, analog sticks, and triggers are represented a public
+ * member variables that can be read from or written to directly.
+ * <p>
+ * Analog sticks are represented as floats that range from -1.0 to +1.0. They will be 0.0 while at
+ * rest. The horizontal axis is labeled x, and the vertical axis is labeled y.
+ * <p>
+ * Triggers are represented as floats that range from 0.0 to 1.0. They will be at 0.0 while at
+ * rest.
+ * <p>
+ * Buttons are boolean values. They will be true if the button is pressed, otherwise they will be
+ * false.
+ * <p>
+ * The codes KEYCODE_BUTTON_SELECT and KEYCODE_BACK are both be handled as a "back" button event.
+ * Older Android devices (Kit Kat) map a Logitech F310 "back" button press to a KEYCODE_BUTTON_SELECT event.
+ * Newer Android devices (Marshmallow or greater) map this "back" button press to a KEYCODE_BACK event.
+ * Also, the REV Robotics Gamepad (REV-31-1159) has a "select" button instead of a "back" button on the gamepad.
+ * <p>
+ * The dpad is represented as 4 buttons, dpad_up, dpad_down, dpad_left, and dpad_right
  */
+@SuppressWarnings("unused")
 public class Gamepad {
 
-    //for ps4
-    public volatile boolean circle = false;
-    public volatile boolean cross = false;
-    public volatile boolean triangle = false;
-    public volatile boolean square = false;
-    public volatile boolean share = false;
-    public volatile boolean options = false;
-    public volatile boolean ps = false;
+    /**
+     * A gamepad with an ID equal to ID_UNASSOCIATED has not been associated with any device.
+     */
+    public static final int ID_UNASSOCIATED = -1;
 
-    public volatile boolean x = false;
-    public volatile boolean y = false;
-    public volatile boolean a = false;
-    public volatile boolean b = false;
-    public volatile float left_stick_x  = 0;
-    public volatile float left_stick_y = 0;
-    public volatile float right_stick_x = 0;
-    public volatile float right_stick_y = 0;
+    /**
+     * A gamepad with a phantom id a synthetic one made up by the system
+     */
+    public static final int ID_SYNTHETIC = -2;
+
+    public enum Type {
+        // Do NOT change the order/names of existing entries,
+        // you will break backwards compatibility!!
+        UNKNOWN(LegacyType.UNKNOWN),
+        LOGITECH_F310(LegacyType.LOGITECH_F310),
+        XBOX_360(LegacyType.XBOX_360),
+        SONY_PS4(LegacyType.SONY_PS4), // This indicates a PS4-compatible controller that is being used through our compatibility mode
+        SONY_PS4_SUPPORTED_BY_KERNEL(LegacyType.SONY_PS4); // This indicates a PS4-compatible controller that is being used through the DualShock 4 Linux kernel driver.
+
+        private final LegacyType correspondingLegacyType;
+        Type(LegacyType correspondingLegacyType) {
+            this.correspondingLegacyType = correspondingLegacyType;
+        }
+    }
+
+    // LegacyType is necessary because robocol gamepad version 3 was written in a way that was not
+    // forwards-compatible, so we have to keep sending V3-compatible values.
+    public enum LegacyType {
+        // Do NOT change the order or names of existing entries, or add new entries.
+        // You will break backwards compatibility!!
+        UNKNOWN,
+        LOGITECH_F310,
+        XBOX_360,
+        SONY_PS4;
+    }
+
+    @SuppressWarnings("UnusedAssignment")
+    public volatile Type type = Type.UNKNOWN; // IntelliJ thinks this is redundant, but it is NOT. Must be a bug in the analyzer?
+
+    /**
+     * left analog stick horizontal axis
+     */
+    public volatile float left_stick_x = 0f;
+
+    /**
+     * left analog stick vertical axis
+     */
+    public volatile float left_stick_y = 0f;
+
+    /**
+     * right analog stick horizontal axis
+     */
+    public volatile float right_stick_x = 0f;
+
+    /**
+     * right analog stick vertical axis
+     */
+    public volatile float right_stick_y = 0f;
+
+    /**
+     * dpad up
+     */
     public volatile boolean dpad_up = false;
+
+    /**
+     * dpad down
+     */
     public volatile boolean dpad_down = false;
+
+    /**
+     * dpad left
+     */
     public volatile boolean dpad_left = false;
+
+    /**
+     * dpad right
+     */
     public volatile boolean dpad_right = false;
-    public volatile boolean back = false;
+
+    /**
+     * button a
+     */
+    public volatile boolean a = false;
+
+    /**
+     * button b
+     */
+    public volatile boolean b = false;
+
+    /**
+     * button x
+     */
+    public volatile boolean x = false;
+
+    /**
+     * button y
+     */
+    public volatile boolean y = false;
+
+    /**
+     * button guide - often the large button in the middle of the controller. The OS may
+     * capture this button before it is sent to the app; in which case you'll never
+     * receive it.
+     */
     public volatile boolean guide = false;
+
+    /**
+     * button start
+     */
     public volatile boolean start = false;
+
+    /**
+     * button back
+     */
+    public volatile boolean back = false;
+
+    /**
+     * button left bumper
+     */
     public volatile boolean left_bumper = false;
+
+    /**
+     * button right bumper
+     */
     public volatile boolean right_bumper = false;
+
+    /**
+     * left stick button
+     */
     public volatile boolean left_stick_button = false;
+
+    /**
+     * right stick button
+     */
     public volatile boolean right_stick_button = false;
-    public volatile float left_trigger = 0;
-    public volatile float right_trigger = 0;
-    public volatile long timestamp = 0;
+
+    /**
+     * left trigger
+     */
+    public volatile float left_trigger = 0f;
+
+    /**
+     * right trigger
+     */
+    public volatile float right_trigger = 0f;
+
+    /**
+     * PS4 Support - Circle
+     */
+    public volatile boolean circle = false;
+
+    /**
+     * PS4 Support - cross
+     */
+    public volatile boolean cross = false;
+
+    /**
+     * PS4 Support - triangle
+     */
+    public volatile boolean triangle = false;
+
+    /**
+     * PS4 Support - square
+     */
+    public volatile boolean square = false;
+
+    /**
+     * PS4 Support - share
+     */
+    public volatile boolean share = false;
+
+    /**
+     * PS4 Support - options
+     */
+    public volatile boolean options = false;
+
+    /**
+     * PS4 Support - touchpad
+     */
+    public volatile boolean touchpad = false;
     public volatile boolean touchpad_finger_1;
     public volatile boolean touchpad_finger_2;
-    public volatile boolean touchpad;
     public volatile float touchpad_finger_1_x;
     public volatile float touchpad_finger_1_y;
     public volatile float touchpad_finger_2_x;
     public volatile float touchpad_finger_2_y;
 
-    /*
-     * NOTE CHANGE IN DEADZONE TO MATCH NEW BEHAVIOR IN FTC SDK v. 7.0
-     * There is no longer a setJoystickDeadzone method.
+    /**
+     * PS4 Support - PS Button
      */
+    public volatile boolean ps = false;
+
+    /**
+     * Which user is this gamepad used by
+     */
+    protected volatile byte user = ID_UNASSOCIATED;
+    //
+    public GamepadUser getUser() {
+        return GamepadUser.from(user);
+    }
+    //
+    public void setUser(GamepadUser user) {
+        this.user = user.id;
+    }
+
+    /**
+     * See OpModeManagerImpl#runActiveOpMode(Gamepad[])
+     */
+    protected volatile byte userForEffects = ID_UNASSOCIATED;
+    public void setUserForEffects(byte userForEffects) {
+        this.userForEffects = userForEffects;
+    }
+
 
     protected float deadzone = 0.2f;
 
@@ -110,133 +297,360 @@ public class Gamepad {
     }
 
     public void resetValues(){
-        x = false;
-        y = false;
-        a = false;
-        b = false;
-        left_stick_x = 0;
-        left_stick_y = 0;
-        right_stick_x = 0;
-        right_stick_y = 0;
-        dpad_up = false;
-        dpad_down = false;
-        dpad_left = false;
-        dpad_right = false;
-        back = false;
-        guide = false;
-        start = false;
-        left_bumper = false;
-        right_bumper = false;
-        left_stick_button = false;
-        right_stick_button = false;
-        left_trigger = 0;
-        right_trigger = 0;
-    }
-
-    public void update(ControllerState state){
-        x = state.x;
-        y = state.y;
-        a = state.a;
-        b = state.b;
-        left_stick_x = setWithDeadzone(state.leftStickX);
-        left_stick_y = setWithDeadzone(-state.leftStickY);
-        right_stick_x = setWithDeadzone(state.rightStickX);
-        right_stick_y = setWithDeadzone(-state.rightStickY);
-        dpad_up = state.dpadUp;
-        dpad_down = state.dpadDown;
-        dpad_left = state.dpadLeft;
-        dpad_right = state.dpadRight;
-        back = state.back;
-        guide = state.guide;
-        start = state.start;
-        left_bumper = state.lb;
-        right_bumper = state.rb;
-        left_stick_button = state.leftStickClick;
-        right_stick_button = state.rightStickClick;
-        left_trigger = setWithDeadzone(state.leftTrigger);
-        right_trigger = setWithDeadzone(state.rightTrigger);
-    }
-
-    public byte[] toByteArray() {
-        return new byte[1000];
-    }
-
-    public void copy(Gamepad other) {
-        x = other.x;
-        y = other.y;
-        a = other.a;
-        b = other.b;
-        left_stick_x = other.left_stick_x;
-        left_stick_y = other.left_stick_y;
-        right_stick_x = other.right_stick_x;
-        right_stick_y = other.right_stick_y;
-        dpad_up = other.dpad_up;
-        dpad_down = other.dpad_down;
-        dpad_left = other.dpad_left;
-        dpad_right = other.dpad_right;
-        back = other.back;
-        guide = other.guide;
-        start = other.start;
-        left_bumper = other.left_bumper;
-        right_bumper = other.right_bumper;
-        left_stick_button = other.left_stick_button;
-        right_stick_button = other.right_stick_button;
-        left_trigger = other.left_trigger;
-        right_trigger = other.right_trigger;
+        reset();
     }
 
     public void update(VirtualGamePadController.ControllerState state){
-        x = state.x;
-        y = state.y;
-        a = state.a;
-        b = state.b;
-        left_stick_x = setWithDeadzone(state.leftStickX);
-        left_stick_y = setWithDeadzone(state.leftStickY);
-        right_stick_x = setWithDeadzone(state.rightStickX);
-        right_stick_y = setWithDeadzone(state.rightStickY);
-        dpad_up = state.dpad_up;
-        dpad_down = state.dpad_down;
-        dpad_left = state.dpad_left;
-        dpad_right = state.dpad_right;
-        back = false;
-        guide = false;
-        start = false;
-        left_bumper = state.left_bumper;
-        right_bumper = state.right_bumper;
-        left_stick_button = false;
-        right_stick_button = false;
-        left_trigger = state.left_trigger;
-        right_trigger = state.right_trigger;
+        Gamepad gp = new Gamepad();
+        gp.x = state.x;
+        gp.y = state.y;
+        gp.a = state.a;
+        gp.b = state.b;
+        gp.left_stick_x = setWithDeadzone(state.leftStickX);
+        gp.left_stick_y = setWithDeadzone(state.leftStickY);
+        gp.right_stick_x = setWithDeadzone(state.rightStickX);
+        gp.right_stick_y = setWithDeadzone(state.rightStickY);
+        gp.dpad_up = state.dpad_up;
+        gp.dpad_down = state.dpad_down;
+        gp.dpad_left = state.dpad_left;
+        gp.dpad_right = state.dpad_right;
+        gp.back = false;
+        gp.guide = false;
+        gp.start = false;
+        gp.left_bumper = state.left_bumper;
+        gp.right_bumper = state.right_bumper;
+        gp.left_stick_button = false;
+        gp.right_stick_button = false;
+        gp.left_trigger = state.left_trigger;
+        gp.right_trigger = state.right_trigger;
+        copy(gp);
+    }
+
+    public void update(ControllerState state){
+        Gamepad gp = new Gamepad();
+        gp.x = state.x;
+        gp.y = state.y;
+        gp.a = state.a;
+        gp.b = state.b;
+        gp.left_stick_x = setWithDeadzone(state.leftStickX);
+        gp.left_stick_y = setWithDeadzone(-state.leftStickY);
+        gp.right_stick_x = setWithDeadzone(state.rightStickX);
+        gp.right_stick_y = setWithDeadzone(-state.rightStickY);
+        gp.dpad_up = state.dpadUp;
+        gp.dpad_down = state.dpadDown;
+        gp.dpad_left = state.dpadLeft;
+        gp.dpad_right = state.dpadRight;
+        gp.back = state.back;
+        gp.guide = state.guide;
+        gp.start = state.start;
+        gp.left_bumper = state.lb;
+        gp.right_bumper = state.rb;
+        gp.left_stick_button = state.leftStickClick;
+        gp.right_stick_button = state.rightStickClick;
+        gp.left_trigger = setWithDeadzone(state.leftTrigger);
+        gp.right_trigger = setWithDeadzone(state.rightTrigger);
+        copy(gp);
+    }
+    
+    /**
+     * ID assigned to this gamepad by the OS. This value can change each time the device is plugged in.
+     */
+    public volatile int id = 1;  // public only for historical reasons
+
+    public void setGamepadId(int id) {
+        this.id = id;
+    }
+    public int getGamepadId() {
+        return this.id;
+    }
+
+    /**
+     * Relative timestamp of the last time an event was detected
+     */
+    public volatile long timestamp = 0;
+
+    // private static values used for packaging the gamepad state into a byte array
+    private static final short PAYLOAD_SIZE = 60;
+    private static final short BUFFER_SIZE = PAYLOAD_SIZE + 5;
+
+    private static final byte ROBOCOL_GAMEPAD_VERSION = 5;
+
+    public Gamepad() {
+        this.type = type();
+    }
+
+    /**
+     * Copy the state of a gamepad into this gamepad
+     * @param gamepad state to be copied from
+     * @throws RuntimeException if the copy fails - gamepad will be in an unknown
+     *         state if this exception is thrown
+     */
+    public void copy(Gamepad gamepad) {
+        // reuse the serialization code; since that reduces the chances of bugs
+        fromByteArray(gamepad.toByteArray());
+    }
+
+    /**
+     * Reset this gamepad into its initial state
+     */
+    public void reset() {
+        copy(new Gamepad());
+    }
+
+    final int HEADER_LENGTH = 5;
+    protected ByteBuffer getWriteBuffer(int payloadSize)
+    {
+        ByteBuffer result = ByteBuffer.allocate(HEADER_LENGTH + payloadSize);
+        // arbitrary
+        result.put((byte) 0);
+        result.putShort((short)payloadSize);
+        result.putShort((short) 0);
+        return result;
+    }
+    
+    protected ByteBuffer getReadBuffer(byte[] byteArray)
+    {
+        int cbHeaderWithoutSeqNum = HEADER_LENGTH - 2;
+        ByteBuffer result = ByteBuffer.wrap(byteArray, cbHeaderWithoutSeqNum, byteArray.length - cbHeaderWithoutSeqNum);
+        //
+//        setSequenceNumber(result.getShort());
+        result.getShort(); // don't care about the value but we need to progress the buffer
+        //
+        return result;
+    }
+    
+    public byte[] toByteArray() {
+
+        ByteBuffer buffer = getWriteBuffer(PAYLOAD_SIZE);
+
+        try {
+            int buttons = 0;
+
+            buffer.put(ROBOCOL_GAMEPAD_VERSION);
+            buffer.putInt(id);
+            buffer.putLong(timestamp).array();
+            buffer.putFloat(left_stick_x).array();
+            buffer.putFloat(left_stick_y).array();
+            buffer.putFloat(right_stick_x).array();
+            buffer.putFloat(right_stick_y).array();
+            buffer.putFloat(left_trigger).array();
+            buffer.putFloat(right_trigger).array();
+
+            buttons = (buttons << 1) + (touchpad_finger_1 ? 1 : 0);
+            buttons = (buttons << 1) + (touchpad_finger_2 ? 1 : 0);
+            buttons = (buttons << 1) + (touchpad ? 1 : 0);
+            buttons = (buttons << 1) + (left_stick_button ? 1 : 0);
+            buttons = (buttons << 1) + (right_stick_button ? 1 : 0);
+            buttons = (buttons << 1) + (dpad_up ? 1 : 0);
+            buttons = (buttons << 1) + (dpad_down ? 1 : 0);
+            buttons = (buttons << 1) + (dpad_left ? 1 : 0);
+            buttons = (buttons << 1) + (dpad_right ? 1 : 0);
+            buttons = (buttons << 1) + (a ? 1 : 0);
+            buttons = (buttons << 1) + (b ? 1 : 0);
+            buttons = (buttons << 1) + (x ? 1 : 0);
+            buttons = (buttons << 1) + (y ? 1 : 0);
+            buttons = (buttons << 1) + (guide ? 1 : 0);
+            buttons = (buttons << 1) + (start ? 1 : 0);
+            buttons = (buttons << 1) + (back ? 1 : 0);
+            buttons = (buttons << 1) + (left_bumper ? 1 : 0);
+            buttons = (buttons << 1) + (right_bumper ? 1 : 0);
+            buffer.putInt(buttons);
+
+            // Version 2
+            buffer.put(user);
+
+            // Version 3
+            buffer.put((byte) legacyType().ordinal());
+
+            // Version 4
+            buffer.put((byte) type.ordinal());
+
+            // Version 5
+            buffer.putFloat(touchpad_finger_1_x);
+            buffer.putFloat(touchpad_finger_1_y);
+            buffer.putFloat(touchpad_finger_2_x);
+            buffer.putFloat(touchpad_finger_2_y);
+        } catch (BufferOverflowException e) {
+            RobotLog.logStacktrace(e);
+        }
+
+        return buffer.array();
+    }
+
+    public void fromByteArray(byte[] byteArray) {
+        if (byteArray.length < BUFFER_SIZE) {
+            throw new RuntimeException("Expected buffer of at least " + BUFFER_SIZE + " bytes, received " + byteArray.length);
+        }
+
+        ByteBuffer byteBuffer = getReadBuffer(byteArray);
+
+        int buttons = 0;
+
+        byte version = byteBuffer.get();
+
+        // TODO(Noah): Reset version to 1
+        // extract version 1 values
+        if (version >= 1) {
+            id = byteBuffer.getInt();
+            timestamp = byteBuffer.getLong();
+            left_stick_x = byteBuffer.getFloat();
+            left_stick_y = byteBuffer.getFloat();
+            right_stick_x = byteBuffer.getFloat();
+            right_stick_y = byteBuffer.getFloat();
+            left_trigger = byteBuffer.getFloat();
+            right_trigger = byteBuffer.getFloat();
+
+            buttons = byteBuffer.getInt();
+            touchpad_finger_1   = (buttons & 0x20000) != 0;
+            touchpad_finger_2   = (buttons & 0x10000) != 0;
+            touchpad            = (buttons & 0x08000) != 0;
+            left_stick_button   = (buttons & 0x04000) != 0;
+            right_stick_button  = (buttons & 0x02000) != 0;
+            dpad_up             = (buttons & 0x01000) != 0;
+            dpad_down           = (buttons & 0x00800) != 0;
+            dpad_left           = (buttons & 0x00400) != 0;
+            dpad_right          = (buttons & 0x00200) != 0;
+            a                   = (buttons & 0x00100) != 0;
+            b                   = (buttons & 0x00080) != 0;
+            x                   = (buttons & 0x00040) != 0;
+            y                   = (buttons & 0x00020) != 0;
+            guide               = (buttons & 0x00010) != 0;
+            start               = (buttons & 0x00008) != 0;
+            back                = (buttons & 0x00004) != 0;
+            left_bumper         = (buttons & 0x00002) != 0;
+            right_bumper        = (buttons & 0x00001) != 0;
+        }
+
+        // extract version 2 values
+        if (version >= 2) {
+            user = byteBuffer.get();
+        }
+
+        // extract version 3 values
+        if (version >= 3) {
+            type = Type.values()[byteBuffer.get()];
+        }
+
+        if (version >= 4) {
+            byte v4TypeValue = byteBuffer.get();
+            if (v4TypeValue < Type.values().length) {
+                // Yes, this will replace the version 3 value. That is a good thing, since the version 3
+                // value was not forwards-compatible.
+                type = Type.values()[v4TypeValue];
+            } // Else, we don't know what the number means, so we just stick with the value we got from the v3 type field
+        }
+
+        if(version >= 5) {
+            touchpad_finger_1_x = byteBuffer.getFloat();
+            touchpad_finger_1_y = byteBuffer.getFloat();
+            touchpad_finger_2_x = byteBuffer.getFloat();
+            touchpad_finger_2_y = byteBuffer.getFloat();
+        }
+
         updateButtonAliases();
     }
 
     /**
-     * Alias buttons so that XBOX & PS4 native button labels can be used in use code.
-     * Should allow a team to program with whatever controllers they prefer, but
-     * be able swap controllers easily without changing code.
+     * Are all analog sticks and triggers in their rest position?
+     * @return true if all analog sticks and triggers are at rest; otherwise false
      */
-    protected void updateButtonAliases() {
-        // There is no assignment for touchpad because there is no equivalent on XBOX controllers.
-        circle = b;
-        cross = a;
-        triangle = y;
-        square = x;
-        share = back;
-        options = start;
-        ps = guide;
+    public boolean atRest() {
+        return (
+                left_stick_x == 0f && left_stick_y == 0f &&
+                        right_stick_x == 0f && right_stick_y == 0f &&
+                        left_trigger == 0f && right_trigger == 0f);
     }
+
+    /**
+     * Get the type of gamepad as a {@link Type}. This method defaults to "UNKNOWN".
+     * @return gamepad type
+     */
+    public Type type() {
+        return type;
+    }
+
+    /**
+     * Get the type of gamepad as a {@link LegacyType}. This method defaults to "UNKNOWN".
+     * @return gamepad type
+     */
+    private LegacyType legacyType() {
+        return type.correspondingLegacyType;
+    }
+
+
+    /**
+     * Display a summary of this gamepad, including the state of all buttons, analog sticks, and triggers
+     * @return a summary
+     */
+    @Override
+    public String toString() {
+
+        switch (type) {
+            case SONY_PS4:
+            case SONY_PS4_SUPPORTED_BY_KERNEL:
+                return ps4ToString();
+
+            case UNKNOWN:
+            case LOGITECH_F310:
+            case XBOX_360:
+            default:
+                return genericToString();
+        }
+    }
+
+
+    protected String ps4ToString() {
+        String buttons = new String();
+        if (dpad_up) buttons += "dpad_up ";
+        if (dpad_down) buttons += "dpad_down ";
+        if (dpad_left) buttons += "dpad_left ";
+        if (dpad_right) buttons += "dpad_right ";
+        if (cross) buttons += "cross ";
+        if (circle) buttons += "circle ";
+        if (square) buttons += "square ";
+        if (triangle) buttons += "triangle ";
+        if (ps) buttons += "ps ";
+        if (share) buttons += "share ";
+        if (options) buttons += "options ";
+        if (touchpad) buttons += "touchpad ";
+        if (left_bumper) buttons += "left_bumper ";
+        if (right_bumper) buttons += "right_bumper ";
+        if (left_stick_button) buttons += "left stick button ";
+        if (right_stick_button) buttons += "right stick button ";
+
+        return String.format("ID: %2d user: %2d lx: % 1.2f ly: % 1.2f rx: % 1.2f ry: % 1.2f lt: %1.2f rt: %1.2f %s",
+                id, user, left_stick_x, left_stick_y,
+                right_stick_x, right_stick_y, left_trigger, right_trigger, buttons);
+    }
+
+    protected String genericToString() {
+        String buttons = new String();
+        if (dpad_up) buttons += "dpad_up ";
+        if (dpad_down) buttons += "dpad_down ";
+        if (dpad_left) buttons += "dpad_left ";
+        if (dpad_right) buttons += "dpad_right ";
+        if (a) buttons += "a ";
+        if (b) buttons += "b ";
+        if (x) buttons += "x ";
+        if (y) buttons += "y ";
+        if (guide) buttons += "guide ";
+        if (start) buttons += "start ";
+        if (back) buttons += "back ";
+        if (left_bumper) buttons += "left_bumper ";
+        if (right_bumper) buttons += "right_bumper ";
+        if (left_stick_button) buttons += "left stick button ";
+        if (right_stick_button) buttons += "right stick button ";
+
+        return String.format("ID: %2d user: %2d lx: % 1.2f ly: % 1.2f rx: % 1.2f ry: % 1.2f lt: %1.2f rt: %1.2f %s",
+                id, user, left_stick_x, left_stick_y,
+                right_stick_x, right_stick_y, left_trigger, right_trigger, buttons);
+    }
+
 
     // To prevent blowing up the command queue if the user tries to send an LED command in a tight loop,
     // we have a 1-element evicting blocking queue for the outgoing LED effect and the event loop periodically
     // just grabs the effect out of it (if any)
     public EvictingBlockingQueue<LedEffect> ledQueue = new EvictingBlockingQueue<>(new ArrayBlockingQueue<LedEffect>(1));
-
-    public static final int ID_UNASSOCIATED = -1;
-    protected byte userForEffects = ID_UNASSOCIATED;
-
-    public void setUserForEffects(byte userForEffects) {
-        this.userForEffects = userForEffects;
-    }
 
     public static final int LED_DURATION_CONTINUOUS = -1;
 
@@ -256,6 +670,14 @@ public class Gamepad {
             this.steps = steps;
             this.repeating = repeating;
         }
+
+//        public String serialize() {
+//            return SimpleGson.getInstance().toJson(this);
+//        }
+//
+//        public static LedEffect deserialize(String serialized) {
+//            return SimpleGson.getInstance().fromJson(serialized, LedEffect.class);
+//        }
 
         public static class Builder {
             private ArrayList<Step> steps = new ArrayList<>();
@@ -278,7 +700,6 @@ public class Gamepad {
             /**
              * Set whether this LED effect should loop after finishing,
              * unless the LED is otherwise commanded differently.
-             *
              * @param repeating whether to loop
              * @return the builder object, to follow the builder pattern
              */
@@ -305,7 +726,6 @@ public class Gamepad {
             /**
              * After you've added your steps, call this to get an LedEffect object
              * that you can then pass to {@link #runLedEffect(LedEffect)}
-             *
              * @return an LedEffect object, built from previously added steps
              */
             public LedEffect build() {
@@ -320,7 +740,7 @@ public class Gamepad {
             durationMs = Math.max(0, durationMs);
         }
 
-        LedEffect effect = new LedEffect.Builder().addStepInternal(r, g, b, durationMs).build();
+        LedEffect effect = new LedEffect.Builder().addStepInternal(r,g,b, durationMs).build();
         queueEffect(effect);
     }
 
@@ -328,7 +748,7 @@ public class Gamepad {
      * Run an LED effect built using {@link LedEffect.Builder}
      * The LED effect will be run asynchronously; your OpMode will
      * not halt execution while the effect is running.
-     * <p>
+     *
      * Calling this will displace any currently running LED effect
      */
     public void runLedEffect(LedEffect effect) {
@@ -368,6 +788,13 @@ public class Gamepad {
             this.steps = steps;
         }
 
+//        public String serialize() {
+//            return SimpleGson.getInstance().toJson(this);
+//        }
+//
+//        public static RumbleEffect deserialize(String serialized) {
+//            return SimpleGson.getInstance().fromJson(serialized, RumbleEffect.class);
+//        }
 
         public static class Builder {
             private ArrayList<Step> steps = new ArrayList<>();
@@ -377,9 +804,8 @@ public class Gamepad {
              * at a certain power level for a certain duration. By creating a chain of
              * steps, you can create unique effects. See {@link #rumbleBlips(int)} for a
              * a simple example.
-             *
-             * @param rumble1    rumble power for rumble motor 1 (0.0 - 1.0)
-             * @param rumble2    rumble power for rumble motor 2 (0.0 - 1.0)
+             * @param rumble1 rumble power for rumble motor 1 (0.0 - 1.0)
+             * @param rumble2 rumble power for rumble motor 2 (0.0 - 1.0)
              * @param durationMs milliseconds this step lasts
              * @return the builder object, to follow the builder pattern
              */
@@ -404,7 +830,6 @@ public class Gamepad {
             /**
              * After you've added your steps, call this to get a RumbleEffect object
              * that you can then pass to {@link #runRumbleEffect(RumbleEffect)}
-             *
              * @return a RumbleEffect object, built from previously added steps
              */
             public RumbleEffect build() {
@@ -417,7 +842,7 @@ public class Gamepad {
      * Run a rumble effect built using {@link RumbleEffect.Builder}
      * The rumble effect will be run asynchronously; your OpMode will
      * not halt execution while the effect is running.
-     * <p>
+     *
      * Calling this will displace any currently running rumble effect
      */
     public void runRumbleEffect(RumbleEffect effect) {
@@ -427,7 +852,6 @@ public class Gamepad {
     /**
      * Rumble the gamepad's first rumble motor at maximum power for a certain duration.
      * Calling this will displace any currently running rumble effect.
-     *
      * @param durationMs milliseconds to rumble for, or {@link #RUMBLE_DURATION_CONTINUOUS}
      */
     public void rumble(int durationMs) {
@@ -443,9 +867,8 @@ public class Gamepad {
     /**
      * Rumble the gamepad at a fixed rumble power for a certain duration
      * Calling this will displace any currently running rumble effect
-     *
-     * @param rumble1    rumble power for rumble motor 1 (0.0 - 1.0)
-     * @param rumble2    rumble power for rumble motor 2 (0.0 - 1.0)
+     * @param rumble1 rumble power for rumble motor 1 (0.0 - 1.0)
+     * @param rumble2 rumble power for rumble motor 2 (0.0 - 1.0)
      * @param durationMs milliseconds to rumble for, or {@link #RUMBLE_DURATION_CONTINUOUS}
      */
     public void rumble(double rumble1, double rumble2, int durationMs) {
@@ -462,20 +885,19 @@ public class Gamepad {
      * Cancel the currently running rumble effect, if any
      */
     public void stopRumble() {
-        rumble(0, 0, RUMBLE_DURATION_CONTINUOUS);
+        rumble(0,0,RUMBLE_DURATION_CONTINUOUS);
     }
 
     /**
      * Rumble the gamepad for a certain number of "blips" using predetermined blip timing
      * This will displace any currently running rumble effect.
-     *
      * @param count the number of rumble blips to perform
      */
     public void rumbleBlips(int count) {
         RumbleEffect.Builder builder = new RumbleEffect.Builder();
 
-        for (int i = 0; i < count; i++) {
-            builder.addStep(1.0, 0, 250).addStep(0, 0, 100);
+        for(int i = 0; i < count; i++) {
+            builder.addStep(1.0,0,250).addStep(0,0,100);
         }
 
         queueEffect(builder.build());
@@ -498,13 +920,12 @@ public class Gamepad {
 
     /**
      * Returns an educated guess about whether there is a rumble action ongoing on this gamepad
-     *
      * @return an educated guess about whether there is a rumble action ongoing on this gamepad
      */
     public boolean isRumbling() {
-        if (nextRumbleApproxFinishTime == RUMBLE_FINISH_TIME_FLAG_NOT_RUMBLING) {
+        if(nextRumbleApproxFinishTime == RUMBLE_FINISH_TIME_FLAG_NOT_RUMBLING) {
             return false;
-        } else if (nextRumbleApproxFinishTime == RUMBLE_FINISH_TIME_FLAG_INFINITE) {
+        } else if(nextRumbleApproxFinishTime == RUMBLE_FINISH_TIME_FLAG_INFINITE) {
             return true;
         } else {
             return System.currentTimeMillis() < nextRumbleApproxFinishTime;
@@ -512,66 +933,41 @@ public class Gamepad {
     }
 
     private long calcApproxRumbleFinishTime(RumbleEffect effect) {
+        return 0;
         // If the effect is only 1 step long and has an infinite duration...
-        if (effect.steps.size() == 1 && effect.steps.get(0).duration == RUMBLE_DURATION_CONTINUOUS) {
-            // If the power is zero, then that means the gamepad is being commanded to cease rumble
-            if (effect.steps.get(0).large == 0 && effect.steps.get(0).small == 0) {
-                return RUMBLE_FINISH_TIME_FLAG_NOT_RUMBLING;
-            } else { // But if not, that means it's an infinite (continuous) rumble command
-                return RUMBLE_FINISH_TIME_FLAG_INFINITE;
-            }
-        } else { // If the effect has more than one step (or one step with non-infinite duration) we need to sum the step times
-            long time = System.currentTimeMillis();
-            long overhead = 50 /* rumbleGamepadsInterval in FtcEventLoopHandler */ +
-                    //AGS: not on simulator - SendOnceRunnable.MS_BATCH_TRANSMISSION_INTERVAL +
-                    5  /* Slop */;
-            for (RumbleEffect.Step step : effect.steps) {
-                time += step.duration;
-            }
-            time += overhead;
-            return time;
-        }
+//        if(effect.steps.size() == 1 && effect.steps.get(0).duration == RUMBLE_DURATION_CONTINUOUS) {
+//            // If the power is zero, then that means the gamepad is being commanded to cease rumble
+//            if (effect.steps.get(0).large == 0 && effect.steps.get(0).small == 0) {
+//                return RUMBLE_FINISH_TIME_FLAG_NOT_RUMBLING;
+//            } else { // But if not, that means it's an infinite (continuous) rumble command
+//                return RUMBLE_FINISH_TIME_FLAG_INFINITE;
+//            }
+//        } else { // If the effect has more than one step (or one step with non-infinite duration) we need to sum the step times
+//            long time = System.currentTimeMillis();
+//            long overhead = 50 /* rumbleGamepadsInterval in FtcEventLoopHandler */ +
+//                    SendOnceRunnable.MS_BATCH_TRANSMISSION_INTERVAL +
+//                    5  /* Slop */;
+//            for(RumbleEffect.Step step : effect.steps) {
+//                time += step.duration;
+//            }
+//            time += overhead;
+//            return time;
+//        }
     }
 
-    public boolean atRest() {
-        return (
-                left_stick_x == 0f && left_stick_y == 0f &&
-                right_stick_x == 0f && right_stick_y == 0f &&
-                left_trigger == 0f && right_trigger == 0f
-        );
-    }
-    public enum LegacyType {
-        // Do NOT change the order or names of existing entries, or add new entries.
-        // You will break backwards compatibility!!
-        UNKNOWN,
-        LOGITECH_F310,
-        XBOX_360,
-        SONY_PS4;
-    }
-
-    public enum Type {
-        // Do NOT change the order/names of existing entries,
-        // you will break backwards compatibility!!
-        UNKNOWN(LegacyType.UNKNOWN),
-        LOGITECH_F310(LegacyType.LOGITECH_F310),
-        XBOX_360(LegacyType.XBOX_360),
-        SONY_PS4(LegacyType.SONY_PS4), // This indicates a PS4-compatible controller that is being used through our compatibility mode
-        SONY_PS4_SUPPORTED_BY_KERNEL(LegacyType.SONY_PS4); // This indicates a PS4-compatible controller that is being used through the DualShock 4 Linux kernel driver.
-
-        private final LegacyType correspondingLegacyType;
-        Type(LegacyType correspondingLegacyType) {
-            this.correspondingLegacyType = correspondingLegacyType;
-        }
-    }
-
-    public int id = 0;
-    public int user;
-    public GamepadUser getUser() {
-        return GamepadUser.ONE;
-    }
-    public Type type;
-
-    public ByteBuffer getReadBuffer(Object a) {
-        return ByteBuffer.wrap(new byte[0]);
+    /**
+     * Alias buttons so that XBOX &amp; PS4 native button labels can be used in use code.
+     * Should allow a team to program with whatever controllers they prefer, but
+     * be able to swap controllers easily without changing code.
+     */
+    protected void updateButtonAliases(){
+        // There is no assignment for touchpad because there is no equivalent on XBOX controllers.
+        circle = b;
+        cross = a;
+        triangle = y;
+        square = x;
+        share = back;
+        options = start;
+        ps = guide;
     }
 }
