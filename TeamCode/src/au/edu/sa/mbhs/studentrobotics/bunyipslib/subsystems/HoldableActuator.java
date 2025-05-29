@@ -736,6 +736,9 @@ public class HoldableActuator extends BunyipsSubsystem {
      * Tasks for HoldableActuator, access with {@link #tasks}.
      */
     public class Tasks {
+        // Paranoia, we don't want to limit a goTo indefinitely if isBusy doesn't switch state
+        private static final Measure<Time> PRE_EXIT_SAFETY_MARGIN = Seconds.of(2);
+
         /**
          * Controls the actuator with a supplier of power.
          * <p>
@@ -879,10 +882,13 @@ public class HoldableActuator extends BunyipsSubsystem {
         @NonNull
         public Task goTo(int targetPosition) {
             return Task.task()
-                    .init(() -> {
+                    .init((t) -> {
                         sustainedTolerated.reset();
                         motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                         motor.setTargetPosition(targetPosition);
+                        encoder.clearCache();
+                        if (Mathf.isNear(targetPosition, encoder.getPosition(), motor.getTargetPositionTolerance()))
+                            t.finish();
                     })
                     .periodic(() -> {
                         int target = motor.getTargetPosition();
@@ -891,7 +897,12 @@ public class HoldableActuator extends BunyipsSubsystem {
                         DualTelemetry.smartAdd(HoldableActuator.this.toString(), "<font color='#FF5F1F'>MOVING -> %/% ticks</font> [%tps]", current, target, Math.round(encoder.getVelocity()));
                     })
                     .onFinish(() -> power = 0)
-                    .isFinished(() -> !motor.isBusy() && Mathf.isNear(targetPosition, encoder.getPosition(), motor.getTargetPositionTolerance()))
+                    .isFinished((t) -> {
+                        // Only consider finishing if the motor reports as busy first, with a safety margin
+                        if (motor.isBusy() || t.getDeltaTime().gte(PRE_EXIT_SAFETY_MARGIN))
+                            t.sharedRef.accept(true);
+                        return t.sharedRef.getInitialised() && !motor.isBusy() && Mathf.isNear(targetPosition, encoder.getPosition(), motor.getTargetPositionTolerance());
+                    })
                     .on(HoldableActuator.this, true)
                     .named(forThisSubsystem("Run To " + targetPosition + " Ticks"));
         }
@@ -949,11 +960,14 @@ public class HoldableActuator extends BunyipsSubsystem {
             if (userSetpointControl == null)
                 throw new Exceptions.EmergencyStop("Tried to create a profiled task when withUserSetpointControl(...) was not called!");
             return Task.task()
-                    .init(() -> {
+                    .init((t) -> {
                         uscInExternalUse = true;
                         usc.resetState();
                         sustainedTolerated.reset();
                         motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                        encoder.clearCache();
+                        if (Mathf.isNear(targetPosition, encoder.getPosition(), motor.getTargetPositionTolerance()))
+                            t.finish();
                     })
                     .periodic((t) -> {
                         int currentTarget = motor.getTargetPosition();
@@ -968,7 +982,11 @@ public class HoldableActuator extends BunyipsSubsystem {
                         uscInExternalUse = false;
                         power = 0;
                     })
-                    .isFinished(() -> !motor.isBusy() && Mathf.isNear(targetPosition, encoder.getPosition(), motor.getTargetPositionTolerance()))
+                    .isFinished((t) -> {
+                        if (motor.isBusy() || t.getDeltaTime().gte(PRE_EXIT_SAFETY_MARGIN))
+                            t.sharedRef.accept(true);
+                        return t.sharedRef.getInitialised() && !motor.isBusy() && Mathf.isNear(targetPosition, encoder.getPosition(), motor.getTargetPositionTolerance());
+                    })
                     .on(HoldableActuator.this, true)
                     .named(forThisSubsystem("Move To " + targetPosition + " Ticks"));
         }

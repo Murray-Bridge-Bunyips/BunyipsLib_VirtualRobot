@@ -5,6 +5,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.MecanumLocalizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.DriveModel;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.MecanumGains;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.MotionProfile;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.HoldableActuator;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive.MecanumDrive;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Scope;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -17,6 +18,7 @@ import com.qualcomm.robotcore.hardware.*;
 public class Robot extends RobotConfig {
     public static final Robot instance = new Robot();
     public final Hardware hw = new Hardware();
+    public HoldableActuator holdableActuator;
     public MecanumDrive drive;
 
     @Override
@@ -65,6 +67,7 @@ public class Robot extends RobotConfig {
             l.leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
             l.leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
         });
+        holdableActuator = new HoldableActuator(hw.arm_motor);
     }
 
     public static class Hardware {
