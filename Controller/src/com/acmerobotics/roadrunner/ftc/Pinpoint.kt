@@ -11,6 +11,8 @@ interface PinpointView {
     fun getParEncoderPosition(): Int
     fun getPerpEncoderPosition(): Int
     fun getHeadingVelocity(): Float
+    fun getParDirection(): DcMotorSimple.Direction
+    fun getPerpDirection(): DcMotorSimple.Direction
 
     fun setParDirection(direction: DcMotorSimple.Direction)
     fun setPerpDirection(direction: DcMotorSimple.Direction)
