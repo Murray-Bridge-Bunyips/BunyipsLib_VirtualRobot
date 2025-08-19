@@ -1,7 +1,7 @@
 # BunyipsLib Virtual Robot
 ###### A 2D simulator to help beginning Java programmers learn to program for FTC Robotics with BunyipsLib.
     
-![](/readme_image.jpg)
+![](/readme_image.png)
 
 
 This is a JavaFX application forked from the virtual-robot project.
@@ -12,13 +12,13 @@ Multiple robot configurations are available. MecanumBot has a mecanum drive with
 and with three dead-wheel encoders. XDriveBot has four corner-mounted Omni-wheels, a rear arm driven by a cr-servo, 
 and three dead-wheel encoders. ArmBot is a mecanum drive bot with a motor-driven arm and servo-driven grabber. 
 
-In general, BunyipsLib virtual robots will assume the default MecanumBot.
+By default, BunyipsLib virtual robots will assume the default `ArmBot` as per the `Robot` RobotConfig implementation.
 
 An approximation of the FTC SDK is provided as well as a version of BunyipsLib, with additional changes to support up to SDK v10.3.
 Vision and other incompatible features are no-op or return null.
 This simulator also has shims and ports of RoadRunner v1.0, Dairy Sloth, and Dashboard for code compatibility.
 
-A BunyipsLib `RobotConfig` for the MecanumBot is available in `au.edu.sa.mbhs.studentrobotics.virtual.robot` package.
+A BunyipsLib `RobotConfig` for the `ArmBot` is available in `au.edu.sa.mbhs.studentrobotics.virtual.robot` package.
 This configuration works exactly the same as a real robot running BunyipsLib, and new OpModes can be created in the same way as a normal bot within this package.
 
 Several virtual-robot sample op modes are currently disabled (in the `archived` subpackage of the `virtual.robot` package), as well as a 

@@ -262,13 +262,6 @@ public abstract class RoadRunnerTuningOpMode extends LinearOpMode {
                             DcMotorSimple.Direction.FORWARD : DcMotorSimple.Direction.REVERSE;
                 }
 
-                @NonNull
-                @Override
-                public DcMotorSimple.Direction getParDirection() {
-                    return parDirection == GoBildaPinpointDriver.EncoderDirection.FORWARD ?
-                            DcMotorSimple.Direction.FORWARD : DcMotorSimple.Direction.REVERSE;
-                }
-
                 @Override
                 public void setParDirection(@NonNull DcMotorSimple.Direction direction) {
                     parDirection = direction == DcMotorSimple.Direction.FORWARD ?
