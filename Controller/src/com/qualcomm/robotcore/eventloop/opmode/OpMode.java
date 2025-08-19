@@ -38,6 +38,8 @@ package com.qualcomm.robotcore.eventloop.opmode;
 
 import virtual_robot.controller.VirtualRobotController;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -47,6 +49,7 @@ import java.util.concurrent.TimeUnit;
  * Optionally, "init_loop", "start", and "stop" methods may be overridden.
  */
 public abstract class OpMode extends VirtualRobotController.OpModeBase {
+    public static final HashMap<String, Object> blackboard = new HashMap<>();
     /**
      * number of seconds this op mode has been running, this is
      * updated before every call to loop.

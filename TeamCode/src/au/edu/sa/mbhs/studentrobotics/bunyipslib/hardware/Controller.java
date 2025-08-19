@@ -11,6 +11,8 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.robotcore.internal.ui.GamepadUser;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.function.Predicate;
@@ -20,6 +22,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsOpMode;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.UnaryFunction;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.logic.Condition;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls;
+import dev.frozenmilk.util.cell.MirroredCell;
 
 /**
  * A wrapper around a {@link Gamepad} object that provides a {@link Controls} interface and custom input calculations.
@@ -40,6 +43,10 @@ public class Controller extends Gamepad {
     private final HashMap<Controls, Predicate<Boolean>> buttons = new HashMap<>();
     private final HashMap<Controls.Analog, UnaryFunction> axes = new HashMap<>();
     private final HashMap<Controls, Boolean> debounces = new HashMap<>();
+    // Can't use GamepadStateChanges class directly as it is package-private
+    private final MirroredCell<Object> gamepadStateChanges = new MirroredCell<>(this, "changes");
+    // GamepadStateChanges and all methods that update it are private, we do some reflection to expose this method
+    private final Method updateGamepadStateChanges;
     /**
      * Shorthand for left_stick_x
      */
@@ -114,6 +121,14 @@ public class Controller extends Gamepad {
      */
     public Controller(@NonNull GamepadUser designatedUser) {
         this.designatedUser = designatedUser;
+        // Reference to the edge detector lets us update it in our overridden fromByteArray
+        try {
+            updateGamepadStateChanges = gamepadStateChanges.get().getClass()
+                    .getDeclaredMethod("updateAllButtons", Gamepad.class);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException("Failed to access an internal field, this shouldn't happen!", e);
+        }
+        updateGamepadStateChanges.setAccessible(true);
     }
 
     /**
@@ -243,6 +258,12 @@ public class Controller extends Gamepad {
             touchpad_finger_2_y = byteBuffer.getFloat();
         }
         updateButtonAliases();
+        try {
+            // Update edge detectors that we can't access conventionally
+            updateGamepadStateChanges.invoke(gamepadStateChanges.get(), this);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException("Failed to invoke an internal method, this shouldn't happen!", e);
+        }
     }
 
     private boolean transform(boolean sdk, Controls button) {
@@ -346,8 +367,11 @@ public class Controller extends Gamepad {
 
     /**
      * Check if a button is currently pressed on a gamepad, with debounce to ignore a press that was already detected
-     * upon the <b>first call of this function and button</b>. This is an implementation of rising edge detection, but also
-     * applies a check for the initial state of the button, making it useful for task toggles.
+     * upon the <b>first call of this function and button</b>. This is an implementation of rising edge detection,
+     * but also applies a check for the initial state of the button, making it useful for task toggles and <b>is stateful</b>.
+     * <p>
+     * Standard edge detectors that are stateless are available natively as of SDK v10.3 through
+     * {@code wasPressed} and {@code wasReleased}. Use these if idempotency is required.
      * <p>
      * See the {@link Condition} class for more boolean state management.
      *
@@ -368,8 +392,12 @@ public class Controller extends Gamepad {
 
     /**
      * Call to reset the initial debounce state of {@link #getDebounced(Controls)}, allowing further calls to
-     * this method to capture the initial state of the button again. For implementations that do not call this method,
-     * the {@link #getDebounced(Controls)} method will operate as a simple rising edge detector.
+     * this method to capture the initial state of the button again. This resets the statefulness of the debounced state.
+     * For implementations that do not call this method, the {@link #getDebounced(Controls)} method will
+     * operate as a simple rising edge detector.
+     * <p>
+     * Standard edge detectors that are stateless are available natively as of SDK v10.3 through
+     * {@code wasPressed} and {@code wasReleased}. Use these if idempotency is required.
      *
      * @param button The button to reset the debounce state of
      */

@@ -35,6 +35,7 @@ import com.acmerobotics.roadrunner.ftc.OTOSPositionOffsetTuner;
 import com.acmerobotics.roadrunner.ftc.PinpointEncoderGroup;
 import com.acmerobotics.roadrunner.ftc.PinpointIMU;
 import com.acmerobotics.roadrunner.ftc.PinpointView;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -56,7 +57,6 @@ import java.util.concurrent.TimeUnit;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsOpMode;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.DualTelemetry;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.GoBildaPinpointDriver;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.TelemetryMenu;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.Localizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.MecanumLocalizer;
@@ -228,8 +228,8 @@ public abstract class RoadRunnerTuningOpMode extends LinearOpMode {
             imu.accept(new OTOSIMU(ol.otos));
         } else if (localizer instanceof PinpointLocalizer pl) {
             PinpointView pv = new PinpointView() {
-                private GoBildaPinpointDriver.EncoderDirection parDirection = pl.pinpoint.getXDirection();
-                private GoBildaPinpointDriver.EncoderDirection perpDirection = pl.pinpoint.getYDirection();
+                GoBildaPinpointDriver.EncoderDirection parDirection = pl.params.initialParDirection;
+                GoBildaPinpointDriver.EncoderDirection perpDirection = pl.params.initialPerpDirection;
 
                 @Override
                 public void update() {
@@ -250,9 +250,16 @@ public abstract class RoadRunnerTuningOpMode extends LinearOpMode {
                 }
 
                 @Override
-                public float getHeadingVelocity() {
+                public float getHeadingVelocity(@NonNull UnnormalizedAngleUnit unit) {
                     assert pl.pinpoint != null;
-                    return (float) pl.pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS);
+                    return (float) pl.pinpoint.getHeadingVelocity(unit);
+                }
+
+                @NonNull
+                @Override
+                public DcMotorSimple.Direction getParDirection() {
+                    return parDirection == GoBildaPinpointDriver.EncoderDirection.FORWARD ?
+                            DcMotorSimple.Direction.FORWARD : DcMotorSimple.Direction.REVERSE;
                 }
 
                 @NonNull
@@ -328,9 +335,8 @@ public abstract class RoadRunnerTuningOpMode extends LinearOpMode {
         });
 
         DriveViewFactory dvf;
-        if (drive instanceof MecanumDrive) {
+        if (drive instanceof MecanumDrive md) {
             dvf = (h) -> {
-                MecanumDrive md = (MecanumDrive) drive;
                 md.setPose(Geometry.zeroPose());
 
                 // We don't want to expose the motors on the subsystem directly, we'll just use reflection here.
@@ -410,9 +416,8 @@ public abstract class RoadRunnerTuningOpMode extends LinearOpMode {
                         0
                 );
             };
-        } else if (drive instanceof TankDrive) {
+        } else if (drive instanceof TankDrive td) {
             dvf = (h) -> {
-                TankDrive td = (TankDrive) drive;
                 td.setPose(Geometry.zeroPose());
 
                 Class<?> tdClass = td.getClass();

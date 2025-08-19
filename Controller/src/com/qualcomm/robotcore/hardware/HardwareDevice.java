@@ -42,7 +42,7 @@ public interface HardwareDevice {
 
     enum Manufacturer {
         Unknown, Other, Lego, HiTechnic, ModernRobotics, Adafruit, Matrix, Lynx, AMS, STMicroelectronics,
-        Broadcom, SparkFun
+        Broadcom, SparkFun, GoBilda
     }
 
     /**
