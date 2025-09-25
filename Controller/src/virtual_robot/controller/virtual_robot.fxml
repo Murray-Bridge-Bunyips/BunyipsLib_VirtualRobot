@@ -30,7 +30,7 @@
                <VBox.margin>
                   <Insets bottom="10.0" left="15.0" right="15.0" top="10.0" />
                </VBox.margin></Button>
-            <TextArea fx:id="txtTelemetry" editable="false" prefHeight="250.0" prefWidth="250.0" />
+            <TextArea fx:id="txtTelemetry" editable="false" prefHeight="400.0" prefWidth="250.0" />
             <HBox fx:id="hbxGamePads" prefWidth="200.0">
                <children>
                   <CheckBox fx:id="checkBoxGamePad1" mnemonicParsing="false" text="GamePad1">

@@ -19,10 +19,10 @@ public class FakePinpoint implements I2cDeviceSynchSimple {
     public FakePinpoint() {
     }
 
-    @Hook(on = Hook.Target.PRE_INIT, priority = 3)
-    private static void injectPinpoint() {
-        BunyipsLib.getOpMode().hardwareMap.put("pinpoint", new GoBildaPinpointDriver(new FakePinpoint(), true));
-    }
+//    @Hook(on = Hook.Target.PRE_INIT, priority = 3)
+//    private static void injectPinpoint() {
+//        BunyipsLib.getOpMode().hardwareMap.put("pinpoint", new GoBildaPinpointDriver(new FakePinpoint(), true));
+//    }
     // assume velocity is 0 since it auto resets
 
     @Override
