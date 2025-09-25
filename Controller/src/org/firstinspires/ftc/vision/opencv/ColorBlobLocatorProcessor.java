@@ -39,7 +39,6 @@ import androidx.annotation.ColorInt;
 
 import com.qualcomm.robotcore.util.SortOrder;
 
-import opencv.Circle;
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;

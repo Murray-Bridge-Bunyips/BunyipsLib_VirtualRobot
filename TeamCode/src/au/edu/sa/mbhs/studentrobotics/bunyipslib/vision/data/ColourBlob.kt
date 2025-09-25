@@ -2,7 +2,7 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.vision.data
 
 import android.util.Size
 import com.qualcomm.robotcore.util.SortOrder
-import opencv.Circle
+import org.firstinspires.ftc.vision.opencv.Circle
 import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor.BlobCriteria
 import org.opencv.core.MatOfPoint
 import org.opencv.core.Point

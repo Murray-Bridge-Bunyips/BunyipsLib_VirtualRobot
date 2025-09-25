@@ -9,9 +9,10 @@ import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.roadrunner.ftc.FlightRecorder;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.function.Consumer;
@@ -29,6 +30,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.Hook;
  */
 @Config
 public final class Dashboard {
+    private static final HashMap<String, Supplier<String>> observations = new HashMap<>();
     /**
      * The radius of the robot for drawing in inches.
      */
@@ -42,7 +44,11 @@ public final class Dashboard {
      * be sent automatically if this is enabled, {@link #sendAndClearSyncedPackets()} must be called manually.
      */
     public static boolean USING_SYNCED_PACKETS = false;
-    private static final ArrayList<Supplier<String>> observations = new ArrayList<>();
+    /**
+     * The interval at which observed objects registered in {@link #observe(Object...)} are updated and sent to the
+     * RoadRunner log {@link FlightRecorder} on {@link #updateObservations()} invocations.
+     */
+    public static int FLIGHT_RECORDER_OBSERVATION_INTERVAL_MS = 10;
     private static volatile TelemetryPacket accumulatedPacket = new TelemetryPacket();
 
     private Dashboard() {
@@ -110,7 +116,7 @@ public final class Dashboard {
      * @param a the first (leading) packet, this will be used as the parent
      * @param b the second packet, this packet will be deconstructed and merged into the leading packet
      * @return a merged packet leading with the first packet
-     * @since ?.?.?
+     * @since 7.5.0
      */
     @SuppressWarnings("unchecked")
     public static TelemetryPacket mergePackets(TelemetryPacket a, TelemetryPacket b) {
@@ -145,14 +151,14 @@ public final class Dashboard {
      * Calling this method yourself is often unnecessary unless you want to perform some advanced operations.
      *
      * @return a packet with text information regarding all registered items in {@link #observe(Object...)}
-     * @since ?.?.?
+     * @since 7.5.0
      */
     @NonNull
     public static TelemetryPacket updateObservations() {
         TelemetryPacket p = new TelemetryPacket();
         if (observations.isEmpty()) return p;
-        for (Supplier<String> supplier : observations) {
-            // TODO
+        for (String key : observations.keySet()) {
+            // TODO: FlightRecorder?
         }
         return p;
     }
@@ -169,7 +175,7 @@ public final class Dashboard {
      * @param objects the objects that should be observed to draw on the dashboard field canvas. Some objects are
      *                automagically converted into useful base information, such as hardware devices. Suppliers will
      *                be updated. Other objects will simply have {@code .toString()} called.
-     * @since ?.?.?
+     * @since 7.5.0
      */
     public static void observe(Object... objects) {
         for (Object object : objects) {

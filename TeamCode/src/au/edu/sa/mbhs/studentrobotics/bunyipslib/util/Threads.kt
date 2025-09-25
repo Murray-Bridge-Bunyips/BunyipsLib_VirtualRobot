@@ -79,13 +79,18 @@ object Threads {
          * @throws InterruptedException if the current thread was interrupted while waiting
          * @throws TimeoutException if the wait timed out
          */
-        @Throws(
-            CancellationException::class,
-            ExecutionException::class,
-            InterruptedException::class,
-            TimeoutException::class
-        )
         fun get(timeout: Measure<Time>): T = get((timeout to Milliseconds).toLong(), TimeUnit.MILLISECONDS)
+
+        /**
+         * Waits if necessary for the computation to complete, and then retrieves its result.
+         *
+         * @returns the computed result
+         * @throws CancellationException if the computation was cancelled
+         * @throws ExecutionException if the computation threw an exception
+         * @throws InterruptedException if the current thread was interrupted while waiting
+         * @throws TimeoutException if the wait timed out
+         */
+        fun getResult(): T = get()
     }
 
     /**
