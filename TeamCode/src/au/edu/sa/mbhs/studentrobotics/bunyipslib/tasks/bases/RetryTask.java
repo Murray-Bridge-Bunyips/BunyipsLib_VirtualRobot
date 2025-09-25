@@ -41,7 +41,7 @@ public class RetryTask extends Task {
         this.shouldRetry = shouldRetry;
         this.maxRetries = maxRetries;
         named(task + " || " + retryTask + " (rty.)");
-        timeout = task.timeout.times(maxRetries);
+        timeout = task.timeout.times(Math.max(1, maxRetries));
     }
 
     /**
@@ -66,7 +66,7 @@ public class RetryTask extends Task {
     protected void periodic() {
         if (!currentTask.poll()) {
             named(currentTask.toString());
-            timeout = currentTask.timeout.times(maxRetries - retryCount);
+            timeout = currentTask.timeout.times(maxRetries - retryCount + 1);
             currentTask.execute();
             return;
         }
