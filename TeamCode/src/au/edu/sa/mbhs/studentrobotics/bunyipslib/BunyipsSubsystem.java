@@ -46,7 +46,7 @@ public abstract class BunyipsSubsystem {
     /**
      * Serialised structure used in logging detailed subsystem status to the {@link FlightRecorder}.
      */
-    public final LogSchema logger = new LogSchema();
+    public LogSchema logger = new LogSchema();
     private final Periodic flightRecorder;
     private final List<BunyipsSubsystem> children = new ArrayList<>();
     /**
@@ -244,8 +244,8 @@ public abstract class BunyipsSubsystem {
      *
      * @param logSchema the object that stores a running record of serializable and loggable data to log to {@link FlightRecorder}.
      */
-    protected final void attachLogSchema(Object logSchema) {
-        logger.child = logSchema;
+    protected final void attachLogSchema(LogSchema logSchema) {
+        logger = logSchema;
     }
 
     /**
@@ -553,11 +553,5 @@ public abstract class BunyipsSubsystem {
          * Currently executing task.
          */
         public String currentTask = "";
-        /**
-         * Implemented subsystem attached schema.
-         * <p>
-         * Subsystems with a custom schema of log info should set to this value.
-         */
-        public Object child = "";
     }
 }

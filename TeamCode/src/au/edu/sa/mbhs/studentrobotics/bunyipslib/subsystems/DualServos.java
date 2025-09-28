@@ -190,7 +190,7 @@ public class DualServos extends BunyipsSubsystem {
         BOTH
     }
 
-    private static class LogSchema {
+    public static class LogSchema extends BunyipsSubsystem.LogSchema {
         public double leftTarget;
         public double leftServoTarget;
         public double rightTarget;

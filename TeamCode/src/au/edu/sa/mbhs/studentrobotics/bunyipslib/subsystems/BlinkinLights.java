@@ -225,7 +225,7 @@ public class BlinkinLights extends BunyipsSubsystem {
         }
     }
 
-    private static class LogSchema {
+    public static class LogSchema extends BunyipsSubsystem.LogSchema {
         public RevBlinkinLedDriver.BlinkinPattern pattern = RevBlinkinLedDriver.BlinkinPattern.BLACK;
         public double pwmMapped;
     }

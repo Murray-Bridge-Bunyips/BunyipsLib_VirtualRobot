@@ -67,7 +67,7 @@ public class Actuator extends BunyipsSubsystem {
         actuator.setPower(power);
     }
 
-    private static class LogSchema {
+    public static class LogSchema extends BunyipsSubsystem.LogSchema {
         public double power;
     }
 

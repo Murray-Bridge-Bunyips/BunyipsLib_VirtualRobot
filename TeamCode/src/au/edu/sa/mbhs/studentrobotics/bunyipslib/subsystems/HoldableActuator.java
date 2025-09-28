@@ -612,7 +612,7 @@ public class HoldableActuator extends BunyipsSubsystem {
         encoder.setCaching(false);
     }
 
-    private static class LogSchema {
+    public static class LogSchema extends BunyipsSubsystem.LogSchema {
         public int position;
         public int targetPosition;
         public double velocity;

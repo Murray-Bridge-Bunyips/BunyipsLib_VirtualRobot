@@ -172,7 +172,7 @@ public class SimpleTankDrive extends BunyipsSubsystem implements Moveable {
         return localizer != null ? accumulator.getVelocity() : null;
     }
 
-    private static class LogSchema {
+    public static class LogSchema extends BunyipsSubsystem.LogSchema {
         public double leftPower;
         public double rightPower;
         public double speedX;

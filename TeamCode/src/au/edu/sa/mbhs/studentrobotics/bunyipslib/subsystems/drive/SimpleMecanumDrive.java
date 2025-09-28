@@ -291,7 +291,7 @@ public class SimpleMecanumDrive extends BunyipsSubsystem implements Moveable {
         ROTATIONAL
     }
 
-    private static class LogSchema {
+    public static class LogSchema extends BunyipsSubsystem.LogSchema {
         public double speedX;
         public double speedY;
         public double speedR;
