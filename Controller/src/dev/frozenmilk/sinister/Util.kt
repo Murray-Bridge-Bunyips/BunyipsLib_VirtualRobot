@@ -40,7 +40,7 @@ fun Member.isFinal() : Boolean = Modifier.isFinal(modifiers)
 /**
  * used to find all [Scanner]s, will give access to all loaded instances of a preloaded class, which is useful for kotlin objects, and similar java singletons
  */
-fun <T : Any> Class<*>.staticInstancesOf(type: Class<T>) : Set<T> =//////////
+fun <T : Any> Class<*>.staticInstancesOf(type: Class<T>) : Set<T> =////////////
 	this.getAllFields {
 		it.isStatic() && type.isAssignableFrom(it.type)
 	}

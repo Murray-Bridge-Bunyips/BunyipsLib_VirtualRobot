@@ -40,7 +40,7 @@ import dev.frozenmilk.sinister.loading.Preload;
  * {@link OpModeManagerNotifier.Notifications} is an interface by which interested
  * parties can receive notification of the coming and going of OpModes.
  * <p>
- * This doesn't actually do much in virtual robot.
+ * This works.
  */
 public interface OpModeManagerNotifier
     {
