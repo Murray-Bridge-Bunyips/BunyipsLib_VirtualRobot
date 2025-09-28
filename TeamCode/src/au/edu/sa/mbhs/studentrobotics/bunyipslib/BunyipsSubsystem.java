@@ -43,12 +43,12 @@ public abstract class BunyipsSubsystem {
      */
     public static double FLIGHT_RECORDER_INTERVAL_MS = 10;
     private static int idx = 0;
+    private final Periodic flightRecorder;
+    private final List<BunyipsSubsystem> children = new ArrayList<>();
     /**
      * Serialised structure used in logging detailed subsystem status to the {@link FlightRecorder}.
      */
     public LogSchema logger = new LogSchema();
-    private final Periodic flightRecorder;
-    private final List<BunyipsSubsystem> children = new ArrayList<>();
     /**
      * Reference to the user-defined or default name of this subsystem.
      *

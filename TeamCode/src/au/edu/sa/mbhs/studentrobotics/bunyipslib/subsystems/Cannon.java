@@ -120,8 +120,17 @@ public class Cannon extends BunyipsSubsystem {
         prolong.setPosition(target);
     }
 
+    /**
+     * Log schema for Cannon instances.
+     */
     public static class LogSchema extends BunyipsSubsystem.LogSchema {
+        /**
+         * Desired target.
+         */
         public double target;
+        /**
+         * Actual target sent to the servo.
+         */
         public double servoTarget;
     }
 
