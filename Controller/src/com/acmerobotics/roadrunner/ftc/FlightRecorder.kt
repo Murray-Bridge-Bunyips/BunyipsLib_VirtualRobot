@@ -1,11 +1,14 @@
 package com.acmerobotics.roadrunner.ftc
 
 import android.annotation.SuppressLint
+import android.content.Context
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerImpl
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerNotifier
 import com.qualcomm.robotcore.util.RobotLog
+import com.qualcomm.robotcore.util.WebHandlerManager
 import org.firstinspires.ftc.ftccommon.internal.manualcontrol.ManualControlOpMode
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil
 import java.io.File
 import java.io.OutputStream
 import java.text.SimpleDateFormat
@@ -39,6 +42,15 @@ private class FlightLogWriter(suffix: String) {
 object FlightRecorder : OpModeManagerNotifier.Notifications {
     private var writer: FlightLogWriter? = null
 
+//    // I'm tempted to use @OnCreate, but some of the hooks are unreliable and @WebHandlerRegistrar
+//    // seems to just work.
+//    @WebHandlerRegistrar
+//    @JvmStatic
+//    fun registerRoutes(context: Context, manager: WebHandlerManager) {
+//        OpModeManagerImpl.getOpModeManagerOfActivity(AppUtil.getInstance().activity)
+//                .registerListener(this)
+//    }
+
     override fun onOpModePreInit(opMode: OpMode?) {
         synchronized(this) {
             writer?.close()
@@ -55,7 +67,7 @@ object FlightRecorder : OpModeManagerNotifier.Notifications {
                     totalSizeBytes -= fs[i].length()
                     if (!fs[i].delete()) {
                         // avoid panicking here
-                        RobotLog.setGlobalErrorMsg("Unable to delete file " + fs[i].absolutePath);
+                        RobotLog.addGlobalWarningMessage("Unable to delete file ${fs[i].absolutePath}")
                     }
                     ++i
                 }

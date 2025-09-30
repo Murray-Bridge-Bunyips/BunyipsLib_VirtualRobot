@@ -5,7 +5,13 @@ import com.qualcomm.hardware.sparkfun.SparkFunOTOS
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareDevice
 import com.qualcomm.robotcore.hardware.IMU
-import org.firstinspires.ftc.robotcore.external.navigation.*
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
+import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation
+import org.firstinspires.ftc.robotcore.external.navigation.Quaternion
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles
 import kotlin.math.round
 
 fun rawPosVelPair(pos: Int, vel: Int) = PositionVelocityPair(pos, vel, pos, vel)
@@ -48,7 +54,7 @@ class OTOSIMU(val otos: SparkFunOTOS) : LazyImu, IMU, HardwareDevice by otos {
     override fun resetYaw() = fail()
 
     override fun getRobotYawPitchRollAngles(): YawPitchRollAngles {
-        return YawPitchRollAngles(AngleUnit.RADIANS, otos.position.h, 0.0, 0.0, 0L)
+        return YawPitchRollAngles(otos.angularUnit, normalizeAngle(otos.position.h), 0.0, 0.0, 0L)
     }
 
     override fun getRobotOrientation(
@@ -60,7 +66,7 @@ class OTOSIMU(val otos: SparkFunOTOS) : LazyImu, IMU, HardwareDevice by otos {
     override fun getRobotOrientationAsQuaternion(): Quaternion = fail()
 
     override fun getRobotAngularVelocity(p0: AngleUnit?): AngularVelocity {
-        return AngularVelocity(AngleUnit.RADIANS, 0.0f, 0.0f, otos.velocity.h.toFloat(), 0L)
+        return AngularVelocity(otos.angularUnit, 0.0f, 0.0f, otos.velocity.h.toFloat(), 0L).toAngleUnit(p0)
     }
 
     override fun get() = this as IMU

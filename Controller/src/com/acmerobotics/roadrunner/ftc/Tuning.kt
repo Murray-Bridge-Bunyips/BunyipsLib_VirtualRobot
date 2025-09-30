@@ -12,7 +12,6 @@ import com.acmerobotics.roadrunner.Time
 import com.acmerobotics.roadrunner.TimeProfile
 import com.acmerobotics.roadrunner.Vector2d
 import com.acmerobotics.roadrunner.constantProfile
-//import com.google.gson.annotations.SerializedName
 import com.qualcomm.hardware.lynx.LynxModule
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
@@ -46,8 +45,8 @@ class MidpointTimer {
 }
 
 private class MutableSignal(
-    val times: MutableList<Double> = mutableListOf(),
-    val values: MutableList<Double> = mutableListOf()
+        val times: MutableList<Double> = mutableListOf(),
+        val values: MutableList<Double> = mutableListOf()
 )
 
 enum class DriveType {
@@ -67,25 +66,25 @@ data class EncoderRef(
 )
 
 class DriveView(
-    val type: DriveType,
-    val inPerTick: Double,
-    val maxVel: Double,
-    val minAccel: Double,
-    val maxAccel: Double,
-    val encoderGroups: List<EncoderGroup>,
-    // ordered front to rear
-    val leftMotors: List<DcMotorEx>,
-    val rightMotors: List<DcMotorEx>,
-    // invariant: (leftEncs.isEmpty() && rightEncs.isEmpty()) ||
-    //                  (parEncs.isEmpty() && perpEncs.isEmpty())
-    val leftEncs: List<EncoderRef>,
-    val rightEncs: List<EncoderRef>,
-    val parEncs: List<EncoderRef>,
-    val perpEncs: List<EncoderRef>,
-    val imu: LazyImu,
-    val voltageSensor: VoltageSensor,
-    val feedforwardFactory: FeedforwardFactory,
-    bogus: Int,
+        val type: DriveType,
+        val inPerTick: Double,
+        val maxVel: Double,
+        val minAccel: Double,
+        val maxAccel: Double,
+        val encoderGroups: List<EncoderGroup>,
+        // ordered front to rear
+        val leftMotors: List<DcMotorEx>,
+        val rightMotors: List<DcMotorEx>,
+        // invariant: (leftEncs.isEmpty() && rightEncs.isEmpty()) ||
+        //                  (parEncs.isEmpty() && perpEncs.isEmpty())
+        val leftEncs: List<EncoderRef>,
+        val rightEncs: List<EncoderRef>,
+        val parEncs: List<EncoderRef>,
+        val perpEncs: List<EncoderRef>,
+        val imu: LazyImu,
+        val voltageSensor: VoltageSensor,
+        val feedforwardFactory: FeedforwardFactory,
+        bogus: Int,
 ) {
     // Legacy constructor to preserve compatibility with older quickstarts.
     constructor(
@@ -254,41 +253,41 @@ class AngularRampLogger(val dvf: DriveViewFactory) : LinearOpMode() {
 
             for (i in view.leftEncs.indices) {
                 recordUnwrappedEncoderData(
-                    view.encoderGroups,
-                    encTimes,
-                    view.leftEncs[i],
-                    data.leftEncPositions[i],
-                    data.leftEncVels[i]
+                        view.encoderGroups,
+                        encTimes,
+                        view.leftEncs[i],
+                        data.leftEncPositions[i],
+                        data.leftEncVels[i]
                 )
             }
 
             for (i in view.rightEncs.indices) {
                 recordUnwrappedEncoderData(
-                    view.encoderGroups,
-                    encTimes,
-                    view.rightEncs[i],
-                    data.rightEncPositions[i],
-                    data.rightEncVels[i]
+                        view.encoderGroups,
+                        encTimes,
+                        view.rightEncs[i],
+                        data.rightEncPositions[i],
+                        data.rightEncVels[i]
                 )
             }
 
             for (i in view.parEncs.indices) {
                 recordUnwrappedEncoderData(
-                    view.encoderGroups,
-                    encTimes,
-                    view.parEncs[i],
-                    data.parEncPositions[i],
-                    data.parEncVels[i]
+                        view.encoderGroups,
+                        encTimes,
+                        view.parEncs[i],
+                        data.parEncPositions[i],
+                        data.parEncVels[i]
                 )
             }
 
             for (i in view.perpEncs.indices) {
                 recordUnwrappedEncoderData(
-                    view.encoderGroups,
-                    encTimes,
-                    view.perpEncs[i],
-                    data.perpEncPositions[i],
-                    data.perpEncVels[i]
+                        view.encoderGroups,
+                        encTimes,
+                        view.perpEncs[i],
+                        data.perpEncPositions[i],
+                        data.perpEncVels[i]
                 )
             }
 
@@ -388,11 +387,11 @@ class ForwardRampLogger(val dvf: DriveViewFactory) : LinearOpMode() {
 
             for (i in view.forwardEncs.indices) {
                 recordUnwrappedEncoderData(
-                    view.encoderGroups,
-                    encTimes,
-                    view.forwardEncs[i],
-                    data.forwardEncPositions[i],
-                    data.forwardEncVels[i]
+                        view.encoderGroups,
+                        encTimes,
+                        view.forwardEncs[i],
+                        data.forwardEncPositions[i],
+                        data.forwardEncVels[i]
                 )
             }
         }
@@ -462,11 +461,11 @@ class LateralRampLogger(val dvf: DriveViewFactory) : LinearOpMode() {
 
             for (i in view.perpEncs.indices) {
                 recordUnwrappedEncoderData(
-                    view.encoderGroups,
-                    encTimes,
-                    view.perpEncs[i],
-                    data.perpEncPositions[i],
-                    data.perpEncVels[i]
+                        view.encoderGroups,
+                        encTimes,
+                        view.perpEncs[i],
+                        data.perpEncPositions[i],
+                        data.perpEncVels[i]
                 )
             }
         }
@@ -533,7 +532,7 @@ class ManualFeedforwardTuner(val dvf: DriveViewFactory) : LinearOpMode() {
 
         val view = dvf.make(hardwareMap)
         val profile = TimeProfile(constantProfile(
-            DISTANCE, 0.0, view.maxVel, view.minAccel, view.maxAccel).baseProfile)
+                DISTANCE, 0.0, view.maxVel, view.minAccel, view.maxAccel).baseProfile)
 
         var mode = Mode.TUNING_MODE
 
@@ -605,11 +604,11 @@ class ManualFeedforwardTuner(val dvf: DriveViewFactory) : LinearOpMode() {
                     }
 
                     view.setDrivePowers(PoseVelocity2d(
-                        Vector2d(
-                            -gamepad1.left_stick_y.toDouble(),
-                            if (view.type == DriveType.TANK) 0.0 else -gamepad1.left_stick_x.toDouble()
-                        ),
-                        -gamepad1.right_stick_x.toDouble()
+                            Vector2d(
+                                    -gamepad1.left_stick_y.toDouble(),
+                                    if (view.type == DriveType.TANK) 0.0 else -gamepad1.left_stick_x.toDouble()
+                            ),
+                            -gamepad1.right_stick_x.toDouble()
                     ))
                 }
             }
@@ -776,6 +775,14 @@ class OTOSAngularScalarTuner(val dvf: DriveViewFactory) : LinearOpMode() {
             telemetry.addData("Uncorrected Degrees Turned", Math.toDegrees(radsTurned))
             telemetry.addData("Calculated Angular Scalar", 3600 / Math.toDegrees(radsTurned))
             telemetry.update()
+
+            view.setDrivePowers(PoseVelocity2d(
+                Vector2d(
+                    -gamepad1.left_stick_y.toDouble(),
+                    if (view.type == DriveType.TANK) 0.0 else -gamepad1.left_stick_x.toDouble()
+                ),
+                -gamepad1.right_stick_x.toDouble()
+            ))
         }
     }
 }
@@ -798,12 +805,24 @@ class OTOSLinearScalarTuner(val dvf: DriveViewFactory) : LinearOpMode() {
         waitForStart()
 
         while (opModeIsActive()) {
+            for (g in view.encoderGroups) {
+                g.bulkRead()
+            }
+
             val xPos = parallelEnc.getPositionAndVelocity().position * view.inPerTick
             val yPos = perpEnc.getPositionAndVelocity().position * view.inPerTick
 
-            telemetry.addData("Uncorrected Distance Traveled Y", xPos)
-            telemetry.addData("Uncorrected Distance Traveled X", yPos)
+            telemetry.addData("Uncorrected Distance Traveled X", xPos)
+            telemetry.addData("Uncorrected Distance Traveled Y", yPos)
             telemetry.update()
+
+            view.setDrivePowers(PoseVelocity2d(
+                Vector2d(
+                    -gamepad1.left_stick_y.toDouble(),
+                    if (view.type == DriveType.TANK) 0.0 else -gamepad1.left_stick_x.toDouble()
+                ),
+                -gamepad1.right_stick_x.toDouble()
+            ))
         }
     }
 }
@@ -828,12 +847,24 @@ class OTOSHeadingOffsetTuner(val dvf: DriveViewFactory) : LinearOpMode() {
 
         waitForStart()
         while (opModeIsActive()) {
+            for (g in view.encoderGroups) {
+                g.bulkRead()
+            }
+
             val xPos = parallelEnc.getPositionAndVelocity().position * view.inPerTick
             val yPos = perpEnc.getPositionAndVelocity().position * view.inPerTick
 
             telemetry.addData("Heading Offset (radians, enter this one into OTOSLocalizer!)", atan2(yPos, xPos))
             telemetry.addData("Heading Offset (degrees)", Math.toDegrees(atan2(yPos, xPos)))
             telemetry.update()
+
+            view.setDrivePowers(PoseVelocity2d(
+                Vector2d(
+                    -gamepad1.left_stick_y.toDouble(),
+                    if (view.type == DriveType.TANK) 0.0 else -gamepad1.left_stick_x.toDouble()
+                ),
+                -gamepad1.right_stick_x.toDouble()
+            ))
         }
     }
 }
@@ -859,6 +890,10 @@ class OTOSPositionOffsetTuner(val dvf: DriveViewFactory) : LinearOpMode() {
         telemetry.update()
         waitForStart()
         while (opModeIsActive()) {
+            for (g in view.encoderGroups) {
+                g.bulkRead()
+            }
+
             val heading = view.imu.get().robotYawPitchRollAngles.getYaw(AngleUnit.RADIANS)
             val xPos = parallelEnc.getPositionAndVelocity().position * view.inPerTick
             val yPos = perpEnc.getPositionAndVelocity().position * view.inPerTick
@@ -871,6 +906,14 @@ class OTOSPositionOffsetTuner(val dvf: DriveViewFactory) : LinearOpMode() {
                 telemetry.addLine("Rotate the robot 180 degrees and align it to the corner again.")
             }
             telemetry.update()
+
+            view.setDrivePowers(PoseVelocity2d(
+                Vector2d(
+                    -gamepad1.left_stick_y.toDouble(),
+                    if (view.type == DriveType.TANK) 0.0 else -gamepad1.left_stick_x.toDouble()
+                ),
+                -gamepad1.right_stick_x.toDouble()
+            ))
         }
     }
 }

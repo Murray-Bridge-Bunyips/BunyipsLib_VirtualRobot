@@ -54,7 +54,7 @@ fun range(begin: Double, end: Double, samples: Int): List<Double> {
  * @param[end] \(b\)
  * @param[samples] \(n\)
  */// 
-fun rangeCentered(begin: Double, end: Double, samples: Int): List<Double> {
+fun rangeCentered(begin: Double, end: Double, samples: Int): List<Double> {//
     require(samples >= 1) { "Number of samples must be at least 1" }
     val dx = (end - begin) / samples
     return (0 until samples).map { begin + 0.5 * dx + dx * it }

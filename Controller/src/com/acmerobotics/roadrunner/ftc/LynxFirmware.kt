@@ -58,7 +58,7 @@ private val MIN_VERSION = LynxFirmwareVersion(1, 8, 2)
  * Ensure all of the Lynx modules attached to the robot satisfy the minimum requirement.
  * @param hardwareMap hardware map containing Lynx modules
  */
-fun throwIfModulesAreOutdated(hardwareMap: HardwareMap) {//
+fun throwIfModulesAreOutdated(hardwareMap: HardwareMap) {
     val msgBuilder = StringBuilder()
 
     for (module in hardwareMap.getAll(LynxModule::class.java)) {

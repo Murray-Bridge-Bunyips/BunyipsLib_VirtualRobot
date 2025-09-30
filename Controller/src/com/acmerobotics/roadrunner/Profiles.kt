@@ -237,7 +237,7 @@ data class TimeProfile @JvmOverloads constructor(
  * @param[minAccel] negative
  * @param[maxAccel] positive
  */
-fun constantProfile(
+fun constantProfile(//
     length: Double,
     beginEndVel: Double,
     maxVel: Double,
