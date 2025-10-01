@@ -9,8 +9,6 @@ import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Sec
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.Hook;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.TrajectoryMessage;
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.roadrunner.AccelConstraint;
 import com.acmerobotics.roadrunner.AngularVelConstraint;
@@ -50,6 +48,7 @@ import java.util.List;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsSubsystem;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.DualTelemetry;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.Hook;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.IMUEx;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.Localizer;
@@ -59,6 +58,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.RoadRunnerDrive;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.DriveCommandMessage;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.MecanumCommandMessage;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.PoseMessage;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.TrajectoryMessage;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.Constants;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.DriveModel;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.ErrorThresholds;
@@ -86,7 +86,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
      * path following mode of this MecanumDrive.
      */
     public static double PATH_FOLLOWER_ENDPOINT_PROJECTION_TOLERANCE_INCHES = 1.0;
-    
+
     static int trajectoryIdx = 1;
 
     private final TurnConstraints defaultTurnConstraints;
@@ -116,11 +116,6 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
     private volatile double leftBackPower;
     private volatile double rightBackPower;
     private volatile double rightFrontPower;
-    
-    @Hook(on = Hook.Target.POST_STOP)
-    private static void reset() {
-        trajectoryIdx = 1;
-    }
 
     /**
      * Create a new MecanumDrive.
@@ -192,6 +187,11 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
      */
     public MecanumDrive(@NonNull DriveModel driveModel, @NonNull MotionProfile motionProfile, @NonNull MecanumGains mecanumGains, @Nullable DcMotor leftFront, @Nullable DcMotor leftBack, @Nullable DcMotor rightBack, @Nullable DcMotor rightFront, @Nullable IMU imu, @NonNull HardwareMap.DeviceMapping<VoltageSensor> voltageSensorMapping) {
         this(driveModel, motionProfile, mecanumGains, leftFront, leftBack, rightBack, rightFront, imu, voltageSensorMapping, Storage.memory().lastKnownPosition);
+    }
+
+    @Hook(on = Hook.Target.POST_STOP)
+    private static void reset() {
+        trajectoryIdx = 1;
     }
 
     /**

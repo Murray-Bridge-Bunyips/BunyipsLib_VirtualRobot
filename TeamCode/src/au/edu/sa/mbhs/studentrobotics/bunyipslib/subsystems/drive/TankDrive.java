@@ -6,7 +6,6 @@ import static au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive.Mecanum
 
 import androidx.annotation.NonNull;
 
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.TrajectoryMessage;
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.roadrunner.AccelConstraint;
 import com.acmerobotics.roadrunner.AngularVelConstraint;
@@ -54,6 +53,7 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.RoadRunnerDrive;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.DriveCommandMessage;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.PoseMessage;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.TankCommandMessage;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.TrajectoryMessage;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.Constants;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.DriveModel;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.MotionProfile;

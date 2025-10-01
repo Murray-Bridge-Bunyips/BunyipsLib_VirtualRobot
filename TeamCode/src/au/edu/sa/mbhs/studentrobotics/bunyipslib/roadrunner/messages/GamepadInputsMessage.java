@@ -24,23 +24,23 @@ public final class GamepadInputsMessage {
 
     @SuppressWarnings("MissingJavadoc")
     public GamepadInputsMessage(Gamepad gamepad) {
-        buttons = new boolean[] {
+        buttons = new boolean[]{
                 gamepad.a, gamepad.b, gamepad.x, gamepad.y,
                 gamepad.left_bumper, gamepad.right_bumper,
                 gamepad.back, gamepad.start,
                 gamepad.left_stick_button, gamepad.right_stick_button
         };
-        axes = new double[] {
+        axes = new double[]{
                 gamepad.left_stick_x, gamepad.left_stick_y,
                 gamepad.left_trigger, gamepad.right_trigger,
                 gamepad.right_stick_x, gamepad.right_stick_y
         };
-        povs = new int[] { getPov(gamepad) };
+        povs = new int[]{getPov(gamepad)};
     }
 
     /**
      * Gets the current POV of the D-pad on a gamepad.
-     * 
+     *
      * @param gamepad desired gamepad
      * @return the POV value in degrees
      */
