@@ -67,7 +67,7 @@ public class PinpointLocalizer implements Localizer {
 
         if (pinpoint == null)
             return;
-        FlightRecorder.write("LOCALIZER_PARAMS_PINPOINT", new PinpointLocalizerParamsMessage(params, pinpoint.getDeviceID(), pinpoint.getDeviceVersion(), pinpoint.getYawScalar()));
+//        FlightRecorder.write("LOCALIZER_PARAMS_PINPOINT", new PinpointLocalizerParamsMessage(params, pinpoint.getDeviceID(), pinpoint.getDeviceVersion(), pinpoint.getYawScalar()));
 
         // Directions are now applied, it is important to ensure the user does not do this themselves to not break tuning
         pinpoint.setEncoderDirections(params.initialParDirection, params.initialPerpDirection);

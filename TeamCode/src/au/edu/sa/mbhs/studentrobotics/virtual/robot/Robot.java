@@ -2,12 +2,15 @@ package au.edu.sa.mbhs.studentrobotics.virtual.robot;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.RobotConfig;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.MecanumLocalizer;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.PinpointLocalizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.DriveModel;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.MecanumGains;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.MotionProfile;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.HoldableActuator;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive.MecanumDrive;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Scope;
+import au.edu.sa.mbhs.studentrobotics.virtual.robot.archived.FakePinpoint;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.*;
 
@@ -63,9 +66,7 @@ public class Robot extends RobotConfig {
         hw.back_distance = getHardware("back_distance", DistanceSensor.class);
 
         drive = Scope.apply(new MecanumDrive(driveModel, motionProfile, mecanumGains, hw.front_left_motor, hw.back_left_motor, hw.back_right_motor, hw.front_right_motor, hw.imu, hardwareMap.voltageSensor), it -> {
-            MecanumLocalizer l = (MecanumLocalizer) it.getLocalizer();
-            l.leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-            l.leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
+            it.withLocalizer(new PinpointLocalizer(driveModel, new PinpointLocalizer.Params(), new GoBildaPinpointDriver(new FakePinpoint(), true)));
         });
         holdableActuator = new HoldableActuator(hw.arm_motor);
     }

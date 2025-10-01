@@ -9,6 +9,8 @@ import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Sec
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.Hook;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.TrajectoryMessage;
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.roadrunner.AccelConstraint;
 import com.acmerobotics.roadrunner.AngularVelConstraint;
@@ -84,6 +86,8 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
      * path following mode of this MecanumDrive.
      */
     public static double PATH_FOLLOWER_ENDPOINT_PROJECTION_TOLERANCE_INCHES = 1.0;
+    
+    static int trajectoryIdx = 1;
 
     private final TurnConstraints defaultTurnConstraints;
     private final VelConstraint defaultVelConstraint;
@@ -112,6 +116,11 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
     private volatile double leftBackPower;
     private volatile double rightBackPower;
     private volatile double rightFrontPower;
+    
+    @Hook(on = Hook.Target.POST_STOP)
+    private static void reset() {
+        trajectoryIdx = 1;
+    }
 
     /**
      * Create a new MecanumDrive.
@@ -476,7 +485,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
             displacementTrajectory = new DisplacementTrajectory(t.path, t.profile.dispProfile);
             List<Double> disps = com.acmerobotics.roadrunner.Math.range(
                     0, t.path.length(),
-                    Math.max(2, (int) Math.ceil(t.path.length() / 2)));
+                    Math.max(2, (int) Math.ceil(t.path.length() / Dashboard.TRAJECTORY_PREVIEW_SAMPLING_REDUCTION)));
             xPoints = new double[disps.size()];
             yPoints = new double[disps.size()];
             for (int i = 0; i < disps.size(); i++) {
@@ -484,6 +493,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
                 xPoints[i] = p.position.x;
                 yPoints[i] = p.position.y;
             }
+            FlightRecorder.write("TRAJECTORY_" + trajectoryIdx++, new TrajectoryMessage(xPoints, yPoints));
 
             named(Text.format("Trajectory %::%",
                     Geometry.toUserString(t.path.begin(1).value()).replace("Pose2d", ""),
@@ -591,7 +601,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 
             List<Double> disps = com.acmerobotics.roadrunner.Math.range(
                     0, t.path.length(),
-                    Math.max(2, (int) Math.ceil(t.path.length() / 2)));
+                    Math.max(2, (int) Math.ceil(t.path.length() / Dashboard.TRAJECTORY_PREVIEW_SAMPLING_REDUCTION)));
             xPoints = new double[disps.size()];
             yPoints = new double[disps.size()];
             for (int i = 0; i < disps.size(); i++) {
@@ -599,6 +609,7 @@ public class MecanumDrive extends BunyipsSubsystem implements RoadRunnerDrive {
                 xPoints[i] = p.position.x;
                 yPoints[i] = p.position.y;
             }
+            FlightRecorder.write("TRAJECTORY_" + trajectoryIdx++, new TrajectoryMessage(xPoints, yPoints));
 
             timeout(Seconds.of(t.duration).plus(errorThresholds.getStabilizationTimeout()));
             named(Text.format("Trajectory %->%",

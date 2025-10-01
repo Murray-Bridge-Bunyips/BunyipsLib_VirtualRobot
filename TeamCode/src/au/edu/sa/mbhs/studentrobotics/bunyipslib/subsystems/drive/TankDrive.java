@@ -2,9 +2,11 @@ package au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive;
 
 
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds;
+import static au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive.MecanumDrive.trajectoryIdx;
 
 import androidx.annotation.NonNull;
 
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.messages.TrajectoryMessage;
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.roadrunner.AccelConstraint;
 import com.acmerobotics.roadrunner.AngularVelConstraint;
@@ -324,7 +326,7 @@ public class TankDrive extends BunyipsSubsystem implements RoadRunnerDrive {
 
             List<Double> disps = com.acmerobotics.roadrunner.Math.range(
                     0, t.path.length(),
-                    Math.max(2, (int) Math.ceil(t.path.length() / 2)));
+                    Math.max(2, (int) Math.ceil(t.path.length() / Dashboard.TRAJECTORY_PREVIEW_SAMPLING_REDUCTION)));
             xPoints = new double[disps.size()];
             yPoints = new double[disps.size()];
             for (int i = 0; i < disps.size(); i++) {
@@ -332,6 +334,8 @@ public class TankDrive extends BunyipsSubsystem implements RoadRunnerDrive {
                 xPoints[i] = p.position.x;
                 yPoints[i] = p.position.y;
             }
+            // Reuse the one from MecanumDrive for simplicity
+            FlightRecorder.write("TRAJECTORY_" + trajectoryIdx++, new TrajectoryMessage(xPoints, yPoints));
 
             timeout(Seconds.of(t.duration));
             named(Text.format("Trajectory %->%",
