@@ -553,21 +553,24 @@ public class GoBildaPinpointDriver extends I2cDeviceSynchDevice<I2cDeviceSynchSi
      * @return 1 if device is functional.
      */
     public int getDeviceID() {
-        return readInt(Register.DEVICE_ID);
+        return 1;
+//        return readInt(Register.DEVICE_ID);
     }
 
     /**
      * @return the firmware version of the Odometry Computer
      */
     public int getDeviceVersion() {
-        return readInt(Register.DEVICE_VERSION);
+        return 2;
+//        return readInt(Register.DEVICE_VERSION);
     }
 
     /**
      * @return a scalar that the IMU measured heading is multiplied by.
      */
     public float getYawScalar() {
-        return readFloat(Register.YAW_SCALAR);
+        return 1;
+//        return readFloat(Register.YAW_SCALAR);
     }
 
     /**
