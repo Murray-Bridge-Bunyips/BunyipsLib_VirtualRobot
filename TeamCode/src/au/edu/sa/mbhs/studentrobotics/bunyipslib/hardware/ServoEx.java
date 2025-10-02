@@ -85,12 +85,12 @@ public class ServoEx extends ServoImpl implements PwmControl {
         double target = servo.getPosition();
         String channelPrefix = Text.format("SERVO_P%_%_", port, Text.upper(name).replace(" ", "_"));
         if (!onlyLog)
-            DualTelemetry.smartAdd(Text.format("% Target (0-1, port %)", name, port), target);
+            DualTelemetry.smartAdd(Text.format("% Target (0-1, port %)", name, port), "%", target);
         FlightRecorder.write(channelPrefix + "TARGET", target);
         if (servo instanceof ServoEx sex) {
             double lastTarget = sex.lastPosition;
             if (!onlyLog)
-                DualTelemetry.smartAdd(Text.format("% Last Target (0-1, port %)", name, port), lastTarget);
+                DualTelemetry.smartAdd(Text.format("% Last Target (0-1, port %)", name, port), "%", lastTarget);
             FlightRecorder.write(channelPrefix + "LAST_TARGET", lastTarget);
         }
     }

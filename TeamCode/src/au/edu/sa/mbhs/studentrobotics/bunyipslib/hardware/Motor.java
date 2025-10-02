@@ -149,21 +149,21 @@ public class Motor extends SimpleRotator implements DcMotorEx {
         if (sc.contains(Scope.POSITION)) {
             int currentPosition = motor.getCurrentPosition();
             if (!onlyLog)
-                DualTelemetry.smartAdd(Text.format("% Position (t, port %)", name, port), currentPosition);
+                DualTelemetry.smartAdd(Text.format("% Position (t, port %)", name, port), "%", currentPosition);
             FlightRecorder.write(channelPrefix + "POSITION", currentPosition);
         }
 
         if (sc.contains(Scope.TARGET)) {
             int targetPosition = motor.getTargetPosition();
             if (!onlyLog)
-                DualTelemetry.smartAdd(Text.format("% Target (t, port %)", name, port), targetPosition);
+                DualTelemetry.smartAdd(Text.format("% Target (t, port %)", name, port), "%", targetPosition);
             FlightRecorder.write(channelPrefix + "TARGET", targetPosition);
         }
 
         if (sc.contains(Scope.POWER)) {
             double power = motor.getPower();
             if (!onlyLog)
-                DualTelemetry.smartAdd(Text.format("% Power (port %)", name, port), power);
+                DualTelemetry.smartAdd(Text.format("% Power (port %)", name, port), "%", power);
             FlightRecorder.write(channelPrefix + "POWER", power);
         }
 
@@ -171,14 +171,14 @@ public class Motor extends SimpleRotator implements DcMotorEx {
             if (sc.contains(Scope.VELOCITY)) {
                 double velocity = dme.getVelocity();
                 if (!onlyLog)
-                    DualTelemetry.smartAdd(Text.format("% Velocity (t/s, port %)", name, port), velocity);
+                    DualTelemetry.smartAdd(Text.format("% Velocity (t/s, port %)", name, port), "%", velocity);
                 FlightRecorder.write(channelPrefix + "VELOCITY", velocity);
             }
 
             if (sc.contains(Scope.CURRENT)) {
                 double current = dme.getCurrent(CurrentUnit.AMPS);
                 if (!onlyLog)
-                    DualTelemetry.smartAdd(Text.format("% Current (A, port %)", name, port), current);
+                    DualTelemetry.smartAdd(Text.format("% Current (A, port %)", name, port), "%", current);
                 FlightRecorder.write(channelPrefix + "CURRENT", current);
             }
         }
