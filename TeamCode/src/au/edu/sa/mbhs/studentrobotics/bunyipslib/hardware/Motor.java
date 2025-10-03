@@ -34,7 +34,6 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.DualTelemetry;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.InterpolatedLookupTable;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.SystemController;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.ff.SimpleMotorFeedforward;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PController;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PIDController;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.control.pid.PIDFController;
@@ -149,21 +148,21 @@ public class Motor extends SimpleRotator implements DcMotorEx {
         if (sc.contains(Scope.POSITION)) {
             int currentPosition = motor.getCurrentPosition();
             if (!onlyLog)
-                DualTelemetry.smartAdd(Text.format("% Position (t, port %)", name, port), "%", currentPosition);
+                DualTelemetry.smartAdd(Text.format("% Position (t, port %)", name, port), currentPosition);
             FlightRecorder.write(channelPrefix + "POSITION", currentPosition);
         }
 
         if (sc.contains(Scope.TARGET)) {
             int targetPosition = motor.getTargetPosition();
             if (!onlyLog)
-                DualTelemetry.smartAdd(Text.format("% Target (t, port %)", name, port), "%", targetPosition);
+                DualTelemetry.smartAdd(Text.format("% Target (t, port %)", name, port), targetPosition);
             FlightRecorder.write(channelPrefix + "TARGET", targetPosition);
         }
 
         if (sc.contains(Scope.POWER)) {
             double power = motor.getPower();
             if (!onlyLog)
-                DualTelemetry.smartAdd(Text.format("% Power (port %)", name, port), "%", power);
+                DualTelemetry.smartAdd(Text.format("% Power (port %)", name, port), power);
             FlightRecorder.write(channelPrefix + "POWER", power);
         }
 
@@ -171,14 +170,14 @@ public class Motor extends SimpleRotator implements DcMotorEx {
             if (sc.contains(Scope.VELOCITY)) {
                 double velocity = dme.getVelocity();
                 if (!onlyLog)
-                    DualTelemetry.smartAdd(Text.format("% Velocity (t/s, port %)", name, port), "%", velocity);
+                    DualTelemetry.smartAdd(Text.format("% Velocity (t/s, port %)", name, port), velocity);
                 FlightRecorder.write(channelPrefix + "VELOCITY", velocity);
             }
 
             if (sc.contains(Scope.CURRENT)) {
                 double current = dme.getCurrent(CurrentUnit.AMPS);
                 if (!onlyLog)
-                    DualTelemetry.smartAdd(Text.format("% Current (A, port %)", name, port), "%", current);
+                    DualTelemetry.smartAdd(Text.format("% Current (A, port %)", name, port), current);
                 FlightRecorder.write(channelPrefix + "CURRENT", current);
             }
         }
@@ -217,9 +216,8 @@ public class Motor extends SimpleRotator implements DcMotorEx {
     }
 
     /**
-     * @return the currently set RUN_TO_POSITION system controller
+     * @return the currently set RUN_TO_POSITION system controller, can be null if not set
      */
-    @Nullable
     public SystemController getRunToPositionController() {
         return rtpController;
     }
@@ -249,9 +247,8 @@ public class Motor extends SimpleRotator implements DcMotorEx {
     }
 
     /**
-     * @return the currently set RUN_USING_ENCODER system controller
+     * @return the currently set RUN_USING_ENCODER system controller, can be null if not set
      */
-    @Nullable
     public SystemController getRunUsingEncoderController() {
         return rueController;
     }
@@ -924,9 +921,7 @@ public class Motor extends SimpleRotator implements DcMotorEx {
                     String msg = Text.format("[Port %] No RUN_USING_ENCODER controller was specified. This motor will be using the default PIDF coefficients to create a fallback PID and static FF controller with values from %. You must set your own controller through setRunUsingEncoderController().", port, coeffs);
                     Dbg.error(msg);
                     RobotLog.addGlobalWarningMessage(msg);
-                    PIDController pid = new PIDController(coeffs.p, coeffs.i, coeffs.d);
-                    SimpleMotorFeedforward ff = new SimpleMotorFeedforward(coeffs.f, 0, 0, encoder::getVelocity, encoder::getAcceleration);
-                    rueController = pid.compose(ff, Double::sum);
+                    rueController = new PIDFController(coeffs.p, coeffs.i, coeffs.d, coeffs.f);
                     rueInfo = new Pair<>(1.0, getMotorType().getAchieveableMaxTicksPerSecond());
                 }
                 if (!rueGains.isEmpty())
