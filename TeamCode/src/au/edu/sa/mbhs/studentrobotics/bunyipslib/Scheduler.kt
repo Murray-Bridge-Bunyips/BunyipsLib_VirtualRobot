@@ -1,100 +1,166 @@
 package au.edu.sa.mbhs.studentrobotics.bunyipslib
 
-import android.annotation.SuppressLint
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.Scheduler.gamepad1
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.Scheduler.gamepad2
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.Scheduler.on
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.Scheduler.update
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf.isNear
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf.round
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Measure
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Time
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.hardware.Controller
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.logic.Comparison
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.logic.Condition
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.IdleTask
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Lambda
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.RepeatTask
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls.Analog
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls.Companion.get
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Dbg
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Exceptions
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Text
 import com.qualcomm.robotcore.hardware.Gamepad
+import dev.frozenmilk.util.cell.LateInitCell
+import org.firstinspires.ftc.robotcore.internal.ui.GamepadUser
+import java.util.Objects
+import java.util.function.BiConsumer
 import java.util.function.BooleanSupplier
+import kotlin.math.abs
 
 /**
- * Scheduler and command plexus for use with the BunyipsLib task system in TeleOp.
+ * Command-based paradigm scheduler and task plexus for BunyipsLib in TeleOp.
+ * This is a singleton used to schedule and run tasks.
  *
- * @author Lucas Bubner, 2024
- * @see CommandBasedBunyipsOpMode
- * @since 1.0.0-pre
+ * Designed to mirror the WPILib command scheduler. Implementations must call [update] periodically.
+ *
+ * It is recommended to use the following static imports with the Scheduler:
+ * ```java
+ *  import static au.edu.sa.mbhs.studentrobotics.bunyipslib.Scheduler.*;
+ *  import static au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls.*;
+ *  import static au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls.Analog.*;
+ * ```
+ *
+ * @author Lucas Bubner, 2025
+ * @since 8.0.0
  */
-class Scheduler {
-    private val subsystems = ArrayList<BunyipsSubsystem>()
-    private val allocatedTasks = ArrayList<ScheduledTask>()
+object Scheduler {
+    private val subsystemsCell = LateInitCell<HashSet<BunyipsSubsystem>>()
 
     /**
-     * Get all allocated tasks.
+     * Subsystems managed by the Scheduler.
      */
-    fun getAllocatedTasks() = allocatedTasks.toTypedArray<ScheduledTask>()
+    @JvmStatic
+    var subsystems by subsystemsCell
+    private val triggerCache = HashMap<Int, Trigger>()
+    private val gamepad1ButtonCache = HashMap<Controls, Trigger>()
+    private val gamepad1AxisCache = HashMap<Int, Trigger>()
+    private val gamepad2ButtonCache = HashMap<Controls, Trigger>()
+    private val gamepad2AxisCache = HashMap<Int, Trigger>()
+    private val activeTasks = LinkedHashSet<Task>()
+    private val tasksToRemove = ArrayList<Task>()
+    private val scheduledTasks = LinkedHashSet<ScheduledTask>()
+    private var taskIdCount = 0
+    private var disabled = false
+    private var muted = false
 
-    /**
-     * All subsystems attached to and managed by the Scheduler.
-     */
-    val managedSubsystems: Array<BunyipsSubsystem>
-        get() = subsystems.toTypedArray<BunyipsSubsystem>()
-
-    /**
-     * Add subsystems to the scheduler. This will ensure the `update()` method of the subsystems is called, and that
-     * commands can be scheduled on these subsystems.
-     * This is **REQUIRED** to be called if using a base implementation of Scheduler. If you are using a
-     * [CommandBasedBunyipsOpMode], see the [use] method or rely on the automatic features during
-     * construction that will add subsystems at construction with no need to call this method.
-     *
-     * The base implementation of Scheduler does not access this implicit construction for finer-grain control for
-     * implementations that don't want this behaviour.
-     *
-     * @param dispatch The subsystems to add.
-     */
-    fun addSubsystems(vararg dispatch: BunyipsSubsystem) {
-        subsystems.addAll(listOf(*dispatch))
+    @JvmStatic
+    @Hook(on = Hook.Target.PRE_START)
+    private fun start() {
+        if (!subsystemsCell.initialised)
+            subsystems = BunyipsSubsystem.getInstances()
+        val out = Text.builder()
+        // Task count will account for tasks on subsystems that are not IdleTasks
+        val taskCount =
+            (scheduledTasks.size + subsystems.size - subsystems.stream().filter { it.isIdle() }.count()).toInt()
+        val tasksWithNoDependencies = scheduledTasks.stream().filter { it.task.dependency.isEmpty }.count()
+        out.append(
+            "[Scheduler] active | Managing % subsystem(s) | % task(s) scheduled (% subsystem, % command)\n",
+            subsystems.size,
+            taskCount,
+            taskCount - tasksWithNoDependencies,
+            tasksWithNoDependencies
+        )
+        for (subsystem in subsystems) {
+            out.append(" | %\n", subsystem.toVerboseString())
+            for (binding in scheduledTasks) {
+                val dep = binding.task.dependency
+                if (dep.isEmpty || dep.get() != subsystem) continue
+                out.append("    -> %\n", binding)
+            }
+        }
+        for (binding in scheduledTasks) {
+            if (binding.task.dependency.isPresent) continue
+            out.append("  : %\n", binding)
+        }
+        Dbg.logd(out.toString())
         if (subsystems.isEmpty())
-            Dbg.warn(javaClass, "Caution: No subsystems were added for the Scheduler to update.")
-        else
-            Dbg.logv(javaClass, "Added % subsystem(s) to update.", dispatch.size)
+            throw RuntimeException("No BunyipsSubsystems were constructed!")
+    }
+
+    @JvmStatic
+    @Hook(on = Hook.Target.POST_STOP)
+    private fun cleanup() {
+        subsystemsCell.invalidate()
+        triggerCache.clear()
+        gamepad1ButtonCache.clear()
+        gamepad1AxisCache.clear()
+        gamepad2ButtonCache.clear()
+        gamepad2AxisCache.clear()
+        activeTasks.clear()
+        tasksToRemove.clear()
+        scheduledTasks.clear()
+        disabled = false
+        muted = false
+        taskIdCount = 0
     }
 
     /**
-     * Disable all subsystems attached to the Scheduler.
+     * Use a specific subset of [subsystems] for the Scheduler.
+     *
+     * By default, all constructed [BunyipsSubsystem] instances will be auto-detected and used.
      */
-    fun disable() {
-        subsystems.forEach { it.disable() }
+    @JvmStatic
+    fun use(vararg subsystems: BunyipsSubsystem) {
+        this.subsystems = subsystems.toHashSet()
     }
 
     /**
-     * Enable all subsystems attached to the Scheduler, unless they failed from null assertion.
+     * Schedules a task to execute.
+     *
+     * **Note:** Using this method directly is not recommended,
+     * you should create a binding with [on], [gamepad1], or [gamepad2].
+     *
+     * This method can be manually called for advanced operations such as detaching or forking tasks. Do note this
+     * method is not thread-safe.
      */
-    fun enable() {
-        subsystems.forEach { it.enable() }
+    @JvmStatic
+    fun schedule(task: Task) {
+        // Do nothing if we're already running that task
+        if (activeTasks.contains(task))
+            return
+        // Important step that we ensure the task is ready for execution
+        task.finishNow()
+        task.reset()
+        activeTasks.add(task)
     }
 
     /**
-     * Run the scheduler. This will run all subsystems and tasks allocated to the scheduler.
-     * This should be called in the `activeLoop()` method of the [BunyipsOpMode], and is automatically called
-     * in [CommandBasedBunyipsOpMode].
+     * Updates subsystems, runs bindings, and schedules and executes tasks.
      */
-    fun run() {
-        subsystems.forEach { it.update() }
+    @JvmStatic
+    fun update() {
+        if (disabled) return
 
-        if (!isMuted) {
+        if (!muted) {
+            val tasksWithDependencies = scheduledTasks.stream().filter { it.task.dependency.isPresent }.count()
             // Task count will account for tasks on subsystems that are not IdleTasks, and also subsystem tasks
-            val taskCount = (allocatedTasks.size - allocatedTasks.stream()
-                .filter { task -> task.taskToRun.dependency.isPresent }.count()
-                    + subsystems.size - subsystems.stream().filter { s -> s.isIdle }.count())
+            val taskCount = scheduledTasks.size - tasksWithDependencies + subsystems.size -
+                    subsystems.stream().filter { it.isIdle }.count()
             DualTelemetry.smartAdd(
                 "\nRunning % task% (%s, %c) on % subsystem%",
                 taskCount,
                 if (taskCount == 1L) "" else "s",
-                allocatedTasks.stream().filter { task -> task.taskToRun.dependency.isPresent }
-                    .count() + taskCount - allocatedTasks.size,
-                allocatedTasks.stream().filter { task -> !task.taskToRun.dependency.isPresent }.count(),
+                tasksWithDependencies + taskCount - scheduledTasks.size,
+                scheduledTasks.size - tasksWithDependencies,
                 subsystems.size,
                 if (subsystems.size == 1) "" else "s"
             )
@@ -113,639 +179,417 @@ class Scheduler {
                 report += "</small>"
                 DualTelemetry.smartAdd(format = report)
             }
-            for (task in allocatedTasks) {
-                if (task.taskToRun.dependency.isPresent // Whether the task is never run from the Scheduler (and task reports were handled above)
-                    || !task.taskToRun.isRunning // Whether this task is actually running
-                    || task.muted // Whether the task has declared itself as muted
+            for (binding in scheduledTasks) {
+                if (binding.task.dependency.isPresent // Whether the task is never run from the Scheduler (and task reports were handled above)
+                    || !binding.task.isRunning // Whether this task is actually running
+                    || binding.muted // Whether the task has declared itself as muted
                 ) {
                     continue
                 }
-                val deltaTime = task.taskToRun.deltaTime to Seconds round 1
+                val deltaTime = binding.task.deltaTime to Seconds round 1
                 DualTelemetry.smartAdd(
                     "<small><b>Scheduler</b> (c.) <font color='gray'>|</font> <b>%</b> -> %</small>",
-                    task.taskToRun,
+                    binding.task,
                     if (deltaTime == 0.0) "active" else deltaTime.toString() + "s"
                 )
             }
         }
 
-        for (task in allocatedTasks) {
-            val condition = task.runCondition.invoke()
-            if (task.stopCondition == null) task.stopCondition = { false }
-            if (condition || task.taskToRun.isRunning) {
-                // Terminate current task if we hit the stop condition, or early return if we've already finished
-                if (task.stopCondition!!.invoke() || task.taskToRun.isFinished) {
-                    // No-ops if already stopped
-                    task.taskToRun.finishNow()
-                    continue
-                }
-                task.taskToRun.execute()
-                if (task.taskToRun.dependency.isEmpty) {
-                    // Update finish conditions for non-subsystem tasks as it is not done elsewhere
-                    task.taskToRun.poll()
-                }
-            } else if (task.taskToRun.isFinished && !task.debouncing) {
-                // Smart button toggles will need to reset the debounce to function if the task is finished early
-                task.useSmartRetrigger?.let { (c, b) -> c.resetDebounce(b) }
-                // For tasks that are not debouncing and their conditions are met again, we restart them
-                task.taskToRun.reset()
+        // 1. Update all subsystems
+        subsystems.forEach { it.update() }
+
+        // 2. Poll all binds to populate activeTasks with new tasks
+        scheduledTasks.forEach { it.poll() }
+
+        // 3. Run scheduled tasks
+        for (task in activeTasks) {
+            if (task.isFinished) {
+                // We're done here, schedule for removal
+                tasksToRemove.add(task)
+                continue
+            }
+            task.execute()
+            if (task.dependency.isEmpty) {
+                // Update finish conditions for non-subsystem tasks as it is not done elsewhere
+                task.poll()
+            }
+        }
+
+        // 4. Cleanup finished tasks
+        activeTasks.removeAll(tasksToRemove)
+        tasksToRemove.clear()
+    }
+
+    /**
+     * Disables ability to call [update].
+     */
+    @JvmStatic
+    fun disable() {
+        disabled = true
+    }
+
+    /**
+     * Resumes ability to call [update].
+     */
+    @JvmStatic
+    fun enable() {
+        disabled = false
+    }
+
+    /**
+     * Unbinds a scheduled task by the [id].
+     *
+     * The [id] is equivalent to the zero-indexed number of constructed binds from initialisation.
+     */
+    @JvmStatic
+    fun unbind(id: Int) {
+        scheduledTasks.removeIf { it.id == id }
+    }
+
+    /**
+     * Mutes Scheduler telemetry.
+     */
+    @JvmStatic
+    fun mute() {
+        muted = true
+    }
+
+    /**
+     * Unmutes Scheduler telemetry.
+     */
+    @JvmStatic
+    fun unmute() {
+        muted = false
+    }
+
+    /**
+     * Creates a [Trigger] for the boolean [condition].
+     *
+     * Attempts to use an internal cache for repeated triggers with the same hash code.
+     */
+    @JvmStatic
+    infix fun on(condition: BooleanSupplier) = triggerCache.computeIfAbsent(condition.hashCode()) {
+        // Attempt to hit our cache but this may fail if new anonymous functions are used which is common
+        Trigger(condition)
+    }
+
+    /**
+     * Creates a button or axis trigger binder to create a [Trigger] for `gamepad1`.
+     */
+    @JvmStatic
+    fun gamepad1() = GamepadTrigger(GamepadUser.ONE, BunyipsLib.opMode.gamepad1)
+
+    /**
+     * Creates a button or axis trigger binder to create a [Trigger] for `gamepad2`.
+     */
+    @JvmStatic
+    fun gamepad2() = GamepadTrigger(GamepadUser.TWO, BunyipsLib.opMode.gamepad2)
+
+    /**
+     * Button or axis binding creator.
+     *
+     * Utilises internal caches for global controller-based triggers.
+     */
+    class GamepadTrigger(
+        private val user: GamepadUser,
+        @JvmField
+        val instance: Gamepad
+    ) {
+        /**
+         * Creates a [Trigger] for when this [button] is pressed.
+         */
+        infix fun button(button: Controls): Trigger {
+            val cache = if (user == GamepadUser.ONE) gamepad1ButtonCache else gamepad2ButtonCache
+            return cache.computeIfAbsent(button) { Trigger(ButtonBind(instance, button)) }
+        }
+
+        /**
+         * Creates a [Trigger] for when this [axis] value is less than the [threshold].
+         */
+        fun axisLessThan(axis: Controls.Analog, threshold: Double): Trigger {
+            val cache = if (user == GamepadUser.ONE) gamepad1AxisCache else gamepad2AxisCache
+            return cache.computeIfAbsent(Objects.hash(axis, threshold, Comparison.LESS_THAN)) {
+                Trigger(AxisBind(instance, axis, threshold, Comparison.LESS_THAN))
+            }
+        }
+
+        /**
+         * Creates a [Trigger] for when this [axis] value is greater than the [threshold].
+         */
+        fun axisGreaterThan(axis: Controls.Analog, threshold: Double): Trigger {
+            val cache = if (user == GamepadUser.ONE) gamepad1AxisCache else gamepad2AxisCache
+            return cache.computeIfAbsent(Objects.hash(axis, threshold, Comparison.GREATER_THAN)) {
+                Trigger(AxisBind(instance, axis, threshold, Comparison.GREATER_THAN))
+            }
+        }
+
+        /**
+         * Creates a [Trigger] for when this [axis]'s magnitude (non-signed value) is greater than the [threshold].
+         */
+        fun axisMagnitudeGreaterThan(axis: Controls.Analog, threshold: Double): Trigger {
+            val cache = if (user == GamepadUser.ONE) gamepad1AxisCache else gamepad2AxisCache
+            return cache.computeIfAbsent(Objects.hash(axis, threshold, Comparison.MAGNITUDE_GREATER_THAN)) {
+                Trigger(AxisBind(instance, axis, threshold, Comparison.MAGNITUDE_GREATER_THAN))
+            }
+        }
+
+        data class ButtonBind(val gamepad: Gamepad, val button: Controls) : BooleanSupplier {
+            override fun toString() = "gamepad${Controller.tryGetUser(gamepad)?.id ?: "?"} button $button"
+            override fun getAsBoolean() = Controls.isSelected(gamepad, button)
+        }
+
+        data class AxisBind(
+            val gamepad: Gamepad,
+            val axis: Controls.Analog,
+            val threshold: Double,
+            val comparison: Comparison
+        ) : BooleanSupplier {
+            override fun toString() =
+                "gamepad${Controller.tryGetUser(gamepad)?.id ?: "?"} axis $axis ${comparison.symbol} $threshold"
+
+            override fun getAsBoolean() = when (comparison) {
+                Comparison.LESS_THAN -> Controls.Analog.get(gamepad, axis) < threshold
+                Comparison.GREATER_THAN -> Controls.Analog.get(gamepad, axis) > threshold
+                Comparison.MAGNITUDE_GREATER_THAN -> abs(Controls.Analog.get(gamepad, axis)) > threshold
+                Comparison.LESS_THAN_OR_EQUAL -> Controls.Analog.get(gamepad, axis) <= threshold
+                Comparison.GREATER_THAN_OR_EQUAL -> Controls.Analog.get(gamepad, axis) >= threshold
+                Comparison.EQUAL -> Controls.Analog.get(gamepad, axis).isNear(threshold, 1e-6)
+                Comparison.NOT_EQUAL -> !Controls.Analog.get(gamepad, axis).isNear(threshold, 1e-6)
             }
         }
     }
 
-    /**
-     * Unbind a task from the scheduler, based on the index of the task in the scheduler's allocated tasks.
-     *
-     * This can either be determined by the order in which the tasks were bound, or by the ID of the task via
-     * the [ScheduledTask.id] property, which is the same thing.
-     *
-     * @param index The index of the task to unbind.
-     * @throws IndexOutOfBoundsException If the index is out of bounds.
-     * @since 7.0.0
-     */
-    fun unbind(index: Int) {
-        Dbg.logd(javaClass, "unbound task %: %", allocatedTasks.size - 1, allocatedTasks.removeAt(index))
-    }
 
     /**
-     * Unbind a scheduled task from the scheduler.
-     *
-     * @param task The [ScheduledTask] to unbind.
-     * @since 7.0.0
+     * A [condition] that will link to and execute some [Task].
      */
-    fun unbind(task: ScheduledTask) {
-        if (allocatedTasks.remove(task))
-            Dbg.logd(javaClass, "unbound task %: %", allocatedTasks.size, task)
-    }
+    class Trigger(val condition: BooleanSupplier) : Condition<Trigger>(condition) {
+        private var last: ScheduledTask? = null
 
-    /**
-     * Create a new controller trigger creator.
-     *
-     * For Kotlin users, calling this method can be done with the notation &#96;when&#96;
-     * (see [here](https://kotlinlang.org/docs/java-interop.html#escaping-for-java-identifiers-that-are-keywords-in-kotlin)),
-     * or by calling the alias `on`.
-     *
-     * @param user The Controller instance to use.
-     * @return The controller trigger creator.
-     */
-    @SuppressLint("NoHardKeywords")
-    fun `when`(user: Gamepad) = ControllerTriggerCreator(user)
-
-    /**
-     * Create a new controller trigger creator.
-     *
-     * @param user The Controller instance to use.
-     * @return The controller button trigger creator.
-     */
-    fun on(user: Gamepad) = ControllerTriggerCreator(user)
-
-    /**
-     * Create a new controller trigger creator for the driver (gamepad 1).
-     *
-     * @return The controller trigger creator.
-     */
-    fun driver() = ControllerTriggerCreator(BunyipsLib.opMode.gamepad1)
-
-    /**
-     * Create a new controller trigger creator for gamepad 1 (driver).
-     *
-     * @return The controller trigger creator.
-     */
-    fun gp1() = driver()
-
-    /**
-     * Create a new controller trigger creator for the operator (gamepad 2).
-     *
-     * @return The controller trigger creator.
-     */
-    fun operator() = ControllerTriggerCreator(BunyipsLib.opMode.gamepad2)
-
-    /**
-     * Create a new controller trigger creator for gamepad 2 (operator).
-     *
-     * @return The controller trigger creator.
-     */
-    fun gp2() = operator()
-
-    /**
-     * Run a task when a condition is met.
-     * This condition will be evaluated continuously.
-     *
-     * For Kotlin users, calling this method can be done with the notation &#96;when&#96;
-     * (see [here](https://kotlinlang.org/docs/java-interop.html#escaping-for-java-identifiers-that-are-keywords-in-kotlin)),
-     * or by calling the alias `on`.
-     *
-     * @param condition Supplier to provide a boolean value of when the task should be run.
-     * @return Task scheduling builder
-     */
-    @SuppressLint("NoHardKeywords")
-    fun `when`(condition: BooleanSupplier) =
-        if (condition is Condition) {
-            ScheduledTask(condition)
-        } else {
-            ScheduledTask(Condition(condition))
+        private inline fun buildScheduledTask(type: String, block: () -> ScheduledTask) = apply {
+            val scheduledTask = block.invoke()
+            last = scheduledTask
+            Dbg.logv(javaClass, "binding $condition $type -> ${scheduledTask.task}")
         }
 
-    /**
-     * Run a task when a condition is met.
-     * This condition will be evaluated continuously.
-     *
-     * @param condition Supplier to provide a boolean value of when the task should be run.
-     * @return Task scheduling builder
-     */
-    fun on(condition: BooleanSupplier) = `when`(condition)
-
-    /**
-     * Run a task when a condition is met.
-     * This condition will be evaluated according to a rising-edge detection.
-     *
-     * @param condition Supplier to provide a boolean value of when the task should be run.
-     * @return Task scheduling builder
-     */
-    fun whenRising(condition: BooleanSupplier) = ScheduledTask(
-        Condition(
-            Condition.Edge.RISING,
-            condition
-        )
-    )
-
-    /**
-     * Run a task when a condition is met.
-     * This condition will be evaluated according to a falling-edge detection.
-     *
-     * @param condition Supplier to provide a boolean value of when the task should be run.
-     * @return Task scheduling builder
-     */
-    fun whenFalling(condition: BooleanSupplier) = ScheduledTask(
-        Condition(
-            Condition.Edge.FALLING,
-            condition
-        )
-    )
-
-    /**
-     * Run a task immediately with no start condition. This is the same as calling `.when(() -> true)`.
-     *
-     * @return Task scheduling builder
-     */
-    fun immediately() = ScheduledTask(Condition { true })
-
-    private class ControllerButtonBind(
-        val controller: Gamepad,
-        val button: Controls,
-        edge: Edge
-    ) : Condition(edge, { controller[button] }) {
-        override fun toString() = "Button($edge):GP${Controller.tryGetUser(controller)?.id ?: "?"}->$button"
-    }
-
-    private class ControllerAxisThreshold(
-        private val controller: Gamepad,
-        private val axis: Analog,
-        threshold: (Float) -> Boolean,
-        edge: Edge
-    ) : Condition(edge, { threshold.invoke(controller[axis]) }) {
-        override fun toString() = "Axis($edge):GP${Controller.tryGetUser(controller)?.id ?: "?"}->$axis"
-    }
-
-    /**
-     * Controller trigger creator.
-     */
-    inner class ControllerTriggerCreator(private val user: Gamepad) {
         /**
-         * Run a task once this analog axis condition is met.
-         * This condition will be evaluated continuously.
-         *
-         * For Kotlin users, calling this method can be done with the notation &#96;when&#96;
-         * (see [here](https://kotlinlang.org/docs/java-interop.html#escaping-for-java-identifiers-that-are-keywords-in-kotlin)),
-         * or by calling the alias `on`.
-         *
-         * @param axis      The axis of the controller.
-         * @param threshold The threshold to meet.
-         * @return Task scheduling builder
+         * Schedules [task] when the [condition] changes from `false` to `true`, or `true` to `false`.
          */
-        @SuppressLint("NoHardKeywords")
-        fun `when`(axis: Analog, threshold: (Float) -> Boolean) =
-            ScheduledTask(ControllerAxisThreshold(user, axis, threshold, Condition.Edge.ACTIVE))
+        infix fun onChange(task: Task) = buildScheduledTask("onChange") {
+            ScheduledTask(task, this) { prev, curr ->
+                if (prev != curr)
+                    schedule(task)
+            }
+        }
+
+        infix fun onChange(runnable: Runnable) = onChange(null, runnable)
+        fun onChange(name: String?, runnable: Runnable) =
+            onChange(Lambda { runnable.run() }.also { name?.let { n -> it.named(n) } })
 
         /**
-         * Run a task once this analog axis condition is met.
-         * This condition will be evaluated continuously.
-         *
-         * @param axis      The axis of the controller.
-         * @param threshold The threshold to meet.
-         * @return Task scheduling builder
+         * Schedules [task] when the [condition] changes from `false` to `true`.
          */
-        fun on(axis: Analog, threshold: (Float) -> Boolean) = `when`(axis, threshold)
+        infix fun onTrue(task: Task) = buildScheduledTask("onTrue") {
+            ScheduledTask(task, this) { prev, curr ->
+                if (!prev && curr)
+                    schedule(task)
+            }
+        }
+
+        infix fun onTrue(runnable: Runnable) = onTrue(null, runnable)
+        fun onTrue(name: String?, runnable: Runnable) =
+            onTrue(Lambda { runnable.run() }.also { name?.let { n -> it.named(n) } })
 
         /**
-         * Run a task once this analog axis condition is met.
-         * This condition will be evaluated continuously.
-         *
-         * @param condition The condition to meet.
-         * @return Task scheduling builder
+         * Schedules [task] when the [condition] changes from `true` to `false`.
          */
-        infix fun on(condition: Pair<Analog, (Float) -> Boolean>) = `when`(condition.first, condition.second)
+        infix fun onFalse(task: Task) = buildScheduledTask("onFalse") {
+            ScheduledTask(task, this) { prev, curr ->
+                if (prev && !curr)
+                    schedule(task)
+            }
+        }
+
+        infix fun onFalse(runnable: Runnable) = onFalse(null, runnable)
+        fun onFalse(name: String?, runnable: Runnable) =
+            onFalse(Lambda { runnable.run() }.also { name?.let { n -> it.named(n) } })
 
         /**
-         * Run a task once this analog axis condition is met.
-         * This condition will be evaluated according to a rising-edge detection.
+         * Schedules [task] when the [condition] changes from `false` to `true`,
+         * and finishes the task when the same condition changes back to `false`.
          *
-         * @param axis      The axis of the controller.
-         * @param threshold The threshold to meet.
-         * @return Task scheduling builder
+         * Does not restart the task if it finishes by itself while the condition is still `true`.
+         * Use a [RepeatTask] for this behaviour.
          */
-        fun whenRising(axis: Analog, threshold: (Float) -> Boolean) =
-            ScheduledTask(ControllerAxisThreshold(user, axis, threshold, Condition.Edge.RISING))
+        infix fun whileTrue(task: Task) = buildScheduledTask("whileTrue") {
+            ScheduledTask(task, this) { prev, curr ->
+                if (!prev && curr)
+                    schedule(task)
+                else if (prev && !curr)
+                    task.finish()
+            }
+        }
+
+        infix fun whileTrue(runnable: Runnable) = whileTrue(null, runnable)
+        fun whileTrue(name: String?, runnable: Runnable) =
+            whileTrue(Lambda { runnable.run() }.also { name?.let { n -> it.named(n) } })
 
         /**
-         * Run a task once this analog axis condition is met.
-         * This condition will be evaluated according to a rising-edge detection.
+         * Schedules [task] when the [condition] changes from `true` to `false`,
+         * and finishes the task when the same condition changes back to `true`.
          *
-         * @param condition The condition to meet.
-         * @return Task scheduling builder
+         * Does not restart the task if it finishes by itself while the condition is still `false`.
+         * Use a [RepeatTask] for this behaviour.
          */
-        infix fun whenRising(condition: Pair<Analog, (Float) -> Boolean>) =
-            ScheduledTask(ControllerAxisThreshold(user, condition.first, condition.second, Condition.Edge.RISING))
+        infix fun whileFalse(task: Task) = buildScheduledTask("whileFalse") {
+            ScheduledTask(task, this) { prev, curr ->
+                if (prev && !curr)
+                    schedule(task)
+                else if (!prev && curr)
+                    task.finish()
+            }
+        }
+
+        infix fun whileFalse(runnable: Runnable) = whileFalse(null, runnable)
+        fun whileFalse(name: String?, runnable: Runnable) =
+            whileFalse(Lambda { runnable.run() }.also { name?.let { n -> it.named(n) } })
 
         /**
-         * Run a task once this analog axis condition is met.
-         * This condition will be evaluated according to a falling-edge detection.
-         *
-         * @param axis      The axis of the controller.
-         * @param threshold The threshold to meet.
-         * @return Task scheduling builder
+         * Schedules [task] when the [condition] changes from `false` to `true`,
+         * and finishes the task under the same condition (`false` to `true`) if the task is still running.
          */
-        fun whenFalling(axis: Analog, threshold: (Float) -> Boolean) =
-            ScheduledTask(ControllerAxisThreshold(user, axis, threshold, Condition.Edge.FALLING))
+        infix fun toggleOnTrue(task: Task) = buildScheduledTask("toggleOnTrue") {
+            ScheduledTask(task, this) { prev, curr ->
+                if (!prev && curr) {
+                    if (task.isRunning)
+                        task.finish()
+                    else
+                        schedule(task)
+                }
+            }
+        }
+
+        infix fun toggleOnTrue(runnable: Runnable) = toggleOnTrue(null, runnable)
+        fun toggleOnTrue(name: String?, runnable: Runnable) =
+            toggleOnTrue(Lambda { runnable.run() }.also { name?.let { n -> it.named(n) } })
 
         /**
-         * Run a task once this analog axis condition is met.
-         * This condition will be evaluated according to a falling-edge detection.
-         *
-         * @param condition The condition to meet.
-         * @return Task scheduling builder
+         * Schedules [task] when the [condition] changes from `true` to `false`,
+         * and finishes the task under the same condition (`true` to `false`) if the task is still running.
          */
-        infix fun whenFalling(condition: Pair<Analog, (Float) -> Boolean>) =
-            ScheduledTask(ControllerAxisThreshold(user, condition.first, condition.second, Condition.Edge.FALLING))
+        infix fun toggleOnFalse(task: Task) = buildScheduledTask("toggleOnFalse") {
+            ScheduledTask(task, this) { prev, curr ->
+                if (prev && !curr) {
+                    if (task.isRunning)
+                        task.finish()
+                    else
+                        schedule(task)
+                }
+            }
+        }
+
+        infix fun toggleOnFalse(runnable: Runnable) = toggleOnFalse(null, runnable)
+        fun toggleOnFalse(name: String?, runnable: Runnable) =
+            toggleOnFalse(Lambda { runnable.run() }.also { name?.let { n -> it.named(n) } })
 
         /**
-         * Run a task when a controller button is held.
-         * This condition will be evaluated continuously.
+         * Descends into the last binded [ScheduledTask] for this trigger.
          *
-         * @param button The button of the controller.
-         * @return Task scheduling builder
+         * Useful for accessing binding-specific information to stop building more [ScheduledTask] instances.
          */
-        infix fun whenHeld(button: Controls) =
-            ScheduledTask(ControllerButtonBind(user, button, Condition.Edge.ACTIVE))
+        fun descend(): ScheduledTask {
+            return last
+                ?: throw Exceptions.EmergencyStop("Cannot descend into a ScheduledTask as none have been bound for this specific Trigger.")
+        }
+
+        override fun newInstance(edge: Edge, supplier: BooleanSupplier): Trigger {
+            return Trigger(supplier).also {
+                it.edge = edge
+                it.last = last
+            }
+        }
 
         /**
-         * Run a task when a controller button is pressed (will run once when pressing the desired input).
-         * This is the same as rising-edge detection.
-         *
-         * @param button The button of the controller.
-         * @return Task scheduling builder
+         * Alias for [not].
          */
-        infix fun whenPressed(button: Controls) =
-            ScheduledTask(ControllerButtonBind(user, button, Condition.Edge.RISING))
+        fun negate() = not()
 
         /**
-         * Run a task when a controller button is released (will run once letting go of the desired input).
-         * This is the same as falling-edge detection.
-         *
-         * @param button The button of the controller.
-         * @return Task scheduling builder
+         * Alias for [and].
          */
-        infix fun whenReleased(button: Controls) =
-            ScheduledTask(ControllerButtonBind(user, button, Condition.Edge.FALLING))
+        operator fun plus(other: Trigger) = and(other)
+
+        /**
+         * Alias for [or].
+         */
+        operator fun div(other: Trigger) = or(other)
     }
 
     /**
-     * A task that will run when a condition is met.
+     * A bound [task] that will schedule on the given [binding], accepting the previous state
+     * of the trigger and current state of the trigger.
      */
-    inner class ScheduledTask(private val originalRunCondition: Condition) {
-        /**
-         * The ID (allocated task index) of the task that can be used to unbind and identify the binding.
-         */
+    class ScheduledTask(
         @JvmField
-        val id: Int
-
-        /**
-         * The task to run when the condition is met.
-         */
-        var taskToRun: Task = IdleTask()
-            private set
-
-        internal val runCondition: () -> Boolean
-        internal var debouncing: Boolean = false
-        internal var stopCondition: (() -> Boolean)? = null
-        internal var useSmartRetrigger: Pair<Controller, Controls>? = null
-        internal var muted: Boolean = false
-
-        private val and = ArrayList<BooleanSupplier>()
-        private val or = ArrayList<BooleanSupplier>()
+        val task: Task,
+        @JvmField
+        val trigger: Trigger,
+        // (prev, curr)
+        @JvmField
+        val binding: BiConsumer<Boolean, Boolean>
+    ) {
+        private var prev = trigger.asBoolean
+        internal var muted = false
 
         init {
-            // Run the task if the original expression is met,
-            // and all AND conditions are met, or any OR conditions are met
-            runCondition = {
-                originalRunCondition.asBoolean
-                        && and.stream().allMatch { obj -> obj.asBoolean }
-                        || or.stream().anyMatch { obj -> obj.asBoolean }
-            }
-            allocatedTasks.add(this)
-            id = allocatedTasks.size - 1
-            Dbg.logv(javaClass, "allocating task binding % for % ...", id, originalRunCondition)
+            scheduledTasks.add(this)
         }
 
         /**
-         * Queue a task when the condition is met.
-         * This task will run (and self-reset if finished) for as long as the condition is met.
-         *
-         * Note this means that the task provided will run from start-to-finish when the condition is true, which means
-         * it *won't execute exclusively while the condition is met*, rather have the capability to be started when
-         * the condition is met. This means continuous iterations of a true condition will try to keep this task queued
-         * at all times, resetting the task internally when it is completed. Keep this in mind if working with
-         * looping/long tasks, as you might experience runaway tasks.
-         * See [finishIf] for fine-grain "run exclusively if" control.
-         *
-         * This method can only be called once per ScheduledTask.
-         * If you do not mention timing control, this task will be run immediately when the condition is met,
-         * ending when the task ends.
-         *
-         * @param task The task to run.
-         * @return Current builder for additional task parameters
+         * Sequential [id] for this scheduled task that can be used to unbind this task.
          */
-        infix fun run(task: Task) = apply {
-            if (taskToRun !is IdleTask) {
-                throw Exceptions.EmergencyStop("A run(Task) method has been called more than once on a scheduler task. If you wish to run multiple tasks see about using a task group as your task.")
-            }
-            taskToRun = task
-        }
+        @JvmField
+        val id = taskIdCount++
 
         /**
-         * Implicitly make a new [Lambda] to run as the condition is met.
-         * This callback will requeue as many times as the trigger is met.
-         *
-         * This method can only be called once per ScheduledTask, see a TaskGroup for multiple task execution.
-         * If you do not mention timing control, this task will be run immediately when the condition is met,
-         * ending immediately as it is an [Lambda].
-         *
-         * @param runnable The code to run
-         * @return Current builder for additional task parameters
+         * Mute telemetry for this scheduled task.
          */
-        infix fun run(runnable: Runnable) = run(Lambda(runnable))
-
-        /**
-         * Implicitly make a new [Lambda] to run as the condition is met.
-         * This callback will requeue as many times as the trigger is met.
-         *
-         * This method can only be called once per ScheduledTask, see a TaskGroup for multiple task execution.
-         * If you do not mention timing control, this task will be run immediately when the condition is met,
-         * ending immediately as it is an [Lambda].
-         *
-         * @param name task name
-         * @param runnable The code to run
-         * @return Current builder for additional task parameters
-         */
-        fun run(name: String, runnable: Runnable) = run(Lambda(runnable).named(name))
-
-        /**
-         * Queue a task when the condition is met, debouncing the task from queueing more than once the condition is met.
-         *
-         * This task will run, and a self-reset will not be propagated once the task is completed. Do note that this
-         * effectively nullifies the trigger for the task, as it cannot auto-reset unless the task is manually reset
-         * or designed to reset itself/run continuously. Managing the task passed here is up to the user.
-         *
-         * This method can only be called once per ScheduledTask, see a TaskGroup for multiple task execution.
-         * If you do not mention timing control, this task will be run immediately when the condition is met,
-         * ending when the task ends.
-         *
-         * @param task The task to run.
-         * @return Current builder for additional task parameters
-         */
-        infix fun runOnce(task: Task) = run(task).also { debouncing = true }
-
-        /**
-         * Implicitly make a new [Lambda] to run once the condition is met, debouncing the task from queueing more than once the condition is met.
-         *
-         * This code block will run, and a self-reset will not be propagated once the task is completed. Do note that this
-         * effectively nullifies the entire trigger for the task, as it cannot auto-reset. For a Runnable that can reset itself,
-         * consider passing a [Lambda] to the [runOnce] method which will grant you access to the task's reset method.
-         *
-         * This method can only be called once per ScheduledTask, see a TaskGroup for multiple task execution.
-         * If you do not mention timing control, this task will be run immediately when the condition is met,
-         * ending immediately as it is an [Lambda].
-         *
-         * @param runnable The code to run
-         * @return Current builder for additional task parameters
-         */
-        infix fun runOnce(runnable: Runnable) = runOnce(Lambda(runnable))
-
-        /**
-         * Implicitly make a new [Lambda] to run once the condition is met, debouncing the task from queueing more than once the condition is met.
-         *
-         * This code block will run, and a self-reset will not be propagated once the task is completed. Do note that this
-         * effectively nullifies the entire trigger for the task, as it cannot auto-reset. For a Runnable that can reset itself,
-         * consider passing a [Lambda] to the [runOnce] method which will grant you access to the task's reset method.
-         *
-         * This method can only be called once per ScheduledTask, see a TaskGroup for multiple task execution.
-         * If you do not mention timing control, this task will be run immediately when the condition is met,
-         * ending immediately as it is an [Lambda].
-         *
-         * @param name task name
-         * @param runnable The code to run
-         * @return Current builder for additional task parameters
-         */
-        fun runOnce(name: String, runnable: Runnable) = runOnce(Lambda(runnable).named(name))
-
-        /**
-         * Mute this task from being a part of the Scheduler report.
-         *
-         * @return Current builder for additional task parameters
-         */
-        fun muted() = apply {
+        fun mute() = apply {
             muted = true
         }
 
         /**
-         * Chain an `AND` condition to the current conditional task.
-         * Will be evaluated after the controller condition, and before the `OR` conditions.
-         *
-         * @param condition The AND condition to chain.
-         * @return Current builder for additional task parameters
+         * Unmute telemetry for this scheduled task.
          */
-        infix fun and(condition: BooleanSupplier) = apply {
-            and.add(condition)
+        fun unmute() = apply {
+            muted = false
         }
 
         /**
-         * Chain an `OR` condition to the current conditional task.
-         * Will be evaluated after the controller and `AND` conditions.
+         * Polls the [trigger] and executes the [binding] connected to this particular [task].
          *
-         * @param condition The OR condition to chain.
-         * @return Current builder for additional task parameters
+         * Automatically called by [update].
          */
-        infix fun or(condition: BooleanSupplier) = apply {
-            or.add(condition)
-        }
-
-        /**
-         * Run a task assigned to in [run] in a certain amount of time of the condition remaining true.
-         * This will delay the activation of the task by the specified amount of time of the condition remaining true.
-         * If this method is called multiple times, the last time directive will be used.
-         *
-         * For Kotlin users, calling this method can be done with the notation &#96;to&#96;
-         * (see [here](https://kotlinlang.org/docs/java-interop.html#escaping-for-java-identifiers-that-are-keywords-in-kotlin)),
-         * or by calling the alias `after`.
-         *
-         * @param interval The time interval
-         * @return Current builder for additional task parameters
-         */
-        @SuppressLint("NoHardKeywords")
-        infix fun `in`(interval: Measure<Time>) = apply {
-            originalRunCondition.withActiveDelay(interval)
-        }
-
-        /**
-         * Run a task assigned to in [run] in a certain amount of time of the condition remaining true.
-         * This will delay the activation of the task by the specified amount of time of the condition remaining true.
-         * If this method is called multiple times, the last time directive will be used.
-         *
-         * @param interval The time interval
-         * @return Current builder for additional task parameters
-         */
-        infix fun after(interval: Measure<Time>) = `in`(interval)
-
-        /**
-         * Run the task assigned to in [run] until this condition is met. Once this condition is met, the task will
-         * be forcefully stopped and the scheduler will move on. This is useful for continuous tasks.
-         * If this method is called multiple times, an OR condition will be composed with the last condition.
-         *
-         * @param condition The condition to stop the task. Note the task will be auto-stopped if it finishes by itself,
-         * this condition simply allows for an early finish if this condition is met.
-         * @return Current builder for additional task parameters
-         */
-        infix fun finishIf(condition: BooleanSupplier) = apply {
-            // Use prev to avoid a stack overflow
-            val prev = stopCondition
-            stopCondition = if (prev == null) {
-                { condition.asBoolean }
-            } else {
-                { prev.invoke() || condition.asBoolean }
-            }
-        }
-
-        /**
-         * Automagic finish condition that will run the task assigned in [run] until the button used to trigger
-         * this execution is retriggered. This is effectively a [finishIf] convenience method for an edge detector applied
-         * to the button you used to declare this task binding, creating a task toggle.
-         *
-         * This method is equivalent to writing:
-         * ```java
-         * gp1().whenPressed(Controls.A)
-         *      .run(/* ... */)
-         *     .finishIf(() -> gamepad1.getDebounced(Controls.A)) // Common pattern to implement toggles
-         * ```
-         *
-         * However, this method will also take efforts to manage the [Controller] debounce resets (through `resetDebounce`)
-         * in the event your task finishes, which cannot be replicated through a simple [finishIf]. Without proper debounce resets,
-         * your task may require two triggers to restart if it is stopped early or automatically, since `getDebounced`
-         * is a stateful function unaware of your task's running state by default. This method also reduces repetition
-         * that can introduce typo bugs.
-         *
-         * **WARNING:** This method will only work if you have used a [ControllerButtonBind] (such as through `whenPressed`, etc.)
-         * AND you used a [Controller] instance to create the bind (such as by a [BunyipsOpMode]).
-         *
-         * @since 7.3.0
-         */
-        fun finishIfButtonRetriggered() = apply {
-            if (originalRunCondition !is ControllerButtonBind)
-                throw Exceptions.EmergencyStop("finishIfButtonRetriggered() called when bind was not created through a ControllerButtonBind.")
-            if (originalRunCondition.controller !is Controller)
-                throw Exceptions.EmergencyStop("finishIfButtonRetriggered() called when underlying controller used for bind is not a Controller instance.")
-            useSmartRetrigger = originalRunCondition.controller to originalRunCondition.button
-            finishIf { originalRunCondition.controller.getDebounced(originalRunCondition.button) }
+        fun poll() {
+            val curr = trigger.asBoolean
+            binding.accept(prev, curr)
+            prev = curr
         }
 
         override fun toString(): String {
             val out = Text.builder()
-            out.append(if (taskToRun.dependency.isPresent) "Scheduling " else "Running ")
+            out.append(if (task.dependency.isPresent) "Scheduling " else "Running ")
                 .append("'")
-                .append(taskToRun.toString())
+                .append(task.toString())
                 .append("'")
-            val timeout = taskToRun.timeout to Seconds
+            val timeout = task.timeout to Seconds
             if (timeout * 1000.0 > Lambda.EPSILON_MS) {
                 out.append(" (t=").append(timeout).append("s)")
             }
-            if (taskToRun.isPriority) out.append(" (overriding)")
-            if (originalRunCondition is ControllerButtonBind) {
-                val handler = originalRunCondition
-                out.append(" when GP")
-                    .append(Controller.tryGetUser(handler.controller)?.id ?: "?")
-                    .append("->")
-                    .append(handler.button)
-                    .append(" is ")
-                    .append(handler.edge)
-                val delay = originalRunCondition.activeDelay
-                if (delay.magnitude() > 0) {
-                    out.append(" after ")
-                        .append(originalRunCondition.activeDelay to Seconds round 1)
-                        .append("s")
-                }
-            } else {
-                out.append(" when ")
-                    .append(
-                        originalRunCondition.toString().replace(BuildConfig.LIBRARY_PACKAGE_NAME + ".Scheduler", "")
-                    )
-                    .append(" is true")
-            }
-            out.append(if (and.isNotEmpty()) ", " + and.size + " extra AND condition(s)" else "")
-                .append(if (or.isNotEmpty()) ", " + or.size + " extra OR condition(s)" else "")
-                .append(if (debouncing) ", debouncing" else "")
-                .append(if (muted) ", task status muted" else "")
+            if (task.isPriority) out.append(" (overriding)")
+            out.append("on ").append(trigger)
+            out.append(if (muted) ", task status muted" else "")
             return out.toString()
-        }
-    }
-
-    /**
-     * Mute all Scheduler instances telemetry for the rest of the OpMode.
-     */
-    fun mute() {
-        isMuted = true
-    }
-
-    /**
-     * Unmute all Scheduler instances telemetry for the rest of the OpMode.
-     */
-    fun unmute() {
-        isMuted = false
-    }
-
-    companion object {
-        private var isMuted = false
-
-        /**
-         * Unmute all Scheduler instances telemetry for the rest of the OpMode.
-         */
-        @JvmStatic
-        @JvmName("muteTelemetry")
-        fun mute() {
-            isMuted = true
-        }
-
-        /**
-         * Unmute all Scheduler instances telemetry for the rest of the OpMode.
-         */
-        @JvmStatic
-        @JvmName("unmuteTelemetry")
-        fun unmute() {
-            isMuted = false
-        }
-
-        @JvmStatic
-        @Hook(on = Hook.Target.POST_STOP)
-        private fun reset() {
-            isMuted = false
         }
     }
 }
