@@ -37,6 +37,7 @@ import kotlin.math.abs
  *  import static au.edu.sa.mbhs.studentrobotics.bunyipslib.Scheduler.*;
  *  import static au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls.*;
  *  import static au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls.Analog.*;
+ *  import static au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task.task;
  * ```
  *
  * @author Lucas Bubner, 2025
