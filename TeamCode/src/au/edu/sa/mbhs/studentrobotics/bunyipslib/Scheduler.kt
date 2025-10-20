@@ -115,13 +115,13 @@ object Scheduler {
 
     /**
      * Updates subsystems, runs bindings, and schedules and executes tasks.
-     * 
+     *
      * Should be called at the bottom of your active loop.
      */
     @JvmStatic
     fun update() {
         if (disabled) return
-        
+
         if (!initialised) {
             if (!subsystemsCell.initialised)
                 subsystems = BunyipsSubsystem.getInstances()
@@ -376,7 +376,10 @@ object Scheduler {
         private inline fun buildScheduledTask(type: String, block: () -> ScheduledTask) = apply {
             val scheduledTask = block.invoke()
             last = scheduledTask
-            Dbg.logv(javaClass, "allocating binding #${scheduledTask.id}: $condition $type -> ${scheduledTask.task} ...")
+            Dbg.logv(
+                javaClass,
+                "allocating binding #${scheduledTask.id}: $condition $type -> ${scheduledTask.task} ..."
+            )
         }
 
         /**
