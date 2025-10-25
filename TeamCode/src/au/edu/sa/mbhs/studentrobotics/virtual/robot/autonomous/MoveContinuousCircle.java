@@ -1,10 +1,11 @@
 package au.edu.sa.mbhs.studentrobotics.virtual.robot.autonomous;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsSubsystem;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.Scheduler;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.TaskBuilder;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Geometry;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Tasks;
 import au.edu.sa.mbhs.studentrobotics.virtual.robot.Robot;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Vector2d;
@@ -26,12 +27,11 @@ public class MoveContinuousCircle extends OpMode {
                 .build()
                 .mutate()
                 .addPeriodic(() -> telemetry.addData("Circle progress", "%.1f%%", Mathf.wrapRadians(Robot.instance.drive.getPose().heading.log()) / Mathf.TWO_PI * 100));
-        Tasks.register(t);
+        Scheduler.schedule(t);    
     }
-
+    
     @Override
     public void loop() {
-        Tasks.runRepeatedly(0);
-        BunyipsSubsystem.updateAll();
+        Scheduler.update();
     }
 }
