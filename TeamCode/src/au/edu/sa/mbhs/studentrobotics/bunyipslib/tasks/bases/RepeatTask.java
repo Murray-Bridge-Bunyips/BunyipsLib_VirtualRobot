@@ -4,6 +4,10 @@ import androidx.annotation.NonNull;
 
 /**
  * A task that will auto-reset and repeat itself after it is completed.
+ * <p>
+ * Do note that this task is a task wrapper, and will discard already assigned timeout, name, priority, and subsystem information
+ * to match the repeated task. Changes to these properties must be done to the child task, which will be reflected upwards.
+ * Updating this wrapper will result in resets.
  *
  * @author Lucas Bubner, 2024
  * @since 1.0.0-pre
@@ -24,17 +28,17 @@ public class RepeatTask extends Task {
 
     @Override
     protected void periodic() {
-        if (task.poll())
-            task.reset();
-        named(task + " (repeat)");
+        named(task + " (rep.)");
         // Infinite timeout as it will be repeated
         task.isPriority = isPriority;
         task.execute();
+        if (task.isFinished())
+            task.reset();
     }
 
     @Override
     protected void onFinish() {
-        task.finishNow();
+        task.finish();
     }
 
     @Override
