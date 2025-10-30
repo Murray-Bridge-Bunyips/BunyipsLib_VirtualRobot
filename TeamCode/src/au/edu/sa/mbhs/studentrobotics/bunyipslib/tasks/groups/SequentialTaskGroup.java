@@ -53,15 +53,18 @@ public class SequentialTaskGroup extends TaskGroup {
         executeTask(currentTask);
         if (currentTask.isFinished()) {
             taskIndex++;
-            if (taskIndex >= tasks.size()) {
-                finish();
+            if (taskIndex >= tasks.size())
                 return;
-            }
             currentTask = tasks.get(taskIndex);
-            // Don't waste a cycle and execute the next task now
+            // Don't waste a cycle and start the next task now
             // Matches WPILib unit tests
-            executeTask(currentTask);
+            currentTask.ensureInit();
         }
+    }
+
+    @Override
+    protected final void onFinish() {
+        currentTask.finish();
     }
 
     @Override

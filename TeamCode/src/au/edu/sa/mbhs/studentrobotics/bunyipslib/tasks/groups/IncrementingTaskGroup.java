@@ -44,6 +44,8 @@ public class IncrementingTaskGroup extends TaskGroup {
     @Override
     public final void init() {
         increment();
+        if (taskIndex != -1)
+            tasks.get(taskIndex).ensureInit();
     }
 
     @Override
@@ -51,6 +53,16 @@ public class IncrementingTaskGroup extends TaskGroup {
         Task currentTask = tasks.get(taskIndex);
         timeout = currentTask.timeout;
         executeTask(currentTask);
+    }
+
+    @Override
+    protected final void onFinish() {
+        tasks.get(taskIndex).finish();
+    }
+
+    @Override
+    protected final void onReset() {
+        // no-op
     }
 
     @Override

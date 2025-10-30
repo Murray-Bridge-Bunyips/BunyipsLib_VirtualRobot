@@ -127,7 +127,7 @@ abstract class Task : Runnable, Action {
      *
      * @since 7.0.0
      */
-    protected lateinit var dashboard: TelemetryPacket
+    protected open lateinit var dashboard: TelemetryPacket
 
     /**
      * Set the subsystem you want to elect this task to run on, notifying the runner that this task should run there.
@@ -219,10 +219,19 @@ abstract class Task : Runnable, Action {
 
     /**
      * Ensures, and if required, initialises this task calling [init].
+     *
+     * Also attempts to attach this task to the [dependency] unless [direct] is true (default false).
      */
-    fun ensureInit() {
+    @JvmOverloads
+    fun ensureInit(direct: Boolean = false) {
         if (startTime != 0L) return
+        if (!direct && dependency.isPresent) {
+            // Will be recalled immediately with direct=true by setCurrentTask
+            attached = dependency.get().setCurrentTask(this)
+            return
+        }
         Dashboard.usePacket {
+            dashboard = it
             Exceptions.runUserMethod(::init)
             startTime = System.nanoTime()
         }
@@ -596,21 +605,18 @@ abstract class Task : Runnable, Action {
             timeout(this@Task.timeout)
             if (this@Task.dependency.isPresent)
                 on(this@Task.dependency.get(), this@Task.isPriority)
+            isPriority = this@Task.isPriority
             // We shim away the use of run() and execute(), since the DynamicTask will be the new task that is
             // scheduled onto subsystems. All logic relating to timeouts is handled by the parent wrapping DynamicTask.
             // The only things we need to pass forward are things the user has adjusted, which include the function
             // definitions for init, periodic, interrupt, reset, finish, and the finish condition.
             init {
-                Dashboard.usePacket {
-                    this@Task.dashboard = it
-                    this@Task.init()
-                }
+                this@Task.dashboard = dashboard // Need to assign for the inner instance which may reference `dashboard`
+                this@Task.init()
             }
             periodic {
-                Dashboard.usePacket {
-                    this@Task.dashboard = it
-                    this@Task.periodic()
-                }
+                this@Task.dashboard = dashboard
+                this@Task.periodic()
             }
             isFinished { this@Task.isTaskFinished() }
             onInterrupt { this@Task.onInterrupt() }
