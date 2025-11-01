@@ -33,6 +33,7 @@ public class Graphing {
 
             xAxis.setAutoRanging(false);
             yAxis.setAutoRanging(false);
+            System.err.close(); // if we graph excessively large data
 
             lineChart = new LineChart<>(xAxis, yAxis);
             lineChart.setAnimated(true);
