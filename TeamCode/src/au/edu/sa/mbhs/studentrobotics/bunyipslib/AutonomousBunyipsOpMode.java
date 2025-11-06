@@ -252,7 +252,7 @@ public abstract class AutonomousBunyipsOpMode extends BunyipsOpMode {
         telemetry.log("<font color='gray'>auto:</font> %<i>(t=%)</i> -> added %/%", newTask, getTaskTimeout(newTask), taskCount, taskCount);
         return newTask;
     }
-    
+
     // prereq: inside a synchronized block
     private void insert(Task task) {
         // Before we add the task we also want to unwrap a top-level SequentialTaskGroup which may be created through RR
