@@ -9,6 +9,10 @@ import dev.frozenmilk.util.cell.RefCell;
 @Autonomous
 public class TestFirstTask extends AutonomousBunyipsOpMode {
     @Override
+    protected void onInitialise() {
+    }
+
+    @Override
     protected void onReady(@Nullable RefCell<?> selectedOpMode) {
         add(Robot.instance.holdableActuator.tasks.goTo(1000));
         add(Robot.instance.holdableActuator.tasks.goTo(1500));
