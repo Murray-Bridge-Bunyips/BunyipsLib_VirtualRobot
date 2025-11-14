@@ -88,14 +88,15 @@ public class UltimateGoal extends Game {
             r.setLocationInches(STARTER_STACK);
         }
 
-        /*
-         * Place both wobble goals on the field, at the appropriate locations.
-         */
-        for (int i=0; i<2; i++){
-            WobbleGoal w = WobbleGoal.wobbles.get(i);
-            w.setOnField(true);
-            w.setLocationInches(WOBBLE_GOAL_STARTS[i]);
-        }
+        // dont need goals where we're from
+//        /*
+//         * Place both wobble goals on the field, at the appropriate locations.
+//         */
+//        for (int i=0; i<2; i++){
+//            WobbleGoal w = WobbleGoal.wobbles.get(i);
+//            w.setOnField(true);
+//            w.setLocationInches(WOBBLE_GOAL_STARTS[i]);
+//        }
 
         updateDisplay();
     }

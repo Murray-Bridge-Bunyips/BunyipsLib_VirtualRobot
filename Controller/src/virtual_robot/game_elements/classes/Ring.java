@@ -12,12 +12,13 @@ import virtual_robot.controller.VirtualField;
 import virtual_robot.controller.VirtualGameElement;
 import virtual_robot.dyn4j.Dyn4jUtil;
 import virtual_robot.dyn4j.FixtureData;
+import virtual_robot.games.Decode;
 import virtual_robot.games.UltimateGoal;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@GameElementConfig(name = "Ring", filename = "ring", forGame = UltimateGoal.class, numInstances = 10)
+@GameElementConfig(name = "Ring", filename = "ring", forGame = Decode.class, numInstances = 10)
 public class Ring extends VirtualGameElement {
 
     public static final double RING_RADIUS_INCHES = 2.5;

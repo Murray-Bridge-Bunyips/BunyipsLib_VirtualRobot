@@ -5,6 +5,8 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.OTOSLocalizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.DriveModel;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.MecanumGains;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.MotionProfile;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.Actuator;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.Switch;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive.MecanumDrive;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
@@ -17,7 +19,12 @@ import com.qualcomm.robotcore.hardware.*;
 public class Robot extends RobotConfig {
     public static final Robot instance = new Robot();
     public final Hardware hw = new Hardware();
+    
     public MecanumDrive drive;
+    public Actuator intake;
+    public Actuator shooter;
+    public Actuator scoop;
+    public Switch kicker;
 
     @Override
     protected void onRuntime() {
@@ -69,6 +76,14 @@ public class Robot extends RobotConfig {
         drive = new MecanumDrive(driveModel, motionProfile, mecanumGains, hw.front_left_motor, hw.back_left_motor, hw.back_right_motor, hw.front_right_motor, hw.imu)
                 .withLocalizer(new OTOSLocalizer(otosParams, hw.otos))
                 .withName("Drive");
+        intake = new Actuator(hw.intake_motor)
+                .withName("Intake");
+        shooter = new Actuator(hw.shooter_motor)
+                .withName("Shooter");
+        scoop = new Actuator(hw.scoop_motor)
+                .withName("Scoop");
+        kicker = new Switch(hw.kicker_servo)
+                .withName("Kicker");
     }
 
     public static class Hardware {

@@ -10,6 +10,7 @@ import javafx.scene.Group;
 import javafx.scene.transform.Translate;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.BodyFixture;
+import org.dyn4j.geometry.MassType;
 import org.dyn4j.geometry.Rectangle;
 import org.dyn4j.geometry.Vector2;
 import org.dyn4j.world.NarrowphaseCollisionData;
@@ -101,27 +102,27 @@ public class UltiBot extends MecanumPhysicsBase implements ControlsElements {
 
 //        The conventional way of creating the scoop Body:
 //
-//        scoopBody = new Body();
-//
-//        /*
-//         * make the long skinny fixtures a little larger (37x10 pixel units) than the graphical representation
-//         * of the prongs (30x5), in order to account for "penetration slop".
-//         */
-//        BodyFixture leftScoopFixture = scoopBody.addFixture(
-//                new Rectangle(10/VirtualField.PIXELS_PER_METER, 37/VirtualField.PIXELS_PER_METER),
-//                1, 0, 0);
-//        BodyFixture rightScoopFixture = scoopBody.addFixture(
-//                new Rectangle(10/VirtualField.PIXELS_PER_METER, 37/VirtualField.PIXELS_PER_METER),
-//                1, 0, 0);
-//        //Position the scoop fixture shapes to the left and right of midline
-//        leftScoopFixture.getShape().translate(-23/VirtualField.PIXELS_PER_METER, 0);
-//        rightScoopFixture.getShape().translate(23/VirtualField.PIXELS_PER_METER, 0);
-//        scoopBody.setMass(MassType.NORMAL);
-//        world.addBody(scoopBody);
-//        leftScoopFixture.setFilter(Filters.CHASSIS_FILTER);
-//        rightScoopFixture.setFilter(Filters.CHASSIS_FILTER);
-//        // Position the scoop body over front part of chassis
-//        scoopBody.translate(0, 22.5 / VirtualField.PIXELS_PER_METER);
+        scoopBody = new Body();
+
+        /*
+         * make the long skinny fixtures a little larger (37x10 pixel units) than the graphical representation
+         * of the prongs (30x5), in order to account for "penetration slop".
+         */
+        BodyFixture leftScoopFixture = scoopBody.addFixture(
+                new Rectangle(10/VirtualField.PIXELS_PER_METER, 37/VirtualField.PIXELS_PER_METER),
+                1, 0, 0);
+        BodyFixture rightScoopFixture = scoopBody.addFixture(
+                new Rectangle(10/VirtualField.PIXELS_PER_METER, 37/VirtualField.PIXELS_PER_METER),
+                1, 0, 0);
+        //Position the scoop fixture shapes to the left and right of midline
+        leftScoopFixture.getShape().translate(-23/VirtualField.PIXELS_PER_METER, 0);
+        rightScoopFixture.getShape().translate(23/VirtualField.PIXELS_PER_METER, 0);
+        scoopBody.setMass(MassType.NORMAL);
+        world.addBody(scoopBody);
+        leftScoopFixture.setFilter(Filters.CHASSIS_FILTER);
+        rightScoopFixture.setFilter(Filters.CHASSIS_FILTER);
+        // Position the scoop body over front part of chassis
+        scoopBody.translate(0, 22.5 / VirtualField.PIXELS_PER_METER);
 
         /*
          * Use Dyn4jUtil.createBody to generate dyn4j body from the JavaFX Group for the scoop.
