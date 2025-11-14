@@ -50,6 +50,7 @@ import virtual_robot.config.Config;
 import virtual_robot.keyboard.KeyState;
 import virtual_robot.robots.ControlsElements;
 import virtual_robot.robots.classes.ArmBot;
+import virtual_robot.robots.classes.UltiBot;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -311,7 +312,7 @@ public class VirtualRobotController {
                 validConfigClasses.add(c);
         }
         cbxConfig.setItems(validConfigClasses);
-        cbxConfig.setValue(ArmBot.class); // changed for bunyipslib
+        cbxConfig.setValue(UltiBot.class); // changed for bunyipslib
 
         cbxConfig.setCellFactory(new Callback<ListView<Class<?>>, ListCell<Class<?>>>() {
             @Override

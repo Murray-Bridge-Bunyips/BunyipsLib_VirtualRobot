@@ -294,7 +294,7 @@ public class SparkFunOTOS implements HardwareDevice {
      */
     public void getVersionInfo(Version hwVersion, Version fwVersion) {
         // Read hardware and firmware version registers
-        byte[] rawData = new byte[]{0,0};
+        byte[] rawData = new byte[]{1,1};
 
         // Store the version info
         hwVersion.set(rawData[0]);

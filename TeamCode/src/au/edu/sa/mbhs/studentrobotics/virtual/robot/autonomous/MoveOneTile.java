@@ -10,16 +10,18 @@ import dev.frozenmilk.util.cell.RefCell;
 
 @Autonomous(name = "Move One Tile")
 public class MoveOneTile extends AutonomousBunyipsOpMode {
+    private final Robot robot = Robot.instance;
+    
     @Override
     protected void onInitialise() {
         setOpModes("forward", "backward", "left", "right");
-        Robot.instance.drive.setPose(Geometry.zeroPose());
+        robot.drive.setPose(Geometry.zeroPose());
     }
 
     @Override
     protected void onReady(@Nullable RefCell<?> selectedOpMode) {
         if (selectedOpMode == null) return;
-        TaskBuilder tb = Robot.instance.drive.makeTrajectory();
+        TaskBuilder tb = robot.drive.makeTrajectory();
         switch ((String) selectedOpMode.get()) {
             case "forward":
                 tb.lineToX(24);

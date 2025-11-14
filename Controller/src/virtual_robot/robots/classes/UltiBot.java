@@ -14,6 +14,7 @@ import org.dyn4j.geometry.Rectangle;
 import org.dyn4j.geometry.Vector2;
 import org.dyn4j.world.NarrowphaseCollisionData;
 import org.dyn4j.world.listener.CollisionListenerAdapter;
+import virtual_robot.controller.BotConfig;
 import virtual_robot.controller.Filters;
 import virtual_robot.controller.Game;
 import virtual_robot.controller.VirtualField;
@@ -38,7 +39,7 @@ import static virtual_robot.game_elements.classes.Ring.RingStatus.OFF_FIELD;
  *
  * BetaBot is the controller class for the "ulti_bot.fxml" markup file.
  */
-//@BotConfig(name = "Ulti Bot", filename = "ulti_bot")
+@BotConfig(name = "Ulti Bot", filename = "ulti_bot")
 public class UltiBot extends MecanumPhysicsBase implements ControlsElements {
 
     //Fixture to hold the collision geometry of the ring intake

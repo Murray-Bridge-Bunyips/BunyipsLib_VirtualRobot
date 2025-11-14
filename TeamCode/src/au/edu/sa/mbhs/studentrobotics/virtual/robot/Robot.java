@@ -1,27 +1,22 @@
 package au.edu.sa.mbhs.studentrobotics.virtual.robot;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.RobotConfig;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.MecanumLocalizer;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.PinpointLocalizer;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.localization.OTOSLocalizer;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.DriveModel;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.MecanumGains;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.roadrunner.parameters.MotionProfile;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.HoldableActuator;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.subsystems.drive.MecanumDrive;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Scope;
-import au.edu.sa.mbhs.studentrobotics.virtual.robot.archived.FakePinpoint;
-import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.hardware.*;
 
 /**
- * Running under "Arm Bot" config
+ * Running under "Ulti Bot" config
  */
 @RobotConfig.AutoInit
 public class Robot extends RobotConfig {
     public static final Robot instance = new Robot();
     public final Hardware hw = new Hardware();
-    public HoldableActuator holdableActuator;
     public MecanumDrive drive;
 
     @Override
@@ -30,6 +25,8 @@ public class Robot extends RobotConfig {
         hw.back_left_motor = getHardware("back_left_motor", DcMotorEx.class);
         hw.front_right_motor = getHardware("front_right_motor", DcMotorEx.class);
         hw.front_left_motor = getHardware("front_left_motor", DcMotorEx.class);
+        
+        hw.otos = getHardware("sensor_otos", SparkFunOTOS.class);
         
         hw.back_left_motor.setDirection(DcMotorEx.Direction.REVERSE);
         hw.front_left_motor.setDirection(DcMotorEx.Direction.REVERSE);
@@ -53,9 +50,8 @@ public class Robot extends RobotConfig {
                 .setLateralGain(20)
                 .setHeadingGain(20)
                 .build();
-        
-        hw.arm_motor = getHardware("arm_motor", DcMotorEx.class);
-        hw.hand_servo = getHardware("hand_servo", Servo.class);
+        OTOSLocalizer.Params otosParams = new OTOSLocalizer.Params.Builder()
+                .build();
 
         hw.imu = getHardware("imu", IMU.class, d ->
                 d.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.FORWARD))));
@@ -65,10 +61,14 @@ public class Robot extends RobotConfig {
         hw.front_distance = getHardware("front_distance", DistanceSensor.class);
         hw.back_distance = getHardware("back_distance", DistanceSensor.class);
 
-        drive = Scope.apply(new MecanumDrive(driveModel, motionProfile, mecanumGains, hw.front_left_motor, hw.back_left_motor, hw.back_right_motor, hw.front_right_motor, hw.imu, hardwareMap.voltageSensor), it -> {
-            it.withLocalizer(new PinpointLocalizer(driveModel, new PinpointLocalizer.Params(), new GoBildaPinpointDriver(new FakePinpoint(), true)));
-        });
-        holdableActuator = new HoldableActuator(hw.arm_motor);
+        hw.intake_motor = getHardware("intake_motor", DcMotorEx.class);
+        hw.shooter_motor = getHardware("shooter_motor", DcMotorEx.class);
+        hw.scoop_motor = getHardware("scoop_motor", DcMotorEx.class);
+        hw.kicker_servo = getHardware("kicker_servo", Servo.class);
+
+        drive = new MecanumDrive(driveModel, motionProfile, mecanumGains, hw.front_left_motor, hw.back_left_motor, hw.back_right_motor, hw.front_right_motor, hw.imu)
+                .withLocalizer(new OTOSLocalizer(otosParams, hw.otos))
+                .withName("Drive");
     }
 
     public static class Hardware {
@@ -76,13 +76,16 @@ public class Robot extends RobotConfig {
         public DcMotorEx back_left_motor;
         public DcMotorEx front_right_motor;
         public DcMotorEx front_left_motor;
+        public SparkFunOTOS otos;
         public IMU imu;
-        public DcMotorEx arm_motor;
-        public Servo hand_servo;
         public ColorSensor color_sensor;
         public DistanceSensor left_distance;
         public DistanceSensor right_distance;
         public DistanceSensor front_distance;
         public DistanceSensor back_distance;
+        public DcMotorEx intake_motor;
+        public DcMotorEx shooter_motor;
+        public DcMotorEx scoop_motor;
+        public Servo kicker_servo;
     }
 }

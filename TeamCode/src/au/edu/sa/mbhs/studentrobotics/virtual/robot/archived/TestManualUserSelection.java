@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import java.util.Arrays;
 
 @TeleOp
-//@Disabled
+@Disabled
 public class TestManualUserSelection extends BunyipsOpMode {
     @Override
     protected void onInit() {
