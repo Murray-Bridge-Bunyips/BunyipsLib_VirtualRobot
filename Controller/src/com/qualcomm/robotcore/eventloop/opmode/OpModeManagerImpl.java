@@ -1,7 +1,14 @@
 package com.qualcomm.robotcore.eventloop.opmode;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import javafx.application.Application;
+import javafx.application.Platform;
 import virtual_robot.controller.VirtualRobotController;
+
+import java.lang.reflect.Field;
+import java.util.Objects;
+
+import static virtual_robot.controller.VirtualRobotController.getNameFromAnnotationOrOpmode;
 
 public class OpModeManagerImpl {
     public static class ForceStopException extends RuntimeException {}
@@ -14,8 +21,32 @@ public class OpModeManagerImpl {
 
     }
     
-    public void initOpMode(String thisIsDefinitelyGoingToInitialiseSomething, boolean boo) {
+    // shimmed to pressing the button, may be in a weird state use with caution
+    public void startActiveOpMode() {
+        VirtualRobotController.pressDriverButton.run();
+    }
+    
+    public void initOpMode(String opModeName) {
+        initOpMode(opModeName, false);
+    }
+    
+    public void initOpMode(String opModeName, boolean defaultMode) {
+        for (Class<?> o : VirtualRobotController.opModeListCurrent.getItems()) {
+            String name = getNameFromAnnotationOrOpmode(o, o.getSimpleName());
+            if (Objects.equals(name, opModeName)) {
+                System.out.println("initOpMode(" + name + ")");
+                Platform.runLater(() -> {
+                    VirtualRobotController.opModeListCurrent.setValue(o);
+                });
+            }
+        }
+        // ensure we stop
+        VirtualRobotController.opModeInitialized = true;
+        VirtualRobotController.opModeStarted = true;
+        VirtualRobotController.pressDriverButton.run();
         
+        // init
+        VirtualRobotController.pressDriverButton.run();
     }
     
     public HardwareMap getHardwareMap() {
@@ -27,7 +58,7 @@ public class OpModeManagerImpl {
     }
 
     public String getActiveOpModeName() {
-        return "Virtual OpMode";
+        return getNameFromAnnotationOrOpmode(heyThisisTheOpModeThatsRunning.getClass(), heyThisisTheOpModeThatsRunning.getClass().getSimpleName());
     }
     public static OpMode heyThisisTheOpModeThatsRunning;
     

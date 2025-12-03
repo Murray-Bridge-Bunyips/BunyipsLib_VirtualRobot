@@ -55,6 +55,9 @@ import virtual_robot.robots.classes.UltiBot;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.text.BreakIterator;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -65,6 +68,7 @@ import java.util.concurrent.TimeUnit;
  * For internal use only. Controller class for the JavaFX application.
  */
 public class VirtualRobotController {
+    public static ComboBox<Class<?>> opModeListCurrent;
 
     //User Interface
     @FXML private Pane fieldPane;
@@ -109,8 +113,9 @@ public class VirtualRobotController {
 
     //OpMode Control
     private OpMode opMode = null;
-    private volatile boolean opModeInitialized = false;
-    private volatile boolean opModeStarted = false;
+    public static volatile boolean opModeInitialized = false;
+    public static volatile boolean opModeStarted = false;
+    public static Runnable pressDriverButton;
     private Thread opModeThread = null;
 
     //Virtual Robot Control Engine
@@ -209,6 +214,7 @@ public class VirtualRobotController {
             gamePadHelper = new RealGamePadHelper();
         }
         gamePadExecutorService.scheduleAtFixedRate(gamePadHelper, 0, 20, TimeUnit.MILLISECONDS);
+        pressDriverButton = () -> Platform.runLater(() -> handleDriverButtonAction(null));
     }
 
     /**
@@ -365,7 +371,7 @@ public class VirtualRobotController {
     }
 
 
-    private String getNameFromAnnotationOrOpmode(Class c, String defaultt){
+    public static String getNameFromAnnotationOrOpmode(Class c, String defaultt){
         String name = "";
         Annotation a1 = c.getAnnotation(TeleOp.class);
         if(a1 != null){
@@ -436,6 +442,7 @@ public class VirtualRobotController {
             }
         });
 
+        opModeListCurrent = cbxOpModes;
         cbxOpModes.setItems(nonDisabledOpModeClasses);
 
         cbxOpModes.setCellFactory(new Callback<ListView<Class<?>>, ListCell<Class<?>>>() {
@@ -584,6 +591,18 @@ public class VirtualRobotController {
             cbxConfig.setDisable(false);
             OpModeNotificationsFilter.getPostStop().forEach(o -> o.accept(opMode));
             OpModeManagerImpl.heyThisisTheOpModeThatsRunning = null;
+            Autonomous autonomous = opMode.getClass().getAnnotation(Autonomous.class);
+            if (autonomous != null && !autonomous.preselectTeleOp().isEmpty()) {
+                for (Class<?> o : cbxOpModes.getItems()) {
+                    String name = getNameFromAnnotationOrOpmode(o, o.getSimpleName());
+                    if (Objects.equals(name, autonomous.preselectTeleOp()) && o.isAnnotationPresent(TeleOp.class)) {
+                        System.out.println("preselectTeleOp swapping to: " + name);
+                        cbxOpModes.setValue(o);
+                        return;
+                    }
+                }
+                System.err.println("Couldn't find preselectTeleOp of name: " + autonomous.preselectTeleOp());
+            }
         }
     }
 

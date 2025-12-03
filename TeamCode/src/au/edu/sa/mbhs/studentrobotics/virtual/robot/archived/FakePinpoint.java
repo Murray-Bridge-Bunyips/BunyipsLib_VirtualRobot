@@ -1,7 +1,6 @@
 package au.edu.sa.mbhs.studentrobotics.virtual.robot.archived;
 
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.BunyipsLib;
-import au.edu.sa.mbhs.studentrobotics.bunyipslib.Hook;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;

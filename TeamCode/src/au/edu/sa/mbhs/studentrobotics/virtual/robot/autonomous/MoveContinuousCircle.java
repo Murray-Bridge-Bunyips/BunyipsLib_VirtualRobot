@@ -2,6 +2,7 @@ package au.edu.sa.mbhs.studentrobotics.virtual.robot.autonomous;
 
 import androidx.annotation.Nullable;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.AutonomousBunyipsOpMode;
+import au.edu.sa.mbhs.studentrobotics.bunyipslib.annotations.PreselectBehaviour;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.external.Mathf;
 import au.edu.sa.mbhs.studentrobotics.virtual.robot.Robot;
 import com.acmerobotics.roadrunner.Vector2d;
@@ -11,7 +12,8 @@ import dev.frozenmilk.util.cell.RefCell;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Degrees;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Inches;
 
-@Autonomous(name = "Move Continuous Circle")
+@Autonomous(name = "Move Continuous Circle", preselectTeleOp = "TeleOperation")
+@PreselectBehaviour(action = PreselectBehaviour.Action.START)
 public class MoveContinuousCircle extends AutonomousBunyipsOpMode {
     private final Robot robot = Robot.instance;
     

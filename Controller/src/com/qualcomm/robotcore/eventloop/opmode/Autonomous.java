@@ -68,4 +68,6 @@ public @interface Autonomous
      * @return the group into which the annotated OpMode is to be categorized
      */
     String group() default "";
+    
+    String preselectTeleOp() default "";
 }
