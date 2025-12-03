@@ -17,6 +17,10 @@ public class AppUtil {
         System.out.println("TOAST: " + toast);
     }
     
+    public void showToast(UILocation location, String toast, int duration) {
+        System.out.println("TOAST: " + toast);
+    }
+    
     public void ensureDirectoryExists(Object o) {
         
     }
