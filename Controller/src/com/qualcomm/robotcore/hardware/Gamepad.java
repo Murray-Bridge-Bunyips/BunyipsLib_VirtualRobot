@@ -215,6 +215,42 @@ public class Gamepad {
     public volatile float right_trigger = 0f;
 
     /**
+     * default threshold for triggers being pressed
+     */
+    public static final float DEFAULT_TRIGGER_THRESHOLD = 0.5f;
+
+    /**
+     * threshold for triggers being pressed
+     */
+    private volatile float trigger_threshold = DEFAULT_TRIGGER_THRESHOLD;
+
+    /**
+     * Set the threshold for determining if a trigger is pressed
+     * @param threshold the new threshold for determining if a trigger is pressed
+     */
+    public void setTriggerThreshold(float threshold) {
+        trigger_threshold = threshold;
+    }
+
+    /**
+     * Get the threshold for determining if a trigger is pressed
+     * @return the current threshold for determining if a trigger is pressed
+     */
+    public float getTriggerThreshold() {
+        return trigger_threshold;
+    }
+
+    /**
+     * left trigger past threshold
+     */
+    public volatile boolean left_trigger_pressed = false;
+
+    /**
+     * right trigger past threshold
+     */
+    public volatile boolean right_trigger_pressed = false;
+
+    /**
      * PS4 Support - Circle
      */
     public volatile boolean circle = false;
@@ -550,6 +586,9 @@ public class Gamepad {
         }
 
         updateButtonAliases();
+        
+        left_trigger_pressed = left_trigger >= trigger_threshold;
+        right_trigger_pressed = right_trigger >= trigger_threshold;
         
         updateEdgeDetection();
     }
