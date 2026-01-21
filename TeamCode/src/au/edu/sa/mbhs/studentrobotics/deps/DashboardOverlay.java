@@ -44,6 +44,7 @@ public class DashboardOverlay {
         Platform.runLater(() -> {
             Pane fieldPane = VirtualRobotController.instance.getFieldPane();
             overlayCanvas = new Canvas(VirtualField.FIELD_WIDTH, VirtualField.FIELD_WIDTH);
+            overlayCanvas.getGraphicsContext2D().setLineWidth(4);
             fieldPane.getChildren().add(overlayCanvas);
         });
         FtcDashboard.getInstance().core.attachDodgySubscriptionToAllIncomingTelemetryData(it -> {
