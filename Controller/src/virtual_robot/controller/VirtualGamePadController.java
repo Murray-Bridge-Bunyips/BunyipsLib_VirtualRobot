@@ -12,7 +12,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Circle;
-import virtual_robot.config.Config;
+import au.edu.sa.mbhs.studentrobotics.deps.Config;
 
 import java.util.ListIterator;
 

@@ -46,18 +46,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl;
 import org.reflections.Reflections;
 import virtual_robot.OpModeNotificationsFilter;
-import virtual_robot.config.Config;
+import au.edu.sa.mbhs.studentrobotics.deps.Config;
 import virtual_robot.keyboard.KeyState;
 import virtual_robot.robots.ControlsElements;
-import virtual_robot.robots.classes.ArmBot;
 import virtual_robot.robots.classes.UltiBot;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.text.BreakIterator;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -69,6 +64,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class VirtualRobotController {
     public static ComboBox<Class<?>> opModeListCurrent;
+    public static VirtualRobotController instance;
+    
+    public VirtualRobotController() {
+        instance = this;
+    }
 
     //User Interface
     @FXML private Pane fieldPane;

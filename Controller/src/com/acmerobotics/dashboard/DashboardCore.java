@@ -1,5 +1,6 @@
 package com.acmerobotics.dashboard;
 
+import au.edu.sa.mbhs.studentrobotics.deps.DashboardOverlay;
 import com.acmerobotics.dashboard.config.ValueProvider;
 import com.acmerobotics.dashboard.config.variable.BasicVariable;
 import com.acmerobotics.dashboard.config.variable.CustomVariable;
@@ -9,6 +10,7 @@ import com.acmerobotics.dashboard.message.redux.ReceiveConfig;
 import com.acmerobotics.dashboard.message.redux.ReceiveTelemetry;
 import com.acmerobotics.dashboard.message.redux.SaveConfig;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import org.firstinspires.ftc.robotcore.external.function.Consumer;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -78,14 +80,23 @@ public class DashboardCore {
                         }
                     }
 
-                    sendAll(new ReceiveTelemetry(telemetryToSend));
+//                    sendAll(new ReceiveTelemetry(telemetryToSend));
+                    sendDodgySubscribedTelemetryData(telemetryToSend);
 
-                    Thread.sleep(telemetryTransmissionInterval);
+                    Thread.sleep(DashboardOverlay.UPDATE_INTERVAL_MS);
                 } catch (InterruptedException e) {
                     return;
                 }
             }
         }
+    }
+    private final ArrayList<Consumer<List<TelemetryPacket>>> listeners = new ArrayList<>();
+    public void attachDodgySubscriptionToAllIncomingTelemetryData(Consumer<List<TelemetryPacket>> func) {
+        listeners.add(func);
+    }
+    
+    private void sendDodgySubscribedTelemetryData(List<TelemetryPacket> packets) {
+        listeners.forEach(x -> x.accept(packets));
     }
 
     public DashboardCore() {
@@ -154,9 +165,9 @@ public class DashboardCore {
      * @param telemetryPacket packet to send
      */
     public void sendTelemetryPacket(TelemetryPacket telemetryPacket) {
-        if (!enabled) {
-            return;
-        }
+//        if (!enabled) {
+//            return;
+//        }
 
         telemetryPacket.addTimestamp();
 

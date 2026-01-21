@@ -48,7 +48,7 @@ public abstract class CanvasOp {
         IMAGE;
     }
 
-    private Type type;
+    public Type type;
 
     public CanvasOp(Type type) {
         this.type = type;

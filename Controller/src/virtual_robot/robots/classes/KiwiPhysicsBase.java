@@ -14,7 +14,7 @@ import org.firstinspires.ftc.robotcore.external.matrices.GeneralMatrixF;
 import org.firstinspires.ftc.robotcore.external.matrices.MatrixF;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import virtual_robot.config.Config;
+import au.edu.sa.mbhs.studentrobotics.deps.Config;
 import virtual_robot.controller.Filters;
 import virtual_robot.controller.VirtualBot;
 import virtual_robot.controller.VirtualField;

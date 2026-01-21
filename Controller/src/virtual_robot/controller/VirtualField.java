@@ -1,6 +1,6 @@
 package virtual_robot.controller;
 
-import virtual_robot.config.Config;
+import au.edu.sa.mbhs.studentrobotics.deps.Config;
 
 /**
  *   For internal use only. Class for playing field configurations.

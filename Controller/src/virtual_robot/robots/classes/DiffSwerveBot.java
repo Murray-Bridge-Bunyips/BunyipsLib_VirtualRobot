@@ -13,7 +13,7 @@ import javafx.scene.transform.Rotate;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.geometry.MassType;
 import org.dyn4j.geometry.Vector2;
-import virtual_robot.config.Config;
+import au.edu.sa.mbhs.studentrobotics.deps.Config;
 import virtual_robot.controller.Filters;
 import virtual_robot.controller.VirtualBot;
 import virtual_robot.controller.VirtualField;

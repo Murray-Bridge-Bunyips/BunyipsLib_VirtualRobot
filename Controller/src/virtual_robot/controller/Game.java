@@ -6,7 +6,7 @@ import javafx.scene.layout.Pane;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.world.World;
 import org.reflections.Reflections;
-import virtual_robot.config.Config;
+import au.edu.sa.mbhs.studentrobotics.deps.Config;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;

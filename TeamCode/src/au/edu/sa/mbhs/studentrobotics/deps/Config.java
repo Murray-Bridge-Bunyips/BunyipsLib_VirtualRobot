@@ -1,9 +1,8 @@
-package virtual_robot.config;
+package au.edu.sa.mbhs.studentrobotics.deps;
 
 import javafx.scene.image.Image;
 import virtual_robot.controller.Game;
 import virtual_robot.games.Decode;
-import virtual_robot.games.NoGame;
 
 /**
  * Class for configuring field (width and image), and gamepad (virtual vs. real)

@@ -1,5 +1,6 @@
 package virtual_robot.controller;
 
+import au.edu.sa.mbhs.studentrobotics.deps.DashboardOverlay;
 import com.qualcomm.robotcore.hardware.DcMotorControllerImpl;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import javafx.scene.Group;
@@ -141,6 +142,8 @@ public abstract class VirtualBot {
         displayGroup.getTransforms().add(new Scale(botWidth/75, botWidth/75, 0, 0));
 
         fieldPane.getChildren().add(displayGroup);
+        
+        displayGroup.setOpacity(DashboardOverlay.HIDE_STANDARD_ROBOT ? 0 : 1);
     }
 
     /**

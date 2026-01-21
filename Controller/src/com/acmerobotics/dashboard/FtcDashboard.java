@@ -127,7 +127,7 @@ public class FtcDashboard {
      */
     public boolean isEnabled() { return core.enabled; }
 
-    private DashboardCore core = new DashboardCore();
+    public DashboardCore core = new DashboardCore();
 
 //    private NanoWSD server = new NanoWSD(8000) {
 //        @Override
