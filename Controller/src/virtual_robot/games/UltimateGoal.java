@@ -82,11 +82,11 @@ public class UltimateGoal extends Game {
             r.setStatus(Ring.RingStatus.OFF_FIELD);
         }
 
-        for (int i=0; i<starterStackSize; i++){
-            Ring r = Ring.rings.get(i);
-            r.setStatus(Ring.RingStatus.STACKED);
-            r.setLocationInches(STARTER_STACK);
-        }
+//        for (int i=0; i<starterStackSize; i++){
+//            Ring r = Ring.rings.get(i);
+//            r.setStatus(Ring.RingStatus.STACKED);
+//            r.setLocationInches(STARTER_STACK);
+//        }
 
         // dont need goals where we're from
 //        /*
