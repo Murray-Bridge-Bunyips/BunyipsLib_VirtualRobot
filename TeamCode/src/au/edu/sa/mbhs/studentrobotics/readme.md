@@ -2,7 +2,7 @@
 
 This is a reflected copy of the core components of https://github.com/Murray-Bridge-Bunyips/BunyipsFTC.<br><br>
 BunyipsLib is under `bunyipslib/`, and there is
-a bot under `imposter/` to test a virtual robot configuration, as other robots won't work with this simulator due to
+a bot under `virtual/robot/` to test a virtual robot configuration, as other robots won't work with this simulator due to
 configuration differences. Features from the SDK that aren't supported have been replicated to return null or similar,
 and may cause null exceptions if used. This includes all the Vision systems (VisionPortal will not build any cameras).
 
