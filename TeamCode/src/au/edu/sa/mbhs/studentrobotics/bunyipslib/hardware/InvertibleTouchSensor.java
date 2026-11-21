@@ -23,7 +23,7 @@ public class InvertibleTouchSensor implements TouchSensor {
      *
      * @param sensor the sensor to invert
      */
-    public InvertibleTouchSensor(@NonNull TouchSensor sensor) {
+    public InvertibleTouchSensor(@androidx.annotation.NonNull TouchSensor sensor) {
         this.sensor = sensor;
     }
 
@@ -47,13 +47,13 @@ public class InvertibleTouchSensor implements TouchSensor {
         return inverted != sensor.isPressed();
     }
 
-    @NonNull
+    @androidx.annotation.NonNull
     @Override
     public Manufacturer getManufacturer() {
         return sensor.getManufacturer();
     }
 
-    @NonNull
+    @androidx.annotation.NonNull
     @Override
     public String getDeviceName() {
         return sensor.getDeviceName();

@@ -47,8 +47,8 @@ import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Exceptions;
 import au.edu.sa.mbhs.studentrobotics.bunyipslib.util.Text;
 
 /**
- * Drop-in replacement for a {@link DcMotor} that uses custom control algorithms to operate {@link RunMode#RUN_USING_ENCODER}
- * and {@link RunMode#RUN_TO_POSITION} modes. Internally integrates a gain scheduler to allow for more precise
+ * Drop-in replacement for a {@link DcMotor} that uses custom control algorithms to operate {@link DcMotor.RunMode#RUN_USING_ENCODER}
+ * and {@link DcMotor.RunMode#RUN_TO_POSITION} modes. Internally integrates a gain scheduler to allow for more precise
  * system coefficients against gravity and other external forces. This class effectively wraps an entire DcMotor and
  * regulates all the operations.
  * <p>
@@ -74,7 +74,7 @@ public class Motor extends SimpleRotator implements DcMotorEx {
      * regulate all encoder operations. Use with caution.
      */
     public Encoder encoder;
-    private RunMode mode = RunMode.RUN_WITHOUT_ENCODER;
+    private DcMotor.RunMode mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER;
     private SystemController rtpController;
     private SystemController rueController;
     private Pair<Double, Double> rueInfo = null;
@@ -98,7 +98,7 @@ public class Motor extends SimpleRotator implements DcMotorEx {
         port = motor.getPortNumber();
         // The actual motor should *always* be running in RUN_WITHOUT_ENCODER
         synchronized (controller) {
-            controller.setMotorMode(port, RunMode.RUN_WITHOUT_ENCODER);
+            controller.setMotorMode(port, DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
         DcMotorEx dme = (DcMotorEx) motor;
         encoder = new Encoder(motor::getCurrentPosition, dme::getVelocity);
@@ -124,7 +124,7 @@ public class Motor extends SimpleRotator implements DcMotorEx {
      * @param name   The name to debug as
      * @param scopes The motor properties to record and log. No passed scope parameters will log all scopes.
      */
-    public static void debug(@NonNull DcMotor motor, @NonNull String name, @NonNull Scope... scopes) {
+    public static void debug(@NonNull DcMotor motor, @NonNull String name, @NonNull Motor.Scope... scopes) {
         debug(motor, name, false, scopes);
     }
 
@@ -138,7 +138,7 @@ public class Motor extends SimpleRotator implements DcMotorEx {
      * @param onlyLog Whether to only record debug information to the {@link FlightRecorder}, not telemetry/live dash.
      * @param scopes  The motor properties to record and log. No passed scope parameters will log all scopes.
      */
-    public static void debug(@NonNull DcMotor motor, @NonNull String name, boolean onlyLog, @NonNull Scope... scopes) {
+    public static void debug(@NonNull DcMotor motor, @NonNull String name, boolean onlyLog, @NonNull Motor.Scope... scopes) {
         if (scopes.length == 0)
             scopes = Scope.values();
         int port = motor.getPortNumber();
@@ -249,7 +249,7 @@ public class Motor extends SimpleRotator implements DcMotorEx {
     }
 
     /**
-     * Set a system controller to use for {@link RunMode#RUN_TO_POSITION}.
+     * Set a system controller to use for {@link DcMotor.RunMode#RUN_TO_POSITION}.
      * <p>
      * The coefficients of this controller can be gain scheduled through {@link #scheduleRunToPositionGains()}.
      * Otherwise, you can adjust the coefficients directly on the controller instance, and they will be respected, unless
@@ -278,7 +278,7 @@ public class Motor extends SimpleRotator implements DcMotorEx {
     }
 
     /**
-     * Set a system controller to use for {@link RunMode#RUN_USING_ENCODER}.
+     * Set a system controller to use for {@link DcMotor.RunMode#RUN_USING_ENCODER}.
      * <p>
      * The coefficients of this controller can be gain scheduled through {@link #scheduleRunUsingEncoderGains()}.
      * Otherwise, you can adjust the coefficients directly on the controller instance, and they will be respected, unless
@@ -297,7 +297,7 @@ public class Motor extends SimpleRotator implements DcMotorEx {
     }
 
     /**
-     * Set a system controller to use for {@link RunMode#RUN_USING_ENCODER}.
+     * Set a system controller to use for {@link DcMotor.RunMode#RUN_USING_ENCODER}.
      * <p>
      * The coefficients of this controller can be gain scheduled through {@link #scheduleRunUsingEncoderGains()}.
      * Otherwise, you can adjust the coefficients directly on the controller instance, and they will be respected, unless
@@ -322,7 +322,7 @@ public class Motor extends SimpleRotator implements DcMotorEx {
     }
 
     /**
-     * Set a system controller to use for {@link RunMode#RUN_USING_ENCODER}.
+     * Set a system controller to use for {@link DcMotor.RunMode#RUN_USING_ENCODER}.
      * <p>
      * The coefficients of this controller can be gain scheduled through {@link #scheduleRunUsingEncoderGains()}.
      * Otherwise, you can adjust the coefficients directly on the controller instance, and they will be respected, unless
@@ -346,34 +346,34 @@ public class Motor extends SimpleRotator implements DcMotorEx {
     }
 
     /**
-     * Call to build a list of encoder tick positions where you want your {@link RunMode#RUN_TO_POSITION} system controller
+     * Call to build a list of encoder tick positions where you want your {@link DcMotor.RunMode#RUN_TO_POSITION} system controller
      * gains to be. When this builder is built with {@code build()}, it will interpolate between each value to provide a
      * continuous range of coefficients that will be used when {@link #setPower(double)} is called.
      *
-     * @return a builder to specify encoder tick positions to gains of your {@link RunMode#RUN_TO_POSITION} controller
+     * @return a builder to specify encoder tick positions to gains of your {@link DcMotor.RunMode#RUN_TO_POSITION} controller
      */
     @NonNull
     public GainScheduling scheduleRunToPositionGains() {
         rtpGains.clear();
-        return new GainScheduling(RunMode.RUN_TO_POSITION);
+        return new GainScheduling(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     /**
-     * Call to build a list of encoder tick positions where you want your {@link RunMode#RUN_USING_ENCODER} system controller
+     * Call to build a list of encoder tick positions where you want your {@link DcMotor.RunMode#RUN_USING_ENCODER} system controller
      * gains to be. When this builder is built with {@code build()}, it will interpolate between each value to provide a
      * continuous PID range that will be used when {@link #setPower(double)} is called.
      *
-     * @return a builder to specify encoder tick positions to gains of your {@link RunMode#RUN_USING_ENCODER} controller
+     * @return a builder to specify encoder tick positions to gains of your {@link DcMotor.RunMode#RUN_USING_ENCODER} controller
      */
     @NonNull
     public GainScheduling scheduleRunUsingEncoderGains() {
         rueGains.clear();
-        return new GainScheduling(RunMode.RUN_USING_ENCODER);
+        return new GainScheduling(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     /**
      * Reset the encoder value back to 0 by commanding the firmware to reset the encoder count.
-     * Will internally be called if the motor is attempted to be set to {@link RunMode#STOP_AND_RESET_ENCODER}.
+     * Will internally be called if the motor is attempted to be set to {@link DcMotor.RunMode#STOP_AND_RESET_ENCODER}.
      * The target position will also be reset to 0. Power will attempt to be restored across this reset.
      * <p>
      * The previous (true) operating mode, {@code RUN_WITHOUT_ENCODER}, of the motor will be restored after this operation.
@@ -422,7 +422,7 @@ public class Motor extends SimpleRotator implements DcMotorEx {
         if (rueInfo == null || rueInfo.first == null || rueInfo.second == null) {
             throw new IllegalStateException("RUN_USING_ENCODER controller not set up yet, cannot set velocity without setting the controller!");
         }
-        setMode(RunMode.RUN_USING_ENCODER);
+        setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         setPower(vel / (rueInfo.first * rueInfo.second));
     }
 
@@ -444,16 +444,16 @@ public class Motor extends SimpleRotator implements DcMotorEx {
      * Note this will construct a new PID controller for use in the {@code rtp} or {@code rue} RunModes as per
      * the Motor class.
      *
-     * @param mode            either {@link RunMode#RUN_USING_ENCODER} or {@link RunMode#RUN_TO_POSITION}
+     * @param mode            either {@link DcMotor.RunMode#RUN_USING_ENCODER} or {@link DcMotor.RunMode#RUN_TO_POSITION}
      * @param pidCoefficients the new coefficients to use when in that mode on this motor
-     * @see #getPIDCoefficients(RunMode)
+     * @see #getPIDCoefficients(DcMotor.RunMode)
      */
     @Override
     public void setPIDCoefficients(@NonNull RunMode mode, @NonNull PIDCoefficients pidCoefficients) {
         mode = mode.migrate();
-        if (mode == RunMode.RUN_TO_POSITION) {
+        if (mode == DcMotor.RunMode.RUN_TO_POSITION) {
             setRunToPositionController(new PIDController(pidCoefficients.p, pidCoefficients.i, pidCoefficients.d));
-        } else if (mode == RunMode.RUN_USING_ENCODER) {
+        } else if (mode == DcMotor.RunMode.RUN_USING_ENCODER) {
             setRunUsingEncoderController(1, getMotorType().getAchieveableMaxTicksPerSecond(), new PIDController(pidCoefficients.p, pidCoefficients.i, pidCoefficients.d));
         }
     }
@@ -463,16 +463,16 @@ public class Motor extends SimpleRotator implements DcMotorEx {
      * Note this will construct a new PIDF controller for use in the {@code rtp} or {@code rue} RunModes as per
      * the Motor class, or set an existing PIDF controller coefficients if it already exists.
      *
-     * @param mode             either {@link RunMode#RUN_USING_ENCODER} or {@link RunMode#RUN_TO_POSITION}
+     * @param mode             either {@link DcMotor.RunMode#RUN_USING_ENCODER} or {@link DcMotor.RunMode#RUN_TO_POSITION}
      * @param pidfCoefficients the new coefficients to use when in that mode on this motor
      * @see #setVelocityPIDFCoefficients(double, double, double, double)
      * @see #setPositionPIDFCoefficients(double)
-     * @see #getPIDFCoefficients(RunMode)
+     * @see #getPIDFCoefficients(DcMotor.RunMode)
      */
     @Override
     public void setPIDFCoefficients(@NonNull RunMode mode, @NonNull PIDFCoefficients pidfCoefficients) {
         mode = mode.migrate();
-        if (mode == RunMode.RUN_TO_POSITION) {
+        if (mode == DcMotor.RunMode.RUN_TO_POSITION) {
             if (rtpController == null) {
                 setRunToPositionController(new PIDFController(pidfCoefficients.p, pidfCoefficients.i, pidfCoefficients.d, pidfCoefficients.f));
             } else if (rtpController.pidf().isPresent()) {
@@ -480,7 +480,7 @@ public class Motor extends SimpleRotator implements DcMotorEx {
             } else {
                 throw new UnsupportedOperationException("Can't access information on the currently used RTP controller. This is because the currently set controller is not a PIDF or PIDF-derived controller, which makes this method incapable of setting these coefficients.");
             }
-        } else if (mode == RunMode.RUN_USING_ENCODER) {
+        } else if (mode == DcMotor.RunMode.RUN_USING_ENCODER) {
             if (rueController == null) {
                 setRunUsingEncoderController(1, getMotorType().getAchieveableMaxTicksPerSecond(), new PIDFController(pidfCoefficients.p, pidfCoefficients.i, pidfCoefficients.d, pidfCoefficients.f));
             } else if (rueController.pidf().isPresent()) {
@@ -492,7 +492,7 @@ public class Motor extends SimpleRotator implements DcMotorEx {
     }
 
     /**
-     * A shorthand for setting the PIDF coefficients for the {@link RunMode#RUN_USING_ENCODER}
+     * A shorthand for setting the PIDF coefficients for the {@link DcMotor.RunMode#RUN_USING_ENCODER}
      * mode. Note this will either set a new controller if one is not defined, or try to set the PIDF coefficients
      * on the current controller to these coefficients.
      *
@@ -500,7 +500,7 @@ public class Motor extends SimpleRotator implements DcMotorEx {
      * @param i integral
      * @param d derivative
      * @param f feedforward
-     * @see #setPIDFCoefficients(RunMode, PIDFCoefficients)
+     * @see #setPIDFCoefficients(DcMotor.RunMode, PIDFCoefficients)
      */
     @Override
     public void setVelocityPIDFCoefficients(double p, double i, double d, double f) {
@@ -514,13 +514,13 @@ public class Motor extends SimpleRotator implements DcMotorEx {
     }
 
     /**
-     * A shorthand for setting the P coefficient for the {@link RunMode#RUN_TO_POSITION}
+     * A shorthand for setting the P coefficient for the {@link DcMotor.RunMode#RUN_TO_POSITION}
      * mode. Note this will either set a new controller if one is not defined, or try to set the PIDF coefficients
      * on the current controller with this P coefficient in place of the old one. Other coefficients will be preserved.
      *
      * @param p proportional
      * @see #setVelocityPIDFCoefficients(double, double, double, double)
-     * @see #setPIDFCoefficients(RunMode, PIDFCoefficients)
+     * @see #setPIDFCoefficients(DcMotor.RunMode, PIDFCoefficients)
      */
     @Override
     public void setPositionPIDFCoefficients(double p) {
@@ -539,12 +539,12 @@ public class Motor extends SimpleRotator implements DcMotorEx {
      * Returns the PID control coefficients used when running in the indicated mode
      * on this motor.
      *
-     * @param mode either {@link RunMode#RUN_USING_ENCODER} or {@link RunMode#RUN_TO_POSITION}
+     * @param mode either {@link DcMotor.RunMode#RUN_USING_ENCODER} or {@link DcMotor.RunMode#RUN_TO_POSITION}
      * @return the PID control coefficients used when running in the indicated mode on this motor
      */
     @NonNull
     @Override
-    public PIDCoefficients getPIDCoefficients(@NonNull RunMode mode) {
+    public PIDCoefficients getPIDCoefficients(@NonNull DcMotor.RunMode mode) {
         PIDFCoefficients coeffs = getPIDFCoefficients(mode);
         return new PIDCoefficients(coeffs.p, coeffs.i, coeffs.d);
     }
@@ -553,21 +553,21 @@ public class Motor extends SimpleRotator implements DcMotorEx {
      * Returns the PIDF control coefficients used when running in the indicated mode
      * on this motor.
      *
-     * @param mode either {@link RunMode#RUN_USING_ENCODER} or {@link RunMode#RUN_TO_POSITION}
+     * @param mode either {@link DcMotor.RunMode#RUN_USING_ENCODER} or {@link DcMotor.RunMode#RUN_TO_POSITION}
      * @return the PIDF control coefficients used when running in the indicated mode on this motor
-     * @see #setPIDFCoefficients(RunMode, PIDFCoefficients)
+     * @see #setPIDFCoefficients(DcMotor.RunMode, PIDFCoefficients)
      */
     @NonNull
     @Override
-    public PIDFCoefficients getPIDFCoefficients(@NonNull RunMode mode) {
+    public PIDFCoefficients getPIDFCoefficients(@NonNull DcMotor.RunMode mode) {
         double[] coeffs = new double[0];
         mode = mode.migrate();
-        if (mode == RunMode.RUN_TO_POSITION) {
+        if (mode == DcMotor.RunMode.RUN_TO_POSITION) {
             if (rtpController == null || rtpController.pidf().isEmpty()) {
                 throw new UnsupportedOperationException("Can't access information on the currently used RTP controller. This is because the currently set controller is not a PIDF or PIDF-derived controller, or does not exist, which makes this method incapable of getting these coefficients.");
             }
             coeffs = rtpController.pidf().get().getCoefficients();
-        } else if (mode == RunMode.RUN_USING_ENCODER) {
+        } else if (mode == DcMotor.RunMode.RUN_USING_ENCODER) {
             if (rueController == null || rueController.pidf().isEmpty()) {
                 throw new UnsupportedOperationException("Can't access information on the currently used RUE controller. This is because the currently set controller is not a PIDF or PIDF-derived controller, or does not exist, which makes this method incapable of getting these coefficients.");
             }
@@ -614,25 +614,25 @@ public class Motor extends SimpleRotator implements DcMotorEx {
 
     /**
      * Get the custom set mode for this Motor. Note that this will not reflect the actual SDK mode of the motor,
-     * which is always set to {@link RunMode#RUN_WITHOUT_ENCODER}, but rather the equivalent mode this motor
+     * which is always set to {@link DcMotor.RunMode#RUN_WITHOUT_ENCODER}, but rather the equivalent mode this motor
      * is currently running in.
      */
     @NonNull
     @Override
-    public RunMode getMode() {
+    public DcMotor.RunMode getMode() {
         return mode;
     }
 
     /**
      * Modified version of {@code setMode} where the modes will never actually be propagated to the motors, and instead
      * managed internally by the modified {@link #setPower(double)} method. The actual motor object will always be in
-     * {@link RunMode#RUN_WITHOUT_ENCODER}, unless a reset is in progress by {@link #resetEncoder()}.
+     * {@link DcMotor.RunMode#RUN_WITHOUT_ENCODER}, unless a reset is in progress by {@link #resetEncoder()}.
      *
      * @param mode the new current run mode for this motor
      */
     @Override
-    public synchronized void setMode(@NonNull RunMode mode) {
-        if (mode == RunMode.STOP_AND_RESET_ENCODER) {
+    public synchronized void setMode(@NonNull DcMotor.RunMode mode) {
+        if (mode == DcMotor.RunMode.STOP_AND_RESET_ENCODER) {
             setPower(0);
             resetEncoder();
             return;
@@ -641,9 +641,9 @@ public class Motor extends SimpleRotator implements DcMotorEx {
     }
 
     /**
-     * Retrieves the tolerance in encoder ticks at which this arm uses for {@link RunMode#RUN_TO_POSITION}.
+     * Retrieves the tolerance in encoder ticks at which this arm uses for {@link DcMotor.RunMode#RUN_TO_POSITION}.
      * <p>
-     * Note that this method will try to access the {@link RunMode#RUN_TO_POSITION} controller to access target position
+     * Note that this method will try to access the {@link DcMotor.RunMode#RUN_TO_POSITION} controller to access target position
      * tolerance information.
      *
      * @inheritDoc
@@ -660,9 +660,9 @@ public class Motor extends SimpleRotator implements DcMotorEx {
     }
 
     /**
-     * Sets the tolerance in encoder ticks at which this arm uses for {@link RunMode#RUN_TO_POSITION}.
+     * Sets the tolerance in encoder ticks at which this arm uses for {@link DcMotor.RunMode#RUN_TO_POSITION}.
      * <p>
-     * Note that this method will try to access the {@link RunMode#RUN_TO_POSITION} controller to access target position
+     * Note that this method will try to access the {@link DcMotor.RunMode#RUN_TO_POSITION} controller to access target position
      * tolerance information.
      *
      * @inheritDoc
@@ -852,7 +852,7 @@ public class Motor extends SimpleRotator implements DcMotorEx {
      * taget position, {@link #isBusy()} will return true if using a PIDF controller.
      *
      * <p>Note that adjustment to a target position is only effective when the motor is in
-     * {@link RunMode#RUN_TO_POSITION RUN_TO_POSITION}
+     * {@link DcMotor.RunMode#RUN_TO_POSITION RUN_TO_POSITION}
      * RunMode. Note further that, clearly, the motor must be equipped with an encoder in order
      * for this mode to function properly.</p>
      * <p>
@@ -861,8 +861,8 @@ public class Motor extends SimpleRotator implements DcMotorEx {
      *
      * @param position the desired encoder target position
      * @see #getCurrentPosition()
-     * @see #setMode(RunMode)
-     * @see RunMode#RUN_TO_POSITION
+     * @see #setMode(DcMotor.RunMode)
+     * @see DcMotor.RunMode#RUN_TO_POSITION
      * @see #getTargetPosition()
      * @see #isBusy()
      */
@@ -872,7 +872,7 @@ public class Motor extends SimpleRotator implements DcMotorEx {
     }
 
     /**
-     * Note that this method will try to access the {@link RunMode#RUN_TO_POSITION} controller to access information there. This
+     * Note that this method will try to access the {@link DcMotor.RunMode#RUN_TO_POSITION} controller to access information there. This
      * is otherwise unsupported, and you should try to access the actual controller to see this information, unless
      * you are downcasting in which this will assume you are using a PID controller.
      *
@@ -884,7 +884,7 @@ public class Motor extends SimpleRotator implements DcMotorEx {
     @Override
     public boolean isBusy() {
         if (rtpController != null && rtpController.pidf().isPresent()) {
-            return mode == RunMode.RUN_TO_POSITION && !rtpController.pidf().get().atSetpoint();
+            return mode == DcMotor.RunMode.RUN_TO_POSITION && !rtpController.pidf().get().atSetpoint();
         }
         throw new UnsupportedOperationException("Can't access target position information on the currently used RTP controller. It may be the case that this controller is open-loop, or not a PID controller, as any tolerance configuration should be modified by your controller, not by this method.");
     }
@@ -922,7 +922,7 @@ public class Motor extends SimpleRotator implements DcMotorEx {
         switch (mode) {
             case RUN_TO_POSITION:
                 if (rtpController == null) {
-                    PIDFCoefficients coeffs = controller.getPIDFCoefficients(port, RunMode.RUN_TO_POSITION);
+                    PIDFCoefficients coeffs = controller.getPIDFCoefficients(port, DcMotor.RunMode.RUN_TO_POSITION);
                     String msg = Text.format("[Port % Motor] No RUN_TO_POSITION controller was specified. This motor will be using the default PIDF coefficients to create a fallback PIDF controller with values from %. You must set your own controller through setRunToPositionController().", port, coeffs);
                     Dbg.error(msg);
                     RobotLog.addGlobalWarningMessage(msg);
@@ -938,7 +938,7 @@ public class Motor extends SimpleRotator implements DcMotorEx {
                 break;
             case RUN_USING_ENCODER:
                 if (rueController == null) {
-                    PIDFCoefficients coeffs = controller.getPIDFCoefficients(port, RunMode.RUN_USING_ENCODER);
+                    PIDFCoefficients coeffs = controller.getPIDFCoefficients(port, DcMotor.RunMode.RUN_USING_ENCODER);
                     String msg = Text.format("[Port % Motor] No RUN_USING_ENCODER controller was specified. This motor will be using the default PIDF coefficients to create a fallback PIDF controller with values from %. You must set your own controller through setRunUsingEncoderController().", port, coeffs);
                     Dbg.error(msg);
                     RobotLog.addGlobalWarningMessage(msg);
@@ -1012,8 +1012,8 @@ public class Motor extends SimpleRotator implements DcMotorEx {
     public class GainScheduling {
         private final ArrayList<InterpolatedLookupTable> gains;
 
-        private GainScheduling(RunMode targetMode) {
-            gains = targetMode == RunMode.RUN_TO_POSITION ? rtpGains : rueGains;
+        private GainScheduling(DcMotor.RunMode targetMode) {
+            gains = targetMode == DcMotor.RunMode.RUN_TO_POSITION ? rtpGains : rueGains;
         }
 
         /**

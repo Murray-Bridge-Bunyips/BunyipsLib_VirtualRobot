@@ -175,7 +175,7 @@ public class Condition<T extends Condition<T>> implements BooleanSupplier {
      * @param supplier supplied supplier for construction
      * @return new instance of type T
      */
-    protected T newInstance(Edge edge, BooleanSupplier supplier) {
+    protected T newInstance(Condition.Edge edge, BooleanSupplier supplier) {
         return (T) new Condition<>(edge, supplier);
     }
 

@@ -70,7 +70,7 @@ public abstract class ColourThreshold extends Processor<ContourData> {
     private static final Paint borderPaint = new Paint() {{
         setColor(Color.WHITE);
         setAntiAlias(true);
-        setStrokeCap(Cap.BUTT);
+        setStrokeCap(Paint.Cap.BUTT);
         setStrokeWidth(1);
     }};
 

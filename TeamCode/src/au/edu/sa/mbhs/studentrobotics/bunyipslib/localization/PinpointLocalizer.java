@@ -61,7 +61,7 @@ public class PinpointLocalizer implements Localizer {
      * @param pinpoint   the Pinpoint Computer from HardwareMap. Will be IMU and position reset on construction. To set wheel directions,
      *                   set them in the {@code params} object, <b>NOT</b> on this object directly.
      */
-    public PinpointLocalizer(@NonNull DriveModel driveModel, @NonNull Params params, @Nullable GoBildaPinpointDriver pinpoint) {
+    public PinpointLocalizer(@NonNull DriveModel driveModel, @NonNull PinpointLocalizer.Params params, @Nullable GoBildaPinpointDriver pinpoint) {
         this.pinpoint = pinpoint;
         this.params = params;
 
@@ -215,7 +215,7 @@ public class PinpointLocalizer implements Localizer {
              * @return the parameters
              */
             @NonNull
-            public Params build() {
+            public PinpointLocalizer.Params build() {
                 return params;
             }
         }
