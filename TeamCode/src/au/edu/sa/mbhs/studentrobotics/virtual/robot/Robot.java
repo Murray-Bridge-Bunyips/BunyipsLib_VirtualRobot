@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.hardware.*;
 /**
  * Running under "Ulti Bot" config
  */
-@RobotConfig.AutoInit
+//@RobotConfig.AutoInit
 public class Robot extends RobotConfig {
     public static final Robot instance = new Robot();
     public final Hardware hw = new Hardware();
