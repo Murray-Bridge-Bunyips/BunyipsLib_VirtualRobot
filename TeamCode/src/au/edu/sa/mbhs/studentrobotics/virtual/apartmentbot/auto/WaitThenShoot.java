@@ -4,14 +4,11 @@ import androidx.annotation.Nullable;
 
 // ------ Recommended static imports for Scheduler, do not remove! --------
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.Scheduler.*;
-import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Degrees;
-import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Inches;
-import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Nanoseconds;
+import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.*;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls.*;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.transforms.Controls.Analog.*;
 import static au.edu.sa.mbhs.studentrobotics.bunyipslib.tasks.bases.Task.*;
 // ------------------------------------------------------------------------
-import static au.edu.sa.mbhs.studentrobotics.bunyipslib.external.units.Units.Seconds;
 
 import com.acmerobotics.roadrunner.IdentityPoseMap;
 import com.acmerobotics.roadrunner.Pose2d;
@@ -47,8 +44,8 @@ public class WaitThenShoot extends AutonomousBunyipsOpMode {
     protected void onInitialise() {
         robot.init();
         setOpModes(
-                StartingConfiguration.redLeft().tile(1-(((24-length)/2)/24)).forward(Inches.of(24*2)).rotate(Degrees.of(270)),
-                StartingConfiguration.blueLeft().tile(1-(((24-length)/2)/24)).forward(Inches.of(24*2)).rotate(Degrees.of(270))
+                StartingConfiguration.redLeft().tile(1-(((24-length)/2)/24)).forward(Inches.of(((24*2)-12)+((width/2)+(6.7/2))+1)).rotate(Degrees.of(90)),
+                StartingConfiguration.blueLeft().tile(1-(((24-length)/2)/24)).forward(Inches.of(((24*2)-12)+((width/2)+(6.7/2))+1)).rotate(Degrees.of(90))
         ).assignButton(0, 0, Controls.B).assignButton(0, 1, Controls.X);
     }
 
@@ -62,8 +59,8 @@ public class WaitThenShoot extends AutonomousBunyipsOpMode {
 
         RefCell<Pose2d> pose = Ref.of(robot.drive.getPose());
 
-        robot.drive.makeTrajectory(pose.get(), currentPoseMap)
-                .strafeTo(new Vector2d(12,-12), Inches)
+        robot.drive.makeTrajectory(new Pose2d(-70+(length/2), -24+(width/2)+(6.7/2)+1, Radians.convertFrom(180, Degrees)), currentPoseMap)
+                .strafeTo(new Vector2d(0,-24+(width/2)+(6.7/2)+1), Inches)
                 .addTask(pose);
 
         add(new WaitTask(Seconds.of(Math.max(10 - timer.elapsedTime().in(Seconds), 7))));
